@@ -9,11 +9,14 @@ const FIELD_LABELS: Record<string, { label: string; multiline?: boolean }> = {
   name: { label: "Nombre" },
   imageUrl: { label: "Foto de portada (URL)" },
   avatarUrl: { label: "Foto (URL)" },
+  mainImageUrl: { label: "Foto principal (URL)" },
+  galleryImage1Url: { label: "Foto secundaria 1 (URL)" },
+  galleryImage2Url: { label: "Foto secundaria 2 (URL)" },
 };
 
 export default async function SiteTextsPage() {
   const blocks = await prisma.siteBlock.findMany({
-    where: { page: { in: ["home", "blog"] } },
+    where: { page: { in: ["home", "blog", "about"] } },
     orderBy: { id: "asc" },
   });
 

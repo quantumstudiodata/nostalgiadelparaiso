@@ -132,6 +132,24 @@ async function main() {
     },
   });
 
+  const aboutPageFields = {
+    bio: 'Soy Ángeles Nava, tallerista, escritora y promotora de Cultura de Paz (mediadora de lectura del programa nacional de salas de lectura).\n\nMe gusta difundir la cultura de paz y acompañar a personas sensibles que buscan en la palabra un espacio de expresión auténtica, transformación interior y conexión profunda con el mundo.\n\nEn mis talleres y actividades de mediación, he descubierto que la lectura y la escritura pueden ser herramientas para fomentar el pensamiento crítico, la empatía y la cultura de paz.\n\nEste espacio nace con el deseo de dar voz a mis alumnos del taller: Nostalgia del paraíso, al taller al que pertenezco: Olas de Pleamar y a otras Voces del Sur, compartir mi propio camino como escritora, como promotora de Cultura de Paz y entre todos, abrir una ventana de diálogo y reflexión. Aquí no sólo encontrarás poesía sino otros géneros literarios, mediación y más. Esta es tu casa virtual. La palabra es tuya, mía y de todos.\n\nMe defino como apasionada de las letras, con una gran sensibilidad y observación para la creación de textos literarios. Me gusta encontrarme con gente que le interese la lectura, la escritura y generar conversaciones significativas.',
+    mainImageUrl: "/images/acerca-principal.jpg",
+    galleryImage1Url: "/images/acerca-galeria-1.jpg",
+    galleryImage2Url: "/images/acerca-galeria-2.jpg",
+  };
+
+  await prisma.siteBlock.upsert({
+    where: { id: "about.page" },
+    update: { fields: aboutPageFields },
+    create: {
+      id: "about.page",
+      page: "about",
+      label: "Página Acerca de nosotros",
+      fields: aboutPageFields,
+    },
+  });
+
   const sidebarAuthorFields = {
     name: "Ángeles Nava",
     bio: 'Tallerista, escritora y promotora de Cultura de Paz (mediadora de lectura del programa nacional de salas de lectura).\n\nDiseñé este espacio Nostalgia del Paraíso con el deseo de difundir la cultura de paz y dar voz a mis alumnos del taller: Nostalgia del paraíso, del taller al que pertenezco: Olas de Pleamar y a otras voces que deseen dejar su huella en este espacio literario.\n\nMe defino con una gran sensibilidad y observación para la creación de textos literarios.\n\nMe gusta encontrarme con gente que le interese la lectura, la escritura y generar conversaciones significativas.',
