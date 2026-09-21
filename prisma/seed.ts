@@ -95,7 +95,7 @@ async function main() {
         title: "Bienvenidos a Nostalgia del paraíso",
         buttonText: "Leer más",
         body: 'Nostalgia del Paraíso: es un ecosistema cultural: una red viva de actividades, personas, textos, ideas y espacios que se conectan entre sí para formar comunidad. No es sólo un taller, ni sólo un círculo de lectura, ni una charla aislada: es la interacción entre todos ellos. En este ecosistema conviven: la cultura de paz, la poesía, la lectura, la inclusión, la reflexión, la comunidad y la presencia digital. Cada elemento alimenta a los otros. La lectura fortalece la paz; la paz abre la palabra; la palabra crea comunidad; la comunidad sostiene la cultura.\n\nUn ecosistema cultural es eso: un conjunto de prácticas que, al unirse, generan un ambiente donde la cultura puede florecer y transformar vidas.\n\nEl Taller de poesía "Nostalgia del paraíso": es un taller que nombra la poesía desde la balanza emocional y técnica para introducirse en las profundidades del lenguaje. Adicionalmente, el taller cuenta con una capa comunitaria que promueve la cultura de paz.\n\nEl Círculo de lectura "Nostalgia del paraíso", cuyo tema fundamental es la cultura de paz: promueve un espacio donde se utiliza la lectura como acto de resistencia, en términos culturales o simbólicos es un espacio que se mantiene firme frente a las fuerzas que deshumanizan.\n\nEl Taller "Olas de pleamar": es un grupo de escritoras que promueven la lectura y se ayudan mutuamente.\n\nVoces del sur: aquí escriben escritores de nuestra comunidad que son bienvenidos para dejar su huella en este espacio literario.',
-        imageUrl: "",
+        imageUrl: "/images/hero-portada.jpg",
       },
     },
     create: {
@@ -106,7 +106,7 @@ async function main() {
         title: "Bienvenidos a Nostalgia del paraíso",
         buttonText: "Leer más",
         body: 'Nostalgia del Paraíso: es un ecosistema cultural: una red viva de actividades, personas, textos, ideas y espacios que se conectan entre sí para formar comunidad. No es sólo un taller, ni sólo un círculo de lectura, ni una charla aislada: es la interacción entre todos ellos. En este ecosistema conviven: la cultura de paz, la poesía, la lectura, la inclusión, la reflexión, la comunidad y la presencia digital. Cada elemento alimenta a los otros. La lectura fortalece la paz; la paz abre la palabra; la palabra crea comunidad; la comunidad sostiene la cultura.\n\nUn ecosistema cultural es eso: un conjunto de prácticas que, al unirse, generan un ambiente donde la cultura puede florecer y transformar vidas.\n\nEl Taller de poesía "Nostalgia del paraíso": es un taller que nombra la poesía desde la balanza emocional y técnica para introducirse en las profundidades del lenguaje. Adicionalmente, el taller cuenta con una capa comunitaria que promueve la cultura de paz.\n\nEl Círculo de lectura "Nostalgia del paraíso", cuyo tema fundamental es la cultura de paz: promueve un espacio donde se utiliza la lectura como acto de resistencia, en términos culturales o simbólicos es un espacio que se mantiene firme frente a las fuerzas que deshumanizan.\n\nEl Taller "Olas de pleamar": es un grupo de escritoras que promueven la lectura y se ayudan mutuamente.\n\nVoces del sur: aquí escriben escritores de nuestra comunidad que son bienvenidos para dejar su huella en este espacio literario.',
-        imageUrl: "",
+        imageUrl: "/images/hero-portada.jpg",
       },
     },
   });
