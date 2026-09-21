@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // so Next's serverless output tracing doesn't automatically pick up the
   // native query-engine binary there. Force it into every function bundle.
   outputFileTracingIncludes: {
-    "/*": ["./src/generated/prisma/**/*"],
+    "/**": ["./src/generated/prisma/**/*"],
   },
 };
 
