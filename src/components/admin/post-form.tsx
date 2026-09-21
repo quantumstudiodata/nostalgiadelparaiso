@@ -1,4 +1,4 @@
-import type { Category, Post } from "@/generated/prisma/client";
+import type { Category, Post } from "@prisma/client";
 
 export function PostForm({
   post,

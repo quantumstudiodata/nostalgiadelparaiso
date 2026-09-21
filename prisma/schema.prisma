@@ -1,9 +1,13 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Default output (node_modules/@prisma/client) on purpose: Vercel's
+// serverless function bundler has first-class, well-tested support for
+// that location. A custom `output` path repeatedly failed to ship the
+// query-engine binary into the deployed function despite matching
+// binaryTargets and explicit output-file-tracing includes.
 generator client {
-  provider      = "prisma-client"
-  output        = "../src/generated/prisma"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
