@@ -54,7 +54,7 @@ async function main() {
       order: 2,
       cardTitle: "Textos del Taller Olas de pleamar",
       description: null,
-      imageUrl: null,
+      imageUrl: "/images/categoria-olas-de-pleamar.png",
     },
     {
       name: "Voces del Sur",
@@ -63,7 +63,7 @@ async function main() {
       cardTitle: "Textos de voces del sur",
       description:
         "Esta sección es parte de nuestro hogar literario que abre sus puertas a la comunidad para intercambiar su escritura, sus ideas, temas, estilos, tonos y miradas. Entre más voces encontremos para compartir más avivaremos las llamas del fuego literario.\n\nAquí no sólo se comparten palabras sino también líneas íntimas, subversivas o intensas. Las que cada participante despliega a través de sus textos poéticos, narrativos, ensayísticos, etc. Un espacio donde las palabras crecen y se transforman juntas.",
-      imageUrl: null,
+      imageUrl: "/images/categoria-voces-del-sur.png",
     },
     {
       name: "Cultura de Paz",
@@ -72,7 +72,7 @@ async function main() {
       cardTitle: 'Círculo de lectura "Nostalgia del paraíso"',
       description:
         'El círculo de lectura "Nostalgia del paraíso" es una comunidad que analiza textos vinculados al tema de "Cultura de Paz", lee, dialoga y actúa desde lo íntimo y lo colectivo, que entiende la fragilidad del ser humano, pero también su fortaleza. Cada análisis de texto es un recordatorio de nuestra postura crítica frente a la violencia, de que debemos mantenernos firmes frente a las fuerzas que deshumanizan y reconocer que la paz no es ausencia de conflicto, sino la posibilidad de transformar la experiencia en palabra, aprendizaje, empatía y encuentro.',
-      imageUrl: null,
+      imageUrl: "/images/categoria-cultura-de-paz.png",
     },
   ];
 
