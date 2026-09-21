@@ -4,6 +4,8 @@ import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [hero, about, categories, posts] = await Promise.all([
     getSiteBlock<{ title: string; buttonText: string; body: string }>("home.hero"),

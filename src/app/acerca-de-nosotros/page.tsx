@@ -2,6 +2,8 @@ import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 
+export const dynamic = "force-dynamic";
+
 export default async function AboutPage() {
   const about = await getSiteBlock<{ bio: string; imageUrl: string }>("home.about");
 
