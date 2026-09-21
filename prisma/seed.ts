@@ -37,6 +37,7 @@ async function main() {
       order: 0,
       cardTitle: "Blog Ángeles Nava",
       description: null,
+      imageUrl: "/images/angeles-nava.jpeg",
     },
     {
       name: "Nostalgia del paraíso",
@@ -45,6 +46,7 @@ async function main() {
       cardTitle: "Textos del Taller: Nostalgia del paraíso",
       description:
         'Este espacio nace con el deseo de difundir la cultura de paz y dar voz a los alumnos del taller de poesía "Nostalgia del Paraíso". Aquí encontrarás un maravilloso universo de letras poéticas y más. Esta es tu casa virtual. La palabra es mía, tuya y de todos.',
+      imageUrl: "/images/categoria-nostalgia-del-paraiso.png",
     },
     {
       name: "Olas de Pleamar",
@@ -52,6 +54,7 @@ async function main() {
       order: 2,
       cardTitle: "Textos del Taller Olas de pleamar",
       description: null,
+      imageUrl: null,
     },
     {
       name: "Voces del Sur",
@@ -60,6 +63,7 @@ async function main() {
       cardTitle: "Textos de voces del sur",
       description:
         "Esta sección es parte de nuestro hogar literario que abre sus puertas a la comunidad para intercambiar su escritura, sus ideas, temas, estilos, tonos y miradas. Entre más voces encontremos para compartir más avivaremos las llamas del fuego literario.\n\nAquí no sólo se comparten palabras sino también líneas íntimas, subversivas o intensas. Las que cada participante despliega a través de sus textos poéticos, narrativos, ensayísticos, etc. Un espacio donde las palabras crecen y se transforman juntas.",
+      imageUrl: null,
     },
     {
       name: "Cultura de Paz",
@@ -68,6 +72,7 @@ async function main() {
       cardTitle: 'Círculo de lectura "Nostalgia del paraíso"',
       description:
         'El círculo de lectura "Nostalgia del paraíso" es una comunidad que analiza textos vinculados al tema de "Cultura de Paz", lee, dialoga y actúa desde lo íntimo y lo colectivo, que entiende la fragilidad del ser humano, pero también su fortaleza. Cada análisis de texto es un recordatorio de nuestra postura crítica frente a la violencia, de que debemos mantenernos firmes frente a las fuerzas que deshumanizan y reconocer que la paz no es ausencia de conflicto, sino la posibilidad de transformar la experiencia en palabra, aprendizaje, empatía y encuentro.',
+      imageUrl: null,
     },
   ];
 
@@ -77,6 +82,7 @@ async function main() {
       update: {
         cardTitle: category.cardTitle,
         description: category.description,
+        imageUrl: category.imageUrl,
       },
       create: category,
     });
@@ -111,7 +117,7 @@ async function main() {
       fields: {
         bio: "Escritora, tallerista y promotora de Cultura de Paz. Me gusta difundir la cultura de paz y acompañar a personas sensibles que buscan en la palabra un espacio de expresión, transformación y encuentro con el mundo.",
         buttonText: "Leer más",
-        imageUrl: "",
+        imageUrl: "/images/angeles-nava.jpeg",
       },
     },
     create: {
@@ -121,7 +127,7 @@ async function main() {
       fields: {
         bio: "Escritora, tallerista y promotora de Cultura de Paz. Me gusta difundir la cultura de paz y acompañar a personas sensibles que buscan en la palabra un espacio de expresión, transformación y encuentro con el mundo.",
         buttonText: "Leer más",
-        imageUrl: "",
+        imageUrl: "/images/angeles-nava.jpeg",
       },
     },
   });
@@ -129,7 +135,7 @@ async function main() {
   const sidebarAuthorFields = {
     name: "Ángeles Nava",
     bio: 'Tallerista, escritora y promotora de Cultura de Paz (mediadora de lectura del programa nacional de salas de lectura).\n\nDiseñé este espacio Nostalgia del Paraíso con el deseo de difundir la cultura de paz y dar voz a mis alumnos del taller: Nostalgia del paraíso, del taller al que pertenezco: Olas de Pleamar y a otras voces que deseen dejar su huella en este espacio literario.\n\nMe defino con una gran sensibilidad y observación para la creación de textos literarios.\n\nMe gusta encontrarme con gente que le interese la lectura, la escritura y generar conversaciones significativas.',
-    avatarUrl: "",
+    avatarUrl: "/images/angeles-nava.jpeg",
   };
 
   await prisma.siteBlock.upsert({

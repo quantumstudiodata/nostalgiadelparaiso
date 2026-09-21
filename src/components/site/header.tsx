@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function SiteHeader() {
   return (
@@ -39,10 +40,15 @@ export function SiteHeader() {
             </svg>
             Iniciar sesión
           </Link>
-          <Link href="/" className="font-serif text-lg text-center leading-tight">
-            Nostalgia
-            <br />
-            del paraíso
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/images/logo.png"
+              alt="Nostalgia del paraíso"
+              width={431}
+              height={178}
+              className="h-11 w-auto"
+              priority
+            />
           </Link>
           <button aria-label="Menú" className="w-10 h-10 shrink-0 rounded-full bg-ink text-white flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
