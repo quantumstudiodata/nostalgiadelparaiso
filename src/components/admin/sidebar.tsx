@@ -27,6 +27,9 @@ export function AdminSidebar({
         <Link href="/admin" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
           Entradas
         </Link>
+        <Link href="/admin/categorias" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
+          Categorías
+        </Link>
         <Link href="/admin/textos" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
           Textos del sitio
         </Link>

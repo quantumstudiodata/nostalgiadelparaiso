@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
+import { BlogSidebar } from "@/components/site/blog-sidebar";
 
 export default async function BlogPage({
   searchParams,
@@ -10,7 +12,7 @@ export default async function BlogPage({
 }) {
   const { categoria } = await searchParams;
 
-  const [categories, posts] = await Promise.all([
+  const [categories, posts, author] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
       include: { _count: { select: { posts: true } } },
@@ -23,6 +25,7 @@ export default async function BlogPage({
       orderBy: { publishedAt: "desc" },
       include: { category: true, author: true },
     }),
+    getSiteBlock<{ name: string; bio: string; avatarUrl: string }>("sidebar.author"),
   ]);
 
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
@@ -32,31 +35,52 @@ export default async function BlogPage({
     <>
       <SiteHeader />
 
-      <section className="px-6 md:px-10 py-12 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-10">
-        <aside>
-          <h2 className="font-serif text-lg mb-4">Categorías</h2>
-          <div className="flex flex-col gap-1 text-sm">
+      {activeCategory && (
+        <section
+          className="grid grid-cols-1 md:grid-cols-2"
+          style={{
+            backgroundImage: activeCategory.imageUrl
+              ? undefined
+              : "linear-gradient(135deg, #0e0e11 0%, #1c1a1f 100%)",
+          }}
+        >
+          <div className="bg-ink text-white min-h-[280px] flex flex-col justify-center px-6 md:px-10 py-14">
+            <h1 className="font-serif text-3xl md:text-4xl leading-tight mb-6">
+              {activeCategory.cardTitle ?? activeCategory.name}
+            </h1>
             <Link
-              href="/blog"
-              className={`py-2 border-b border-neutral-100 ${!categoria ? "font-bold" : ""}`}
+              href="#entradas"
+              className="inline-block bg-[#f5d76e] text-ink text-sm px-6 py-2.5 w-fit"
             >
-              Todos los textos ({totalPosts})
+              Conoce sus entradas
             </Link>
-            {categories.map((c) => (
-              <Link
-                key={c.id}
-                href={`/blog?categoria=${c.slug}`}
-                className={`py-2 border-b border-neutral-100 ${c.slug === categoria ? "font-bold" : ""}`}
-              >
-                {c.name} ({c._count.posts})
-              </Link>
-            ))}
           </div>
-        </aside>
+          {activeCategory.description && (
+            <div className="flex items-center px-6 md:px-10 py-10 text-sm leading-relaxed text-neutral-700 whitespace-pre-line">
+              <div>
+                <h2 className="font-serif text-lg mb-3">
+                  Acerca de {activeCategory.cardTitle ?? activeCategory.name}
+                </h2>
+                {activeCategory.description}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      <section id="entradas" className="site-container px-6 md:px-10 py-12 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10">
+        <BlogSidebar
+          categories={categories}
+          totalPosts={totalPosts}
+          activeSlug={categoria}
+          authorName={author.name || "Ángeles Nava"}
+          authorBio={author.bio}
+          authorAvatarUrl={author.avatarUrl}
+        />
 
         <div>
           <h2 className="font-serif text-2xl mb-6">
-            {activeCategory ? `Entradas de ${activeCategory.name}` : "Lista de todos los textos"}
+            {activeCategory ? `Lista de entradas de ${activeCategory.name}` : "Lista de todos los textos"}
           </h2>
 
           {posts.length === 0 ? (

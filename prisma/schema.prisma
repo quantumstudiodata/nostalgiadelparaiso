@@ -41,6 +41,14 @@ model Category {
   slug  String @unique
   order Int    @default(0)
 
+  // Content shown on the homepage's "leer entradas" card for this
+  // category and on the category's own listing page. Editable from
+  // /admin/categorias; the taxonomy itself (add/remove/reorder
+  // categories) stays a code change.
+  cardTitle   String?
+  description String?
+  imageUrl    String?
+
   posts Post[]
 }
 

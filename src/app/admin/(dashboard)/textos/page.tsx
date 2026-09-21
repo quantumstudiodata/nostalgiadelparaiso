@@ -5,13 +5,15 @@ const FIELD_LABELS: Record<string, { label: string; multiline?: boolean }> = {
   title: { label: "Título principal" },
   buttonText: { label: "Texto del botón" },
   body: { label: "Párrafo de bienvenida", multiline: true },
-  bio: { label: "Biografía corta", multiline: true },
-  imageUrl: { label: "Foto (URL)" },
+  bio: { label: "Biografía", multiline: true },
+  name: { label: "Nombre" },
+  imageUrl: { label: "Foto de portada (URL)" },
+  avatarUrl: { label: "Foto (URL)" },
 };
 
 export default async function SiteTextsPage() {
   const blocks = await prisma.siteBlock.findMany({
-    where: { page: "home" },
+    where: { page: { in: ["home", "blog"] } },
     orderBy: { id: "asc" },
   });
 
