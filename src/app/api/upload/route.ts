@@ -26,6 +26,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
+    console.error("[/api/upload] handleUpload failed:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Error al subir el archivo" },
       { status: 400 },
