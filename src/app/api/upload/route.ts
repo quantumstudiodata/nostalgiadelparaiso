@@ -3,12 +3,24 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  const body = (await request.json()) as HandleUploadBody;
+
+  // Only token generation comes from the browser; the upload-completed callback
+  // comes from Vercel Blob (no session cookie) and is verified by its signature.
+  if (body.type === "blob.generate-client-token") {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
   }
 
-  const body = (await request.json()) as HandleUploadBody;
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token?.startsWith("vercel_blob_rw_")) {
+    console.error(
+      "[/api/upload] BLOB_READ_WRITE_TOKEN is",
+      token ? `malformed (starts with "${token.slice(0, 15)}", length ${token.length})` : "missing at runtime",
+    );
+  }
 
   try {
     const jsonResponse = await handleUpload({
