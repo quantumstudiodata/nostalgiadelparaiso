@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 
@@ -45,9 +46,10 @@ export default async function PostPage({
           </div>
         )}
 
-        <div className="text-[15px] leading-relaxed text-neutral-800 whitespace-pre-line">
-          {post.content}
-        </div>
+        <div
+          className="prose prose-neutral max-w-none text-[15px] leading-relaxed [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
+        />
       </article>
 
       <SiteFooter />

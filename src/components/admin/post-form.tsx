@@ -1,4 +1,6 @@
 import type { Category, Post } from "@prisma/client";
+import { ImageUploadField } from "./image-upload-field";
+import { RichTextEditor } from "./rich-text-editor";
 
 export function PostForm({
   post,
@@ -26,29 +28,17 @@ export function PostForm({
           />
         </div>
 
-        <div>
-          <label className="block text-xs uppercase tracking-wide text-neutral-500 mb-1.5">
-            Imagen destacada (URL)
-          </label>
-          <input
-            name="coverImage"
-            defaultValue={post?.coverImage ?? ""}
-            placeholder="https://..."
-            className="w-full border border-neutral-300 rounded-lg px-3.5 py-2.5 text-sm"
-          />
-        </div>
+        <ImageUploadField
+          name="coverImage"
+          label="Imagen destacada"
+          defaultValue={post?.coverImage ?? ""}
+        />
 
         <div>
           <label className="block text-xs uppercase tracking-wide text-neutral-500 mb-1.5">
             Contenido
           </label>
-          <textarea
-            name="content"
-            required
-            defaultValue={post?.content}
-            rows={14}
-            className="w-full border border-neutral-300 rounded-lg px-3.5 py-3 text-sm leading-relaxed"
-          />
+          <RichTextEditor name="content" defaultValue={post?.content} />
         </div>
       </div>
 

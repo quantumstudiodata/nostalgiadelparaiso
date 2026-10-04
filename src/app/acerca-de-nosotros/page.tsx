@@ -1,10 +1,21 @@
+import { auth } from "@/auth";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
+import { EditableText, EditableImage } from "@/components/site/editable";
+import { updateSiteBlockField } from "@/app/actions/site-content";
 
 export const dynamic = "force-dynamic";
 
+const saveBio = updateSiteBlockField.bind(null, "about.page", "bio");
+const saveMainImage = updateSiteBlockField.bind(null, "about.page", "mainImageUrl");
+const saveGallery1 = updateSiteBlockField.bind(null, "about.page", "galleryImage1Url");
+const saveGallery2 = updateSiteBlockField.bind(null, "about.page", "galleryImage2Url");
+
 export default async function AboutPage() {
+  const session = await auth();
+  const canEdit = !!session?.user;
+
   const about = await getSiteBlock<{
     bio: string;
     mainImageUrl: string;
@@ -24,34 +35,37 @@ export default async function AboutPage() {
               <br />
               detrás de las entradas
             </h1>
-            <div className="text-sm leading-relaxed text-neutral-700 whitespace-pre-line">
-              {about.bio}
-            </div>
+            <EditableText
+              as="div"
+              canEdit={canEdit}
+              multiline
+              value={about.bio}
+              onSave={saveBio}
+              className="text-sm leading-relaxed text-neutral-700"
+            />
           </div>
-          <div className="aspect-[3/4] bg-neutral-100 overflow-hidden">
-            {about.mainImageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={about.mainImageUrl} alt="Ángeles Nava" className="w-full h-full object-cover" />
-            )}
-          </div>
+          <EditableImage
+            canEdit={canEdit}
+            url={about.mainImageUrl ?? ""}
+            onSave={saveMainImage}
+            className="aspect-[3/4] bg-neutral-100 overflow-hidden"
+          />
         </div>
 
-        {(about.galleryImage1Url || about.galleryImage2Url) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl">
-            {about.galleryImage1Url && (
-              <div className="aspect-[4/3] bg-neutral-100 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={about.galleryImage1Url} alt="" className="w-full h-full object-cover" />
-              </div>
-            )}
-            {about.galleryImage2Url && (
-              <div className="aspect-[4/3] bg-neutral-100 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={about.galleryImage2Url} alt="" className="w-full h-full object-cover" />
-              </div>
-            )}
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl">
+          <EditableImage
+            canEdit={canEdit}
+            url={about.galleryImage1Url ?? ""}
+            onSave={saveGallery1}
+            className="aspect-[4/3] bg-neutral-100 overflow-hidden"
+          />
+          <EditableImage
+            canEdit={canEdit}
+            url={about.galleryImage2Url ?? ""}
+            onSave={saveGallery2}
+            className="aspect-[4/3] bg-neutral-100 overflow-hidden"
+          />
+        </div>
       </section>
 
       <SiteFooter />

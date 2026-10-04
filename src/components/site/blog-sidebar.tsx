@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { EditableText, EditableImage } from "@/components/site/editable";
+import { updateSiteBlockField } from "@/app/actions/site-content";
 
 type CategoryWithCount = {
   id: string;
@@ -7,6 +9,10 @@ type CategoryWithCount = {
   _count: { posts: number };
 };
 
+const saveAuthorName = updateSiteBlockField.bind(null, "sidebar.author", "name");
+const saveAuthorBio = updateSiteBlockField.bind(null, "sidebar.author", "bio");
+const saveAuthorAvatar = updateSiteBlockField.bind(null, "sidebar.author", "avatarUrl");
+
 export function BlogSidebar({
   categories,
   totalPosts,
@@ -14,6 +20,7 @@ export function BlogSidebar({
   authorName,
   authorBio,
   authorAvatarUrl,
+  canEdit = false,
 }: {
   categories: CategoryWithCount[];
   totalPosts: number;
@@ -21,6 +28,7 @@ export function BlogSidebar({
   authorName: string;
   authorBio: string;
   authorAvatarUrl?: string | null;
+  canEdit?: boolean;
 }) {
   return (
     <aside className="flex flex-col gap-8">
@@ -59,16 +67,29 @@ export function BlogSidebar({
       </div>
 
       <div className="bg-ink text-white p-5">
-        <h3 className="font-serif text-lg mb-3">{authorName}</h3>
-        {authorAvatarUrl && (
-          <div className="w-24 h-24 rounded-full overflow-hidden mb-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={authorAvatarUrl} alt={authorName} className="w-full h-full object-cover" />
-          </div>
+        <EditableText
+          as="h3"
+          canEdit={canEdit}
+          value={authorName}
+          onSave={saveAuthorName}
+          className="font-serif text-lg mb-3"
+        />
+        {(authorAvatarUrl || canEdit) && (
+          <EditableImage
+            canEdit={canEdit}
+            url={authorAvatarUrl ?? ""}
+            onSave={saveAuthorAvatar}
+            className="w-24 h-24 rounded-full overflow-hidden mb-3"
+          />
         )}
-        <p className="text-xs text-neutral-300 leading-relaxed whitespace-pre-line">
-          {authorBio}
-        </p>
+        <EditableText
+          as="p"
+          canEdit={canEdit}
+          multiline
+          value={authorBio}
+          onSave={saveAuthorBio}
+          className="text-xs text-neutral-300 leading-relaxed"
+        />
       </div>
     </aside>
   );

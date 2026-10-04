@@ -27,13 +27,17 @@ export function AdminSidebar({
         <Link href="/admin" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
           Entradas
         </Link>
-        <Link href="/admin/categorias" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
-          Categorías
-        </Link>
-        <Link href="/admin/textos" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
-          Textos del sitio
+        <Link href="/" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
+          Editar el sitio
+          <span className="ml-auto text-[10px] text-neutral-400">↗</span>
         </Link>
       </nav>
+
+      <div className="mx-5 mb-5 px-3.5 py-3 rounded-lg bg-white/5 text-[11px] text-neutral-400 leading-relaxed">
+        Para editar textos, botones e imágenes de la página, entra a &quot;Editar el
+        sitio&quot; y pasa el cursor sobre lo que quieras cambiar — verás un
+        ícono de lápiz.
+      </div>
 
       <div className="mt-auto px-6 pt-4 border-t border-white/10">
         <div className="flex items-center gap-2.5 mb-3">
