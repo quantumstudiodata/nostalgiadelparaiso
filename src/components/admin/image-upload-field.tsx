@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
+import { uploadImage } from "@/lib/upload-image";
 
 export function ImageUploadField({
   name,
@@ -26,11 +26,7 @@ export function ImageUploadField({
     setUploading(true);
     setError(null);
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
-      });
-      setUrl(blob.url);
+      setUrl(await uploadImage(file));
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo subir la imagen");
     } finally {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
-import { upload } from "@vercel/blob/client";
+import { uploadImage } from "@/lib/upload-image";
 
 function PencilIcon() {
   return (
@@ -390,11 +390,13 @@ export function EditableImage({
     if (!file) return;
     setUploading(true);
     try {
-      const blob = await upload(file.name, file, { access: "public", handleUploadUrl: "/api/upload" });
-      setCurrent(blob.url);
+      const url = await uploadImage(file);
+      setCurrent(url);
       startTransition(async () => {
-        await onSave(blob.url);
+        await onSave(url);
       });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "No se pudo subir la imagen");
     } finally {
       setUploading(false);
       e.target.value = "";
