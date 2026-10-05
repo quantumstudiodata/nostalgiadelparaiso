@@ -27,6 +27,8 @@
   --color-panel: var(--panel);
   --font-sans: var(--font-sans-body);
   --font-serif: var(--font-serif-display);
+  --font-playfair: var(--font-playfair-src);
+  --font-cormorant: var(--font-cormorant-src);
 }
 
 /* Base styles live in a layer so Tailwind utilities (e.g. text-white on a link) win. */

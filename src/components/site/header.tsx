@@ -93,7 +93,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="bg-white border-b border-mist">
+      <div className="bg-white">
         <div className="wrap h-[76px] lg:h-24 flex items-center gap-10 lg:gap-12">
           <Link href="/" className="flex items-center shrink-0">
             <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className="h-11 lg:h-[52px] w-auto" priority />

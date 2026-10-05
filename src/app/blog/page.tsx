@@ -1,27 +1,39 @@
 import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { isManager } from "@/lib/permissions";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { BlogSidebar } from "@/components/site/blog-sidebar";
-import { PostCard } from "@/components/site/post-card";
+import { WixCategories, WixBlackColumn, PostRow } from "@/components/site/wix-blog";
+import { SearchPill } from "@/components/site/search-pill";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export default async function BlogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ categoria?: string; pagina?: string }>;
+  searchParams: Promise<{ categoria?: string; pagina?: string; q?: string }>;
 }) {
-  const { categoria, pagina } = await searchParams;
+  const { categoria, pagina, q } = await searchParams;
   const session = await auth();
   const canEdit = isManager(session?.user?.role);
+  const query = q?.trim();
 
-  const where = {
-    status: "PUBLISHED" as const,
+  const where: Prisma.PostWhereInput = {
+    status: "PUBLISHED",
     ...(categoria ? { category: { slug: categoria } } : {}),
+    ...(query
+      ? {
+          OR: [
+            { title: { contains: query, mode: "insensitive" } },
+            { excerpt: { contains: query, mode: "insensitive" } },
+            { content: { contains: query, mode: "insensitive" } },
+            { author: { name: { contains: query, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
   };
 
   const [categories, total, author] = await Promise.all([
@@ -40,14 +52,20 @@ export default async function BlogPage({
     orderBy: { publishedAt: "desc" },
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
-    include: { category: true, author: true },
+    include: { category: true, author: true, _count: { select: { comments: true } } },
   });
 
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
   const activeCategory = categories.find((c) => c.slug === categoria);
+  const heading = query
+    ? `Resultados para “${query}”`
+    : activeCategory
+      ? `Lista de entradas de ${activeCategory.name}`
+      : "Lista de todos los textos";
   const pageHref = (n: number) => {
     const params = new URLSearchParams();
     if (categoria) params.set("categoria", categoria);
+    if (query) params.set("q", query);
     if (n > 1) params.set("pagina", String(n));
     const qs = params.toString();
     return qs ? `/blog?${qs}` : "/blog";
@@ -57,53 +75,57 @@ export default async function BlogPage({
     <>
       <SiteHeader />
 
-      <div className="wrap pt-12 lg:pt-20 pb-20 lg:pb-28 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-14 lg:gap-16 items-start">
-        <div className="order-2 lg:order-1">
-          <BlogSidebar
-            categories={categories}
-            totalPosts={totalPosts}
-            activeSlug={categoria}
-            authorName={author.name || "Ángeles Nava"}
-            authorBio={author.bio}
-            authorAvatarUrl={author.avatarUrl}
-            canEdit={canEdit}
-          />
-        </div>
-
-        <main className="order-1 lg:order-2">
-          <div className="flex items-baseline justify-between gap-4 border-b border-mist pb-4">
-            <h1 className="font-serif font-semibold text-[26px] lg:text-[32px] leading-tight">
-              {activeCategory ? activeCategory.name : "Todos los textos"}
-            </h1>
-            <span className="text-[15px] text-neutral-600 shrink-0">
-              {total} {total === 1 ? "texto" : "textos"}
-            </span>
+      <div className="max-w-[1040px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)] gap-12 lg:gap-[72px] items-start">
+        <aside className="order-2 lg:order-1 flex flex-col gap-3">
+          <WixCategories categories={categories} totalPosts={totalPosts} activeSlug={categoria} />
+          <SearchPill variant="filled" defaultValue={query} />
+          <div className="mt-6">
+            <WixBlackColumn
+              authorName={author.name || "Ángeles Nava"}
+              authorBio={author.bio}
+              authorAvatarUrl={author.avatarUrl}
+              canEdit={canEdit}
+            />
           </div>
+        </aside>
+
+        <main className="order-1 lg:order-2 min-w-0">
+          <h1 className="font-cormorant font-semibold text-[21px] tracking-[0.04em] mb-3">{heading}</h1>
 
           {posts.length === 0 ? (
-            <p className="mt-8 text-neutral-600">No hay entradas en esta categoría todavía.</p>
+            <p className="text-sm text-neutral-600 border border-mist p-6">
+              {query ? "No encontramos entradas con esa búsqueda." : "No hay entradas en esta categoría todavía."}
+            </p>
           ) : (
-            <div className="mt-9 lg:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-12 lg:gap-y-14">
+            <div className="flex flex-col pt-px">
               {posts.map((post) => (
-                <PostCard key={post.id} post={post} showAuthor={!activeCategory} />
+                <PostRow key={post.id} post={post} />
               ))}
             </div>
           )}
 
           {pageCount > 1 && (
-            <nav aria-label="Páginas" className="mt-12 flex justify-center flex-wrap gap-2 text-[15px]">
+            <nav aria-label="Páginas" className="mt-8 flex justify-center items-center flex-wrap gap-1 text-sm">
+              {page > 1 && (
+                <Link href={pageHref(page - 1)} aria-label="Página anterior" className="w-9 h-9 flex items-center justify-center">
+                  ‹
+                </Link>
+              )}
               {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
                 <Link
                   key={n}
                   href={pageHref(n)}
                   aria-current={n === page ? "page" : undefined}
-                  className={`w-11 h-11 rounded-full flex items-center justify-center ${
-                    n === page ? "bg-ink text-white" : "border border-ink hover:bg-ink hover:text-white"
-                  }`}
+                  className={`w-9 h-9 flex items-center justify-center ${n === page ? "text-accent font-bold" : "hover:text-accent"}`}
                 >
                   {n}
                 </Link>
               ))}
+              {page < pageCount && (
+                <Link href={pageHref(page + 1)} aria-label="Página siguiente" className="w-9 h-9 flex items-center justify-center">
+                  ›
+                </Link>
+              )}
             </nav>
           )}
         </main>

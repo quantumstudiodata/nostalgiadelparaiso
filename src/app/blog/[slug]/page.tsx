@@ -8,9 +8,10 @@ import { sanitizeHtml } from "@/lib/sanitize";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { CategoriesBox, AuthorCard } from "@/components/site/blog-sidebar";
-import { SubscribeForm } from "@/components/site/subscribe-form";
-import { PostCard } from "@/components/site/post-card";
+import { WixCategories, WixBlackColumn } from "@/components/site/wix-blog";
+import { SearchPill } from "@/components/site/search-pill";
+import { LikeButton, PostMenu } from "@/components/site/post-actions";
+import { readingMinutes, shortDate } from "@/lib/reading-time";
 import { CommentForm } from "@/components/site/comment-form";
 import { addComment, deleteComment } from "@/app/actions/community";
 
@@ -61,114 +62,127 @@ export default async function PostPage({
   const authorAvatar = post.author.avatarUrl || (isFounder ? founder.avatarUrl : null);
   const viewer = session?.user;
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
-  const date = post.publishedAt?.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+  const date = shortDate(post.publishedAt);
 
   return (
     <>
       <SiteHeader />
 
-      <div className="wrap pt-12 lg:pt-16 pb-20 lg:pb-28 grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_230px] gap-12 items-start">
-        <aside className="order-3 lg:order-1 flex flex-col gap-6">
-          <SubscribeForm id="suscribirse" />
-          <AuthorCard name={post.author.name} bio={authorBio} avatarUrl={authorAvatar}>
-            <Link
-              href={`/blog?categoria=${post.category.slug}`}
-              className="inline-block mt-5 bg-lilac text-ink rounded-full px-6 py-3 text-[15px] font-medium"
-            >
-              Leer más
-            </Link>
-          </AuthorCard>
+      <div className="max-w-[1120px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)_180px] gap-12 lg:gap-16 items-start">
+        <aside className="order-3 lg:order-1">
+          <WixBlackColumn
+            authorName={post.author.name}
+            authorBio={authorBio}
+            authorAvatarUrl={authorAvatar}
+            editable={false}
+            moreHref={isFounder ? "/acerca-de-nosotros" : `/blog?q=${encodeURIComponent(post.author.name)}`}
+          />
         </aside>
 
         <main className="order-1 lg:order-2 min-w-0">
           <article>
-            <div className="flex items-center gap-3 text-[15px]">
+            <div className="flex items-center gap-2.5">
               {authorAvatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={authorAvatar} alt="" className="w-9 h-9 rounded-full object-cover" />
+                <img src={authorAvatar} alt="" className="w-8 h-8 rounded-full object-cover" />
               ) : (
-                <span className="w-9 h-9 rounded-full bg-mist" />
+                <span className="w-8 h-8 rounded-full bg-lilac" />
               )}
-              <div>
-                <div className="font-medium">{post.author.name}</div>
-                <div className="text-neutral-600 text-sm">{date}</div>
+              <div className="text-[13px] leading-snug">
+                <div>{post.author.name}</div>
+                <div className="text-xs text-neutral-600">
+                  {date} · {readingMinutes(post.content)} min de lectura
+                </div>
               </div>
-              <Link href={`/blog?categoria=${post.category.slug}`} className="ml-auto text-[13px] font-bold tracking-[0.12em] uppercase text-accent-dark">
-                {post.category.name}
-              </Link>
+              <div className="ml-auto">
+                <PostMenu url={`/blog/${post.slug}`} title={post.title} />
+              </div>
             </div>
-            <h1 className="mt-6 font-serif font-semibold text-[30px] lg:text-[40px] leading-[1.15]">{post.title}</h1>
+            <h1 className="mt-5 font-playfair font-bold text-[24px] leading-snug">{post.title}</h1>
 
             {post.coverImage && (
-              <div className="mt-6 rounded-md overflow-hidden bg-mist">
+              <div className="mt-5 overflow-hidden bg-mist">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={post.coverImage} alt="" className="w-full max-h-[520px] object-cover" />
+                <img src={post.coverImage} alt="" className="w-full max-h-[460px] object-cover" />
               </div>
             )}
 
             <div
-              className="post-content mt-8 prose prose-neutral max-w-none text-[17px] leading-[1.8] [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif"
+              className="post-content mt-5 text-[13.5px] leading-[1.65] text-neutral-900 text-justify [&_p]:my-0 [&_p+p]:mt-0 [&_h1]:font-playfair [&_h1]:font-bold [&_h1]:text-xl [&_h1]:my-4 [&_h2]:font-playfair [&_h2]:font-bold [&_h2]:text-lg [&_h2]:my-3 [&_h3]:font-playfair [&_h3]:font-bold [&_h3]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:border-lilac [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:underline"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
             />
+
+            <div className="mt-8 pt-3 border-t border-mist flex items-center justify-between text-xs">
+              <Link href={`/blog?categoria=${post.category.slug}`} className="text-accent">
+                {post.category.name}
+              </Link>
+              <LikeButton postId={post.id} initialLikes={post.likes} />
+            </div>
           </article>
 
           {related.length > 0 && (
-            <section className="mt-20 pt-10 border-t border-mist">
+            <section className="mt-14">
               <div className="flex items-baseline justify-between">
-                <h2 className="font-serif font-semibold text-2xl">Entradas relacionadas</h2>
-                <Link href={`/blog?categoria=${post.category.slug}`} className="text-[15px] underline underline-offset-4">
+                <h2 className="text-[15px]">Entradas relacionadas</h2>
+                <Link href={`/blog?categoria=${post.category.slug}`} className="text-[13px]">
                   Ver todo
                 </Link>
               </div>
-              <div className="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-8">
-                {related.map((r) => (
-                  <PostCard key={r.id} post={r} showAuthor={false} compact />
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {related.slice(0, 2).map((r) => (
+                  <Link key={r.id} href={`/blog/${r.slug}`} className="border border-mist hover:text-accent">
+                    <div className="h-[150px] bg-mist overflow-hidden">
+                      {r.coverImage && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={r.coverImage} alt="" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    <h3 className="px-4 pt-3.5 pb-6 font-playfair font-bold text-[15px] leading-snug">{r.title}</h3>
+                  </Link>
                 ))}
               </div>
             </section>
           )}
 
-          <section id="comentarios" className="mt-20 pt-10 border-t border-mist">
-            <h2 className="font-serif font-semibold text-2xl">
-              Comentarios {post.comments.length > 0 && <span className="text-neutral-500 font-normal">({post.comments.length})</span>}
+          <section id="comentarios" className="mt-14">
+            <h2 className="text-[15px] pb-3 border-b border-mist">
+              Comentarios {post.comments.length > 0 && <span className="text-neutral-500">({post.comments.length})</span>}
             </h2>
 
-            {post.comments.length === 0 && <p className="mt-3 text-[15px] text-neutral-600">Aún no hay comentarios. ¡Sé la primera persona en comentar!</p>}
+            {post.comments.length === 0 && <p className="mt-4 text-[13px] text-neutral-600">Aún no hay comentarios. ¡Sé la primera persona en comentar!</p>}
 
-            <ul className="mt-6 flex flex-col gap-5">
+            <ul className="mt-5 flex flex-col gap-5">
               {post.comments.map((c) => (
                 <li key={c.id} className="flex gap-3">
                   {c.user.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.user.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
+                    <img src={c.user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
                   ) : (
-                    <span className="w-9 h-9 rounded-full bg-lilac shrink-0 flex items-center justify-center text-sm font-medium">
+                    <span className="w-8 h-8 rounded-full bg-lilac shrink-0 flex items-center justify-center text-xs font-medium">
                       {c.user.name.slice(0, 1).toUpperCase()}
                     </span>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 text-[15px]">
+                    <div className="flex items-baseline gap-2 text-[13px]">
                       <span className="font-medium">{c.user.name}</span>
-                      <span className="text-neutral-500 text-xs">
-                        {c.createdAt.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
-                      </span>
+                      <span className="text-neutral-500 text-xs">{shortDate(c.createdAt)}</span>
                       {viewer && (viewer.id === c.user.id || isManager(viewer.role)) && (
                         <form action={deleteComment.bind(null, c.id)} className="ml-auto">
                           <button className="text-xs text-accent-dark hover:underline">Borrar</button>
                         </form>
                       )}
                     </div>
-                    <p className="mt-1 text-base leading-relaxed whitespace-pre-line">{c.body}</p>
+                    <p className="mt-1 text-[13.5px] leading-relaxed whitespace-pre-line">{c.body}</p>
                   </div>
                 </li>
               ))}
             </ul>
 
-            <div className="mt-8">
+            <div className="mt-7">
               {viewer ? (
                 <CommentForm action={addComment.bind(null, post.id)} />
               ) : (
-                <p className="text-[15px] bg-panel rounded-lg p-5">
+                <p className="text-[13px] border border-mist p-4">
                   <Link href="/admin/login" className="font-medium underline underline-offset-4">Inicia sesión</Link> o{" "}
                   <Link href="/registro" className="font-medium underline underline-offset-4">crea una cuenta</Link> para comentar.
                 </p>
@@ -177,8 +191,9 @@ export default async function PostPage({
           </section>
         </main>
 
-        <aside className="order-2 lg:order-3">
-          <CategoriesBox categories={categories} totalPosts={totalPosts} activeSlug={post.category.slug} />
+        <aside className="order-2 lg:order-3 flex flex-col gap-3">
+          <WixCategories categories={categories} totalPosts={totalPosts} activeSlug={post.category.slug} />
+          <SearchPill variant="outline" />
         </aside>
       </div>
 

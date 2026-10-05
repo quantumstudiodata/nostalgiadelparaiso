@@ -73,3 +73,14 @@ export async function deleteComment(commentId: string) {
   await prisma.comment.delete({ where: { id: commentId } });
   revalidatePath(`/blog/${comment.post.slug}`);
 }
+
+/** "Me gusta" counter on a post; the browser remembers whether this visitor already liked it. */
+export async function likePost(postId: string, liked: boolean) {
+  const post = await prisma.post.update({
+    where: { id: postId },
+    data: { likes: liked ? { increment: 1 } : { decrement: 1 } },
+    select: { likes: true },
+  });
+  if (post.likes < 0) await prisma.post.update({ where: { id: postId }, data: { likes: 0 } });
+  return Math.max(0, post.likes);
+}
