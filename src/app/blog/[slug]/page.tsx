@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { slugify } from "@/lib/slug";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
@@ -29,7 +30,16 @@ export default async function PostPage({
     },
   });
 
-  if (!post) notFound();
+  if (!post) {
+    // Wix links use accented slugs (e.g. "límites") and sometimes a "-1" suffix; find the matching post.
+    const plain = slugify(decodeURIComponent(slug));
+    const candidates = [plain, plain.replace(/-\d+$/, "")].filter((c) => c && c !== slug);
+    for (const candidate of candidates) {
+      const match = await prisma.post.findFirst({ where: { slug: candidate, status: "PUBLISHED" }, select: { slug: true } });
+      if (match) permanentRedirect(`/blog/${match.slug}`);
+    }
+    notFound();
+  }
 
   const [session, categories, related, founder] = await Promise.all([
     auth(),
