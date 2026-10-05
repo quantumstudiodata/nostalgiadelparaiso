@@ -11,6 +11,8 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    url: env("DATABASE_URL"),
+    // Migrations need advisory locks, which Neon's pooled (PgBouncer) endpoint doesn't
+    // support reliably, so the CLI uses the direct host. The app keeps DATABASE_URL.
+    url: process.env.DATABASE_URL_UNPOOLED || env("DATABASE_URL").replace("-pooler.", "."),
   },
 });
