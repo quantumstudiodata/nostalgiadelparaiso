@@ -5,51 +5,34 @@ type PostCardPost = {
   title: string;
   excerpt: string | null;
   coverImage: string | null;
+  category: { name: string };
   author: { name: string; avatarUrl: string | null };
 };
 
-/** Horizontal post card (image left, text right) matching the original Wix blog list. */
-export function PostCard({ post }: { post: PostCardPost }) {
+/** Vertical post card: image, category, title, excerpt and author. */
+export function PostCard({ post, showAuthor = true }: { post: PostCardPost; showAuthor?: boolean }) {
   return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="grid grid-cols-1 sm:grid-cols-2 border border-neutral-200 -mt-px bg-white hover:bg-neutral-50 transition-colors"
-    >
-      <div className="relative aspect-[4/3] sm:aspect-auto sm:min-h-[230px] bg-neutral-100 overflow-hidden">
+    <Link href={`/blog/${post.slug}`} className="group flex flex-col">
+      <div className="h-[240px] md:h-[260px] rounded-md bg-mist overflow-hidden">
         {post.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={post.coverImage} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         )}
       </div>
-      <div className="px-9 py-6 flex flex-col">
-        <div className="flex items-center gap-2.5 mb-4 text-[13px]">
+      <div className="mt-[18px] text-xs font-bold tracking-[0.12em] uppercase text-accent-dark">{post.category.name}</div>
+      <h3 className="mt-2 font-serif font-semibold text-[26px] leading-[1.15] group-hover:text-accent-dark">{post.title}</h3>
+      {post.excerpt && <p className="mt-2.5 text-[15px] leading-relaxed text-neutral-700 line-clamp-3">{post.excerpt}</p>}
+      {showAuthor && (
+        <div className="mt-4 flex items-center gap-2.5 text-sm font-medium">
           {post.author.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.author.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+            <img src={post.author.avatarUrl} alt="" className="w-[30px] h-[30px] rounded-full object-cover" />
           ) : (
-            <span className="w-8 h-8 rounded-full bg-neutral-300" />
+            <span className="w-[30px] h-[30px] rounded-full bg-mist" />
           )}
           {post.author.name}
         </div>
-        <h3 className="font-serif font-bold text-[17px] leading-snug mb-3">{post.title}</h3>
-        {post.excerpt && <p className="text-[12px] leading-relaxed text-neutral-700 line-clamp-3">{post.excerpt}</p>}
-        <div className="mt-auto pt-5 border-b border-neutral-300" />
-      </div>
-    </Link>
-  );
-}
-
-/** Vertical post card (image on top) used in the "Entradas recientes" strip. */
-export function PostTile({ post }: { post: Pick<PostCardPost, "slug" | "title" | "coverImage"> }) {
-  return (
-    <Link href={`/blog/${post.slug}`} className="border border-neutral-200 bg-white hover:bg-neutral-50 transition-colors">
-      <div className="aspect-[4/3] bg-neutral-100 overflow-hidden">
-        {post.coverImage && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverImage} alt="" className="w-full h-full object-cover" />
-        )}
-      </div>
-      <h3 className="font-serif font-bold text-[17px] leading-snug px-4 pt-5 pb-12">{post.title}</h3>
+      )}
     </Link>
   );
 }

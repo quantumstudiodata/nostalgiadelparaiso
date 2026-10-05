@@ -14,9 +14,7 @@ async function requireEditor() {
 }
 
 function revalidateSiteContentPaths() {
-  revalidatePath("/");
-  revalidatePath("/blog");
-  revalidatePath("/acerca-de-nosotros");
+  revalidatePath("/", "layout");
 }
 
 export async function updateSiteBlockField(blockId: string, key: string, value: string) {
@@ -77,4 +75,28 @@ export async function updateCategoryField(
 
   await prisma.category.update({ where: { id: categoryId }, data: { [key]: value } });
   revalidateSiteContentPaths();
+}
+
+function normalizeUrl(value: unknown) {
+  const url = String(value ?? "").trim();
+  if (!url) return "";
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+/** Links for the social icons in the site header. An empty link hides its icon. */
+export async function updateSocialLinks(links: { instagram: string; tiktok: string; facebook: string }) {
+  await requireEditor();
+
+  const fields = {
+    instagram: normalizeUrl(links.instagram),
+    tiktok: normalizeUrl(links.tiktok),
+    facebook: normalizeUrl(links.facebook),
+  };
+  await prisma.siteBlock.upsert({
+    where: { id: "site.social" },
+    update: { fields },
+    create: { id: "site.social", page: "site", label: "Redes sociales", fields },
+  });
+  revalidateSiteContentPaths();
+  return fields;
 }

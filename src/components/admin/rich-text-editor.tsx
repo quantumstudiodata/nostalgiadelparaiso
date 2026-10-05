@@ -33,8 +33,8 @@ function ToolbarButton({
       title={label}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={`w-8 h-8 rounded-md flex items-center justify-center text-sm ${
-        active ? "bg-ink text-white" : "hover:bg-neutral-100 text-neutral-700"
+      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm ${
+        active ? "bg-ink text-white" : "hover:bg-panel text-neutral-800"
       }`}
     >
       {children}
@@ -44,7 +44,7 @@ function ToolbarButton({
 
 function Toolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 border-b border-neutral-200 bg-neutral-50">
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 p-1.5 border border-mist rounded-[24px] bg-white">
       <ToolbarButton
         label="Negrita"
         active={editor.isActive("bold")}
@@ -74,11 +74,11 @@ function Toolbar({ editor }: { editor: Editor }) {
         <span style={{ textDecoration: "line-through" }}>S</span>
       </ToolbarButton>
 
-      <div className="w-px h-5 bg-neutral-300 mx-1" />
+      <div className="w-px h-[22px] bg-mist mx-1" />
 
       <select
         aria-label="Tipo de letra"
-        className="text-xs border border-neutral-300 rounded px-1.5 py-1 bg-white"
+        className="text-sm h-9 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const value = e.target.value;
           if (value) editor.chain().focus().setFontFamily(value).run();
@@ -94,7 +94,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <select
         aria-label="Tamaño de texto"
-        className="text-xs border border-neutral-300 rounded px-1.5 py-1 bg-white"
+        className="text-sm h-9 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const level = Number(e.target.value);
           if (!level) editor.chain().focus().setParagraph().run();
@@ -112,7 +112,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         <option value="3">Título pequeño</option>
       </select>
 
-      <div className="w-px h-5 bg-neutral-300 mx-1" />
+      <div className="w-px h-[22px] bg-mist mx-1" />
 
       <ToolbarButton
         label="Alinear a la izquierda"
@@ -151,7 +151,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         </svg>
       </ToolbarButton>
 
-      <div className="w-px h-5 bg-neutral-300 mx-1" />
+      <div className="w-px h-[22px] bg-mist mx-1" />
 
       <ToolbarButton
         label="Lista con viñetas"
@@ -194,7 +194,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none min-h-[280px] px-4 py-3 focus:outline-none [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif",
+          "prose prose-lg max-w-none min-h-[360px] px-1 py-6 font-serif focus:outline-none",
       },
     },
   });
@@ -203,7 +203,7 @@ export function RichTextEditor({
   const html = editor?.getHTML() ?? defaultValue ?? "";
 
   return (
-    <div className="border border-neutral-300 rounded-lg overflow-hidden bg-white">
+    <div className="bg-white">
       {editor && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
       <HiddenSync name={name} editor={editor} fallback={html} />

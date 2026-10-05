@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { PostTile } from "@/components/site/post-card";
+import { PostCard } from "@/components/site/post-card";
 import { EditableText, EditableImage } from "@/components/site/editable";
 import { updateSiteBlockField } from "@/app/actions/site-content";
 
@@ -44,7 +44,7 @@ export default async function AboutPage() {
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
       take: 3,
-      select: { id: true, slug: true, title: true, coverImage: true },
+      include: { category: true, author: true },
     }),
   ]);
 
@@ -52,14 +52,14 @@ export default async function AboutPage() {
     <>
       <SiteHeader />
 
-      <section className="max-w-[960px] mx-auto px-6 pt-10 pb-24">
-        <h1 className="font-serif font-bold text-4xl md:text-[52px] leading-[1.25] mb-4">
+      <section className="max-w-[1100px] mx-auto w-full px-6 pt-16 pb-24">
+        <h1 className="font-serif font-extrabold text-4xl md:text-[64px] leading-[1.05] tracking-[-0.01em] mb-8">
           Conoce el rostro
           <br />
           detrás de las entradas
         </h1>
 
-        <div className="bg-[#eeeeee] grid grid-cols-1 md:grid-cols-2 gap-x-9 gap-y-8 pb-32">
+        <div className="bg-lilac rounded-[10px] overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-x-9 gap-y-8 pb-10">
           <EditableText
             as="div"
             canEdit={canEdit}
@@ -89,8 +89,8 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-mist py-9 px-4">
-        <div className="max-w-[1205px] mx-auto bg-white grid grid-cols-1 md:grid-cols-2">
+      <section className="bg-navy py-12 px-4">
+        <div className="max-w-[1205px] mx-auto bg-white rounded-[10px] overflow-hidden grid grid-cols-1 md:grid-cols-2">
           <EditableImage
             canEdit={canEdit}
             url={nostalgia.imageUrl ?? NOSTALGIA_DEFAULTS.imageUrl}
@@ -103,7 +103,7 @@ export default async function AboutPage() {
               canEdit={canEdit}
               value={nostalgia.title ?? NOSTALGIA_DEFAULTS.title}
               onSave={saveNostalgiaTitle}
-              className="font-serif font-bold text-4xl md:text-[56px] leading-[1.2] mb-6"
+              className="font-serif font-extrabold text-4xl md:text-[56px] leading-[1.05] mb-6"
             />
             <EditableText
               as="div"
@@ -118,11 +118,11 @@ export default async function AboutPage() {
       </section>
 
       {recentPosts.length > 0 && (
-        <section className="max-w-[1000px] mx-auto px-6 pt-14 pb-16">
-          <h2 className="font-serif font-bold text-[22px] tracking-wider mb-3">Entradas recientes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <section className="max-w-[1280px] mx-auto w-full px-6 md:px-14 pt-20 pb-24">
+          <h2 className="font-serif font-semibold text-4xl mb-8">Entradas recientes</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {recentPosts.map((post) => (
-              <PostTile key={post.id} post={post} />
+              <PostCard key={post.id} post={post} />
             ))}
           </div>
         </section>

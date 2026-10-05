@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { signOut } from "@/auth";
+import { AdminNavLinks } from "./admin-nav-links";
 
 export function AdminSidebar({
   name,
@@ -11,48 +13,23 @@ export function AdminSidebar({
   avatarUrl?: string | null;
 }) {
   return (
-    <div className="w-[236px] shrink-0 bg-ink text-white flex flex-col py-7">
-      <div className="px-6 pb-7 border-b border-white/10">
-        <div className="font-serif text-lg leading-tight">
-          Nostalgia
-          <br />
-          del paraíso
+    <aside className="lg:w-[248px] shrink-0 bg-ink text-white flex flex-col px-5 py-5 lg:py-7 lg:min-h-screen">
+      <Link href="/admin" className="block mx-2 mb-5 lg:mb-7">
+        <Image src="/images/logo-blanco.png" alt="Nostalgia del paraíso" width={540} height={244} className="w-[130px] h-auto" />
+      </Link>
+
+      <AdminNavLinks />
+
+      <div className="mt-6 lg:mt-auto flex items-center gap-2.5 px-2 pt-3 border-t border-neutral-800">
+        <div className="w-9 h-9 rounded-full bg-neutral-700 shrink-0 overflow-hidden">
+          {avatarUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+          )}
         </div>
-        <div className="text-[11px] uppercase tracking-wide text-neutral-400 mt-1.5">
-          Panel de edición
-        </div>
-      </div>
-
-      <nav className="py-5 px-3 flex flex-col gap-0.5 text-sm">
-        <Link href="/admin" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
-          Entradas
-        </Link>
-        <Link href="/" className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg hover:bg-white/10">
-          Editar el sitio
-          <span className="ml-auto text-[10px] text-neutral-400">↗</span>
-        </Link>
-      </nav>
-
-      <div className="mx-5 mb-5 px-3.5 py-3 rounded-lg bg-white/5 text-[11px] text-neutral-400 leading-relaxed">
-        Para editar textos, botones e imágenes de la página, entra a &quot;Editar el
-        sitio&quot; y pasa el cursor sobre lo que quieras cambiar — verás un
-        ícono de lápiz.
-      </div>
-
-      <div className="mt-auto px-6 pt-4 border-t border-white/10">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-8 h-8 rounded-full bg-neutral-600 shrink-0 overflow-hidden">
-            {avatarUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-            )}
-          </div>
-          <div>
-            <div className="text-[13px]">{name}</div>
-            <div className="text-[11px] text-neutral-400">
-              {role === "ADMIN" ? "Administrador" : "Editora de contenido"}
-            </div>
-          </div>
+        <div className="flex-1 min-w-0 text-sm">
+          <div className="font-medium truncate">{name}</div>
+          <div className="text-xs text-neutral-400">{role === "ADMIN" ? "Administradora" : "Editora"}</div>
         </div>
         <form
           action={async () => {
@@ -60,11 +37,9 @@ export function AdminSidebar({
             await signOut({ redirectTo: "/admin/login" });
           }}
         >
-          <button className="text-[12px] text-neutral-400 hover:text-white">
-            Cerrar sesión
-          </button>
+          <button className="text-[13px] text-lilac hover:text-white">Salir</button>
         </form>
       </div>
-    </div>
+    </aside>
   );
 }

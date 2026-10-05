@@ -17,36 +17,14 @@ export default async function EditPostPage({
 
   if (!post) notFound();
 
-  const boundUpdate = updatePost.bind(null, post.id);
-  const boundDelete = deletePost.bind(null, post.id);
-
   return (
-    <div className="flex flex-col h-screen">
-      <div className="h-[72px] shrink-0 border-b border-neutral-200 flex items-center justify-between px-8">
-        <div>
-          <h1 className="font-serif text-[20px]">Editar entrada</h1>
-          <div className="text-xs text-neutral-500 mt-0.5">
-            Última edición{" "}
-            {post.updatedAt.toLocaleDateString("es-MX", {
-              day: "numeric",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </div>
-        </div>
-        <form action={boundDelete}>
-          <button className="text-sm text-red-600 px-4 py-2 border border-red-200 rounded-lg hover:bg-red-50">
-            Eliminar entrada
-          </button>
-        </form>
-      </div>
-      <PostForm
-        post={post}
-        categories={categories}
-        action={boundUpdate}
-        submitLabel="Guardar cambios"
-      />
-    </div>
+    <PostForm
+      post={post}
+      categories={categories}
+      action={updatePost.bind(null, post.id)}
+      deleteAction={deletePost.bind(null, post.id)}
+      heading={`Editando “${post.title}”`}
+      submitLabel="Guardar cambios"
+    />
   );
 }

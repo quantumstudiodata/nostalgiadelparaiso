@@ -3,25 +3,30 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1a1a1a;
+  --foreground: #111111;
   --accent: #c0603e;
+  --accent-dark: #a24c2f;
   --lilac: #ddd7e3;
   --ink: #000000;
   --mist: #dcdcdc;
   --slate: #3c3e57;
+  --navy: #1b1a2c;
+  --panel: #f6f5f8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
   --color-lilac: var(--lilac);
   --color-ink: var(--ink);
   --color-mist: var(--mist);
   --color-slate: var(--slate);
+  --color-navy: var(--navy);
+  --color-panel: var(--panel);
   --font-sans: var(--font-sans-body);
   --font-serif: var(--font-serif-display);
-  --font-cormorant: var(--font-cormorant);
 }
 
 /* Base styles live in a layer so Tailwind utilities (e.g. text-white on a link) win. */
@@ -30,7 +35,6 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans-body), system-ui, sans-serif;
-    font-weight: 300;
   }
 
   a {
@@ -43,4 +47,10 @@
   max-width: 1280px;
   margin-inline: auto;
   width: 100%;
+}
+
+.hero-gradient {
+  background-image: url("/images/hero-fondo.jpg");
+  background-size: cover;
+  background-position: center;
 }

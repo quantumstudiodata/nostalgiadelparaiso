@@ -7,7 +7,7 @@ export function ImageUploadField({
   name,
   label,
   defaultValue,
-  aspectClassName = "aspect-video",
+  aspectClassName = "aspect-[16/10]",
 }: {
   name: string;
   label: string;
@@ -37,26 +37,26 @@ export function ImageUploadField({
 
   return (
     <div>
-      <label className="block text-xs uppercase tracking-wide text-neutral-500 mb-1.5">
+      <label className="block text-[15px] font-bold mb-3">
         {label}
       </label>
       <input type="hidden" name={name} value={url} />
 
       {url ? (
-        <div className={`relative rounded-lg overflow-hidden ${aspectClassName} mb-2`}>
+        <div className={`relative rounded-lg overflow-hidden ${aspectClassName} mb-2.5`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="" className="w-full h-full object-cover" />
           <button
             type="button"
             onClick={() => setUrl("")}
-            className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2.5 py-1 rounded"
+            className="absolute top-2 right-2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full"
           >
             Quitar
           </button>
         </div>
       ) : null}
 
-      <label className="flex items-center justify-center gap-2 border border-dashed border-neutral-300 rounded-lg py-3 text-sm text-neutral-600 cursor-pointer hover:bg-neutral-50">
+      <label className="flex items-center justify-center gap-2 border border-ink rounded-full h-11 text-sm cursor-pointer hover:bg-ink hover:text-white">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
           <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />

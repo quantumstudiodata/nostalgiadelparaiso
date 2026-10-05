@@ -1,57 +1,97 @@
 import Link from "next/link";
 import Image from "next/image";
+import { auth, signOut } from "@/auth";
+import { getSocialLinks } from "@/lib/social-links";
 import { SiteMenu } from "@/components/site/site-menu";
+import { NAV_LINKS } from "@/components/site/nav-links";
+import { SocialLinksEditor } from "@/components/site/social-links-editor";
+import { InstagramIcon, TikTokIcon, FacebookIcon, SearchIcon, UserIcon, PencilIcon } from "@/components/site/icons";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const [session, social] = await Promise.all([auth(), getSocialLinks()]);
+  const user = session?.user;
+
+  const socialItems = [
+    { url: social.instagram, label: "Instagram", Icon: InstagramIcon },
+    { url: social.tiktok, label: "TikTok", Icon: TikTokIcon },
+    { url: social.facebook, label: "Facebook", Icon: FacebookIcon },
+  ].filter((s) => s.url);
+
   return (
     <header>
-      <div className="bg-ink text-white h-[45px]">
-        <div className="max-w-[1100px] mx-auto h-full flex items-center px-6 md:px-10 gap-5">
-          <button aria-label="Buscar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <circle cx="10.5" cy="10.5" r="7" />
-              <path d="M21 21l-5.5-5.5" />
-            </svg>
-          </button>
-          <a href="#" aria-label="Instagram" className="w-5 h-5 rounded-full bg-white text-ink flex items-center justify-center">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
-              <rect x="3" y="3" width="18" height="18" rx="5" />
-              <circle cx="12" cy="12" r="4" />
-            </svg>
-          </a>
-          <a href="#" aria-label="TikTok">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M16.6 5.8A4.3 4.3 0 0 1 15.5 3h-3.3v12.4a2.6 2.6 0 1 1-1.8-2.5V9.5a5.9 5.9 0 1 0 5.1 5.9V9a7.6 7.6 0 0 0 4.4 1.4V7.1a4.3 4.3 0 0 1-3.3-1.3Z" />
-            </svg>
-          </a>
-          <a href="#" aria-label="Facebook">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M14 8V6.3c0-.8.2-1.3 1.4-1.3H17V2h-2.6C11.3 2 10.3 3.5 10.3 6v2H8v3h2.3v11H14V11h2.6l.4-3Z" />
-            </svg>
-          </a>
+      {user && (
+        <div className="bg-slate text-white">
+          <div className="max-w-[1280px] mx-auto px-6 md:px-14 py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+            <span className="flex items-center gap-2 font-bold">
+              <PencilIcon size={15} />
+              Modo edición
+            </span>
+            <span className="hidden lg:inline text-lilac">
+              Pasa el cursor sobre cualquier texto o imagen para editarlo. Los cambios se guardan solos.
+            </span>
+            <div className="ml-auto flex items-center gap-3">
+              <Link href="/admin/entradas/nueva" className="border border-white/50 rounded-full px-4 py-1.5">
+                + Nueva entrada
+              </Link>
+              <Link href="/admin" className="border border-white/50 rounded-full px-4 py-1.5">
+                Mis entradas
+              </Link>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/" });
+                }}
+              >
+                <button className="px-1">Salir</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-ink text-white">
+        <div className="max-w-[1280px] mx-auto h-11 px-6 md:px-14 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-[18px]">
+            <Link href="/blog" aria-label="Buscar entradas" className="flex">
+              <SearchIcon />
+            </Link>
+            {socialItems.map(({ url, label, Icon }) => (
+              <a key={label} href={url} target="_blank" rel="noopener noreferrer" aria-label={label} className="flex">
+                <Icon />
+              </a>
+            ))}
+            {user && <SocialLinksEditor links={social} />}
+          </div>
+          {user ? (
+            <span className="flex items-center gap-2">
+              <UserIcon />
+              {user.name}
+            </span>
+          ) : (
+            <Link href="/admin/login" className="flex items-center gap-2">
+              <UserIcon />
+              Iniciar sesión
+            </Link>
+          )}
         </div>
       </div>
-      <div className="bg-white">
-        <div className="max-w-[1100px] mx-auto h-[73px] flex items-center px-6 md:px-10 gap-6">
-          <Link href="/admin/login" className="flex items-center gap-3 text-[15px] text-accent whitespace-nowrap md:w-[260px]">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-ink shrink-0">
-              <circle cx="12" cy="12" r="12" />
-              <circle cx="12" cy="9.5" r="3.6" fill="white" />
-              <path d="M5.5 19.2c1.3-2.6 3.8-4 6.5-4s5.2 1.4 6.5 4a9 9 0 0 1-13 0Z" fill="white" />
-            </svg>
-            <span className="hidden sm:inline">Iniciar sesión</span>
+
+      <div className="bg-white border-b border-mist">
+        <div className="max-w-[1280px] mx-auto h-[88px] px-6 md:px-14 flex items-center gap-10">
+          <Link href="/" className="flex items-center shrink-0">
+            <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className="h-[46px] w-auto" priority />
           </Link>
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/images/logo.png"
-              alt="Nostalgia del paraíso"
-              width={431}
-              height={178}
-              className="h-11 w-auto"
-              priority
-            />
-          </Link>
-          <div className="ml-auto">
+          <nav className="hidden md:flex gap-[30px] text-[15px] font-medium ml-auto">
+            {NAV_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="hover:text-accent">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <a href="#contacto" className="hidden sm:inline-block bg-ink text-white rounded-full px-[22px] py-3 text-sm font-medium ml-auto md:ml-0">
+            Suscribirse
+          </a>
+          <div className="ml-auto sm:ml-0">
             <SiteMenu />
           </div>
         </div>

@@ -30,68 +30,81 @@ export function BlogSidebar({
   authorAvatarUrl?: string | null;
   canEdit?: boolean;
 }) {
+  const items = [
+    { key: "todos", href: "/blog", label: "Todos los textos", count: totalPosts, active: !activeSlug },
+    ...categories.map((c) => ({
+      key: c.id,
+      href: `/blog?categoria=${c.slug}`,
+      label: c.name,
+      count: c._count.posts,
+      active: c.slug === activeSlug,
+    })),
+  ];
+
   return (
-    <aside className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-cormorant font-semibold text-xl tracking-wide mb-4">Categorías</h2>
-        <div className="flex flex-col border border-neutral-200 text-[15px] py-2">
-          <Link href="/blog" className={`px-2 py-3 hover:text-accent ${!activeSlug ? "text-accent" : ""}`}>
-            Todos los textos ({totalPosts})
-          </Link>
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              href={`/blog?categoria=${c.slug}`}
-              className={`px-2 py-3 hover:text-accent ${c.slug === activeSlug ? "text-accent" : ""}`}
-            >
-              {c.name} ({c._count.posts})
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-ink px-4 pt-16 pb-8">
-        <div className="bg-white p-2.5">
-          <h3 className="font-serif font-bold text-[15px] leading-snug text-center mb-2.5">
-            Recibe todas
-            <br />
-            las entradas.
-          </h3>
-          <div className="bg-ink p-2.5 pb-6">
-            <label className="block font-serif italic text-[11px] text-white mb-2">
-              Email <span className="text-neutral-500">*</span>
-            </label>
-            <input type="email" className="w-full bg-white border-2 border-neutral-500 px-2 py-1.5 text-sm mb-6" />
-            <button className="bg-slate text-white font-serif text-sm px-10 py-3">Suscribirse</button>
-          </div>
-        </div>
-
-        <div className="text-white text-center mt-16">
-          <EditableText
-            as="h3"
-            canEdit={canEdit}
-            value={authorName}
-            onSave={saveAuthorName}
-            className="font-serif text-[28px] mb-4"
-          />
-          {(authorAvatarUrl || canEdit) && (
-            <EditableImage
-              canEdit={canEdit}
-              url={authorAvatarUrl ?? ""}
-              onSave={saveAuthorAvatar}
-              className="w-[120px] h-[120px] rounded-full overflow-hidden mx-auto mb-5"
-            />
+    <aside className="flex flex-col gap-7">
+      <div className="border border-mist rounded-lg p-[22px]">
+        <h2 className="font-serif font-semibold text-[22px] mb-3.5">Categorías</h2>
+        <nav className="flex flex-col text-[15px]">
+          {items.map((item) =>
+            item.active ? (
+              <Link
+                key={item.key}
+                href={item.href}
+                aria-current="page"
+                className="flex justify-between px-3 py-2.5 -mx-3 my-1 bg-ink text-white rounded-full"
+              >
+                <span>{item.label}</span>
+                <span>{item.count}</span>
+              </Link>
+            ) : (
+              <Link
+                key={item.key}
+                href={item.href}
+                className="flex justify-between py-2.5 border-b border-neutral-100 last:border-0 hover:text-accent-dark"
+              >
+                <span>{item.label}</span>
+                <span className="text-neutral-500">{item.count}</span>
+              </Link>
+            ),
           )}
-          <EditableText
-            as="p"
-            canEdit={canEdit}
-            multiline
-            value={authorBio}
-            onSave={saveAuthorBio}
-            className="text-[11px] leading-relaxed"
-          />
-        </div>
+        </nav>
       </div>
+
+      <div className="bg-navy text-white rounded-lg p-7 text-center">
+        {(authorAvatarUrl || canEdit) && (
+          <EditableImage
+            canEdit={canEdit}
+            url={authorAvatarUrl ?? ""}
+            onSave={saveAuthorAvatar}
+            className="w-[120px] h-[120px] rounded-full overflow-hidden mx-auto outline-[6px] outline-solid outline-lilac"
+          />
+        )}
+        <EditableText
+          as="h2"
+          canEdit={canEdit}
+          value={authorName}
+          onSave={saveAuthorName}
+          className="font-serif font-semibold text-[28px] mt-[18px]"
+        />
+        <EditableText
+          as="p"
+          canEdit={canEdit}
+          multiline
+          value={authorBio}
+          onSave={saveAuthorBio}
+          className="mt-3 text-sm leading-relaxed text-lilac"
+        />
+      </div>
+
+      <form id="suscribirse" className="bg-lilac rounded-lg p-[22px] flex flex-col gap-2.5">
+        <h2 className="font-serif font-semibold text-xl">Recibe todas las entradas</h2>
+        <label htmlFor="sidebar-email" className="text-[13px] font-medium">Email</label>
+        <input id="sidebar-email" type="email" className="h-11 rounded-md bg-white px-3 text-[15px]" />
+        <button type="submit" className="h-11 rounded-full bg-ink text-white text-sm font-medium">
+          Suscribirse
+        </button>
+      </form>
     </aside>
   );
 }
