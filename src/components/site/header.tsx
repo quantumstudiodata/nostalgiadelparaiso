@@ -28,7 +28,7 @@ export async function SiteHeader() {
     <header>
       {manager && (
         <div className="bg-slate text-white">
-          <div className="max-w-[1280px] mx-auto px-6 md:px-14 py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <div className="wrap py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-2 font-bold">
               <PencilIcon size={15} />
               Modo edición
@@ -52,8 +52,8 @@ export async function SiteHeader() {
       )}
 
       <div className="bg-ink text-white">
-        <div className="max-w-[1280px] mx-auto h-11 px-6 md:px-14 flex items-center justify-between text-sm">
-          <div className="flex items-center gap-[18px]">
+        <div className="wrap h-11 lg:h-12 flex items-center justify-between text-[15px]">
+          <div className="flex items-center gap-5 lg:gap-[22px]">
             <Link href="/blog" aria-label="Buscar entradas" className="flex">
               <SearchIcon />
             </Link>
@@ -94,18 +94,18 @@ export async function SiteHeader() {
       </div>
 
       <div className="bg-white border-b border-mist">
-        <div className="max-w-[1280px] mx-auto h-[88px] px-6 md:px-14 flex items-center gap-10">
+        <div className="wrap h-[76px] lg:h-24 flex items-center gap-10 lg:gap-12">
           <Link href="/" className="flex items-center shrink-0">
-            <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className="h-[46px] w-auto" priority />
+            <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className="h-11 lg:h-[52px] w-auto" priority />
           </Link>
-          <nav className="hidden md:flex gap-[30px] text-[15px] font-medium ml-auto">
+          <nav className="hidden md:flex gap-8 lg:gap-10 text-base font-medium ml-auto">
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="hover:text-accent">
                 {link.label}
               </Link>
             ))}
           </nav>
-          <a href="#contacto" className="hidden sm:inline-block bg-ink text-white rounded-full px-[22px] py-3 text-sm font-medium ml-auto md:ml-0">
+          <a href="#contacto" className="hidden sm:inline-block bg-ink text-white rounded-full px-6 py-3.5 text-[15px] font-medium ml-auto md:ml-0">
             Suscribirse
           </a>
           <div className="ml-auto sm:ml-0">

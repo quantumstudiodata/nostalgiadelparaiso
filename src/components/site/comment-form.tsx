@@ -13,10 +13,10 @@ export function CommentForm({ action }: { action: (prev: FormState, formData: Fo
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-2.5">
-      <label htmlFor="comment-body" className="text-sm font-medium">Deja un comentario</label>
-      <textarea id="comment-body" name="body" required rows={4} maxLength={3000} className="border border-mist rounded-lg px-3 py-2.5 text-[15px]" />
+      <label htmlFor="comment-body" className="text-base font-medium">Deja un comentario</label>
+      <textarea id="comment-body" name="body" required rows={4} maxLength={3000} className="border border-mist rounded-lg px-4 py-3 text-base" />
       {state.error && <p className="text-sm text-red-700" role="alert">{state.error}</p>}
-      <button type="submit" disabled={pending} className="self-start bg-ink text-white rounded-full px-6 py-2.5 text-sm font-medium disabled:opacity-60">
+      <button type="submit" disabled={pending} className="self-start bg-ink text-white rounded-full px-7 py-3 text-base font-medium disabled:opacity-60">
         {pending ? "Publicando..." : "Publicar comentario"}
       </button>
     </form>

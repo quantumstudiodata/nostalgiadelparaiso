@@ -17,7 +17,7 @@ export function SocialLinksForm({ links }: { links: SocialLinks }) {
 
   return (
     <form
-      className="mt-5 bg-white rounded-[10px] p-5 flex flex-col gap-3.5 text-[13px]"
+      className="mt-5 bg-white rounded-[10px] p-5 flex flex-col gap-3.5 text-[15px]"
       onSubmit={(e) => {
         e.preventDefault();
         setMessage(null);
@@ -41,7 +41,7 @@ export function SocialLinksForm({ links }: { links: SocialLinks }) {
             value={draft[f.key]}
             placeholder={f.placeholder}
             onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
-            className="h-9 border border-neutral-300 rounded-md px-2.5"
+            className="h-10 border border-neutral-300 rounded-md px-2.5"
           />
         </div>
       ))}

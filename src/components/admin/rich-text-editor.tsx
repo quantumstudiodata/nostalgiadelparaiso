@@ -35,7 +35,7 @@ function ToolbarButton({
       title={label}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] ${
+      className={`w-9 h-9 rounded-full flex items-center justify-center text-[15px] ${
         active ? "bg-ink text-white" : "hover:bg-panel text-neutral-800"
       }`}
     >
@@ -72,7 +72,7 @@ function ImageButton({ editor }: { editor: Editor }) {
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="h-8 px-3 rounded-full flex items-center gap-1.5 text-[13px] hover:bg-panel disabled:opacity-60"
+        className="h-9 px-3 rounded-full flex items-center gap-1.5 text-[15px] hover:bg-panel disabled:opacity-60"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -97,7 +97,7 @@ function ImageControls({ editor }: { editor: Editor }) {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 mt-2 px-3 py-2 rounded-[18px] bg-lilac text-[13px]">
+    <div className="flex flex-wrap items-center gap-1.5 mt-2 px-3 py-2 rounded-[18px] bg-lilac text-[15px]">
       <span className="font-medium mr-1">Imagen:</span>
       {options.map((o) => (
         <button
@@ -105,7 +105,7 @@ function ImageControls({ editor }: { editor: Editor }) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setAlign(o.value)}
-          className={`h-8 px-3 rounded-full ${attrs.align === o.value ? "bg-ink text-white" : "bg-white"}`}
+          className={`h-9 px-3 rounded-full ${attrs.align === o.value ? "bg-ink text-white" : "bg-white"}`}
         >
           {o.label}
         </button>
@@ -115,7 +115,7 @@ function ImageControls({ editor }: { editor: Editor }) {
         <select
           value={attrs.width ?? "100%"}
           onChange={(e) => editor.chain().focus().updateAttributes("image", { width: e.target.value }).run()}
-          className="h-8 rounded-full px-2 bg-white"
+          className="h-9 rounded-full px-2 bg-white"
         >
           {IMAGE_WIDTHS.map((w) => (
             <option key={w} value={w}>{w}</option>
@@ -126,11 +126,11 @@ function ImageControls({ editor }: { editor: Editor }) {
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => editor.chain().focus().deleteSelection().run()}
-        className="h-8 px-3 rounded-full bg-white text-accent-dark ml-auto"
+        className="h-9 px-3 rounded-full bg-white text-accent-dark ml-auto"
       >
         Quitar imagen
       </button>
-      <span className="basis-full text-xs text-slate">Consejo: arrastra la imagen para moverla a otra parte del texto.</span>
+      <span className="basis-full text-[13px] text-slate">Consejo: arrastra la imagen para moverla a otra parte del texto.</span>
     </div>
   );
 }
@@ -172,7 +172,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <select
         aria-label="Tipo de letra"
-        className="text-[13px] h-8 rounded-full px-3 bg-panel"
+        className="text-[15px] h-9 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const value = e.target.value;
           if (value) editor.chain().focus().setFontFamily(value).run();
@@ -188,7 +188,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <select
         aria-label="Tamaño de texto"
-        className="text-[13px] h-8 rounded-full px-3 bg-panel"
+        className="text-[15px] h-9 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const level = Number(e.target.value);
           if (!level) editor.chain().focus().setParagraph().run();

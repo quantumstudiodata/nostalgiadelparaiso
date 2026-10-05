@@ -57,7 +57,7 @@ export default async function BlogPage({
     <>
       <SiteHeader />
 
-      <div className="max-w-[1280px] mx-auto w-full px-6 md:px-14 pt-16 pb-24 grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] gap-14 items-start">
+      <div className="wrap pt-12 lg:pt-20 pb-20 lg:pb-28 grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-14 lg:gap-16 items-start">
         <div className="order-2 lg:order-1">
           <BlogSidebar
             categories={categories}
@@ -72,10 +72,10 @@ export default async function BlogPage({
 
         <main className="order-1 lg:order-2">
           <div className="flex items-baseline justify-between gap-4 border-b border-mist pb-4">
-            <h1 className="font-serif font-semibold text-2xl leading-tight">
+            <h1 className="font-serif font-semibold text-[26px] lg:text-[32px] leading-tight">
               {activeCategory ? activeCategory.name : "Todos los textos"}
             </h1>
-            <span className="text-sm text-neutral-600 shrink-0">
+            <span className="text-[15px] text-neutral-600 shrink-0">
               {total} {total === 1 ? "texto" : "textos"}
             </span>
           </div>
@@ -83,7 +83,7 @@ export default async function BlogPage({
           {posts.length === 0 ? (
             <p className="mt-8 text-neutral-600">No hay entradas en esta categoría todavía.</p>
           ) : (
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10">
+            <div className="mt-9 lg:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-12 lg:gap-y-14">
               {posts.map((post) => (
                 <PostCard key={post.id} post={post} showAuthor={!activeCategory} />
               ))}

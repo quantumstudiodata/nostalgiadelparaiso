@@ -67,13 +67,13 @@ export default async function PostPage({
     <>
       <SiteHeader />
 
-      <div className="max-w-[1280px] mx-auto w-full px-6 md:px-10 pt-12 pb-20 grid grid-cols-1 lg:grid-cols-[250px_minmax(0,1fr)_220px] gap-10 items-start">
+      <div className="wrap pt-12 lg:pt-16 pb-20 lg:pb-28 grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_230px] gap-12 items-start">
         <aside className="order-3 lg:order-1 flex flex-col gap-6">
           <SubscribeForm id="suscribirse" />
           <AuthorCard name={post.author.name} bio={authorBio} avatarUrl={authorAvatar}>
             <Link
               href={`/blog?categoria=${post.category.slug}`}
-              className="inline-block mt-5 bg-lilac text-ink rounded-full px-5 py-2.5 text-sm font-medium"
+              className="inline-block mt-5 bg-lilac text-ink rounded-full px-6 py-3 text-[15px] font-medium"
             >
               Leer más
             </Link>
@@ -82,7 +82,7 @@ export default async function PostPage({
 
         <main className="order-1 lg:order-2 min-w-0">
           <article>
-            <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-3 text-[15px]">
               {authorAvatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={authorAvatar} alt="" className="w-9 h-9 rounded-full object-cover" />
@@ -91,13 +91,13 @@ export default async function PostPage({
               )}
               <div>
                 <div className="font-medium">{post.author.name}</div>
-                <div className="text-neutral-600 text-[13px]">{date}</div>
+                <div className="text-neutral-600 text-sm">{date}</div>
               </div>
-              <Link href={`/blog?categoria=${post.category.slug}`} className="ml-auto text-[11px] font-bold tracking-[0.12em] uppercase text-accent-dark">
+              <Link href={`/blog?categoria=${post.category.slug}`} className="ml-auto text-[13px] font-bold tracking-[0.12em] uppercase text-accent-dark">
                 {post.category.name}
               </Link>
             </div>
-            <h1 className="mt-5 font-serif font-semibold text-[30px] md:text-[36px] leading-tight">{post.title}</h1>
+            <h1 className="mt-6 font-serif font-semibold text-[30px] lg:text-[40px] leading-[1.15]">{post.title}</h1>
 
             {post.coverImage && (
               <div className="mt-6 rounded-md overflow-hidden bg-mist">
@@ -107,20 +107,20 @@ export default async function PostPage({
             )}
 
             <div
-              className="post-content mt-7 prose prose-neutral max-w-none text-[16px] leading-relaxed [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif"
+              className="post-content mt-8 prose prose-neutral max-w-none text-[17px] leading-[1.8] [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
             />
           </article>
 
           {related.length > 0 && (
-            <section className="mt-16 pt-8 border-t border-mist">
+            <section className="mt-20 pt-10 border-t border-mist">
               <div className="flex items-baseline justify-between">
-                <h2 className="font-serif font-semibold text-xl">Entradas relacionadas</h2>
-                <Link href={`/blog?categoria=${post.category.slug}`} className="text-sm underline underline-offset-4">
+                <h2 className="font-serif font-semibold text-2xl">Entradas relacionadas</h2>
+                <Link href={`/blog?categoria=${post.category.slug}`} className="text-[15px] underline underline-offset-4">
                   Ver todo
                 </Link>
               </div>
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-8">
                 {related.map((r) => (
                   <PostCard key={r.id} post={r} showAuthor={false} compact />
                 ))}
@@ -128,12 +128,12 @@ export default async function PostPage({
             </section>
           )}
 
-          <section id="comentarios" className="mt-16 pt-8 border-t border-mist">
-            <h2 className="font-serif font-semibold text-xl">
+          <section id="comentarios" className="mt-20 pt-10 border-t border-mist">
+            <h2 className="font-serif font-semibold text-2xl">
               Comentarios {post.comments.length > 0 && <span className="text-neutral-500 font-normal">({post.comments.length})</span>}
             </h2>
 
-            {post.comments.length === 0 && <p className="mt-3 text-sm text-neutral-600">Aún no hay comentarios. ¡Sé la primera persona en comentar!</p>}
+            {post.comments.length === 0 && <p className="mt-3 text-[15px] text-neutral-600">Aún no hay comentarios. ¡Sé la primera persona en comentar!</p>}
 
             <ul className="mt-6 flex flex-col gap-5">
               {post.comments.map((c) => (
@@ -147,7 +147,7 @@ export default async function PostPage({
                     </span>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 text-sm">
+                    <div className="flex items-baseline gap-2 text-[15px]">
                       <span className="font-medium">{c.user.name}</span>
                       <span className="text-neutral-500 text-xs">
                         {c.createdAt.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
@@ -158,7 +158,7 @@ export default async function PostPage({
                         </form>
                       )}
                     </div>
-                    <p className="mt-1 text-[15px] leading-relaxed whitespace-pre-line">{c.body}</p>
+                    <p className="mt-1 text-base leading-relaxed whitespace-pre-line">{c.body}</p>
                   </div>
                 </li>
               ))}
@@ -168,7 +168,7 @@ export default async function PostPage({
               {viewer ? (
                 <CommentForm action={addComment.bind(null, post.id)} />
               ) : (
-                <p className="text-sm bg-panel rounded-lg p-4">
+                <p className="text-[15px] bg-panel rounded-lg p-5">
                   <Link href="/admin/login" className="font-medium underline underline-offset-4">Inicia sesión</Link> o{" "}
                   <Link href="/registro" className="font-medium underline underline-offset-4">crea una cuenta</Link> para comentar.
                 </p>

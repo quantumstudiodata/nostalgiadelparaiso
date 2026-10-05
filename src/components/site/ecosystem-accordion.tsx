@@ -108,7 +108,7 @@ export function EcosystemAccordion({
                 type="button"
                 aria-expanded={open}
                 onClick={() => setOpenId(open ? null : item.id)}
-                className="flex-1 flex items-center justify-between gap-4 py-3.5 text-left text-base hover:text-lilac"
+                className="flex-1 flex items-center justify-between gap-4 py-4 lg:py-[18px] text-left text-base lg:text-[17px] hover:text-lilac"
               >
                 <span>{item.title}</span>
                 <span className="flex items-center gap-3 text-sm">
@@ -132,9 +132,9 @@ export function EcosystemAccordion({
             ) : (
               <div className={`grid transition-[grid-template-rows] duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                 <div className="overflow-hidden">
-                  <Link href={item.url || "/blog"} className="block pb-4 text-sm leading-relaxed text-white/85 hover:text-white">
+                  <Link href={item.url || "/blog"} className="block pb-[18px] text-[15px] lg:text-base leading-relaxed text-white/85 hover:text-white">
                     {item.description}
-                    <span className="block mt-2 font-medium text-lilac">Ver sus entradas →</span>
+                    <span className="block mt-2 text-[15px] font-medium text-lilac">Ver sus entradas →</span>
                   </Link>
                 </div>
               </div>

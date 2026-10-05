@@ -53,8 +53,8 @@ export default async function AboutPage() {
     <>
       <SiteHeader />
 
-      <section className="max-w-[1100px] mx-auto w-full px-6 pt-16 pb-24">
-        <h1 className="font-serif font-extrabold text-4xl md:text-[64px] leading-[1.05] tracking-[-0.01em] mb-8">
+      <section className="wrap pt-12 lg:pt-20 pb-20 lg:pb-28">
+        <h1 className="font-serif font-extrabold text-[34px] lg:text-[52px] leading-[1.08] tracking-[-0.01em] mb-8 lg:mb-10">
           Conoce el rostro
           <br />
           detrás de las entradas
@@ -67,7 +67,7 @@ export default async function AboutPage() {
             multiline
             value={about.bio}
             onSave={saveBio}
-            className="text-[15px] leading-snug text-black px-8 md:pl-10 md:pr-4 pt-12"
+            className="text-[17px] leading-[1.75] text-black px-6 md:pl-10 md:pr-4 pt-8 md:pt-12"
           />
           <EditableImage
             canEdit={canEdit}
@@ -90,21 +90,21 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-navy py-12 px-4">
-        <div className="max-w-[1205px] mx-auto bg-white rounded-[10px] overflow-hidden grid grid-cols-1 md:grid-cols-2">
+      <section className="bg-navy py-12 lg:py-20 px-5 md:px-10">
+        <div className="max-w-[1200px] mx-auto bg-white rounded-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
           <EditableImage
             canEdit={canEdit}
             url={nostalgia.imageUrl ?? NOSTALGIA_DEFAULTS.imageUrl}
             onSave={saveNostalgiaImage}
             className="min-h-[420px] bg-neutral-300 overflow-hidden"
           />
-          <div className="px-8 md:px-[95px] py-14 md:pt-[85px] md:pb-6">
+          <div className="px-6 md:px-14 lg:px-20 py-12 md:py-16">
             <EditableText
               as="h2"
               canEdit={canEdit}
               value={nostalgia.title ?? NOSTALGIA_DEFAULTS.title}
               onSave={saveNostalgiaTitle}
-              className="font-serif font-extrabold text-4xl md:text-[56px] leading-[1.05] mb-6"
+              className="font-serif font-extrabold text-[32px] lg:text-[46px] leading-[1.08] mb-6"
             />
             <EditableText
               as="div"
@@ -112,16 +112,16 @@ export default async function AboutPage() {
               multiline
               value={nostalgia.body ?? NOSTALGIA_DEFAULTS.body}
               onSave={saveNostalgiaBody}
-              className="text-[15px] leading-[1.9] text-neutral-900"
+              className="text-[17px] leading-[1.8] text-neutral-900"
             />
           </div>
         </div>
       </section>
 
       {recentPosts.length > 0 && (
-        <section className="max-w-[1280px] mx-auto w-full px-6 md:px-14 pt-20 pb-24">
-          <h2 className="font-serif font-semibold text-4xl mb-8">Entradas recientes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <section className="wrap pt-20 lg:pt-28 pb-20 lg:pb-28">
+          <h2 className="font-serif font-semibold text-[28px] lg:text-[40px] mb-8 lg:mb-12">Entradas recientes</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-12 gap-y-12">
             {recentPosts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}

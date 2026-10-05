@@ -37,9 +37,9 @@ export function CategoriesBox({
   ];
 
   return (
-    <div className="border border-mist rounded-lg p-5">
-      <h2 className="font-serif font-semibold text-xl mb-3">Categorías</h2>
-      <nav className="flex flex-col text-sm">
+    <div className="border border-mist rounded-lg p-6">
+      <h2 className="font-serif font-semibold text-[22px] mb-3">Categorías</h2>
+      <nav className="flex flex-col text-[15px]">
         {items.map((item) =>
           item.active ? (
             <Link
@@ -85,7 +85,7 @@ export function AuthorCard({
 }) {
   const edit = canEdit && editable;
   return (
-    <div className="bg-navy text-white rounded-lg p-6 text-center">
+    <div className="bg-navy text-white rounded-lg p-7 text-center">
       {(avatarUrl || edit) &&
         (edit ? (
           <EditableImage
@@ -99,14 +99,14 @@ export function AuthorCard({
           <img src={avatarUrl!} alt="" className="w-[110px] h-[110px] rounded-full object-cover mx-auto outline-[6px] outline-solid outline-lilac" />
         ))}
       {edit ? (
-        <EditableText as="h2" canEdit value={name} onSave={saveAuthorName} className="font-serif font-semibold text-2xl mt-4" />
+        <EditableText as="h2" canEdit value={name} onSave={saveAuthorName} className="font-serif font-semibold text-[26px] mt-4" />
       ) : (
-        <h2 className="font-serif font-semibold text-2xl mt-4">{name}</h2>
+        <h2 className="font-serif font-semibold text-[26px] mt-4">{name}</h2>
       )}
       {edit ? (
-        <EditableText as="p" canEdit multiline value={bio} onSave={saveAuthorBio} className="mt-3 text-[13px] leading-relaxed text-lilac" />
+        <EditableText as="p" canEdit multiline value={bio} onSave={saveAuthorBio} className="mt-3 text-[15px] leading-relaxed text-lilac" />
       ) : (
-        bio && <p className="mt-3 text-[13px] leading-relaxed text-lilac whitespace-pre-line">{bio}</p>
+        bio && <p className="mt-3 text-[15px] leading-relaxed text-lilac whitespace-pre-line">{bio}</p>
       )}
       {children}
     </div>

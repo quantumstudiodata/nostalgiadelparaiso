@@ -103,12 +103,12 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      {/* Hero: full-width lilac banner, title left, gradient card with the workshops right */}
-      <section className="bg-lilac rounded-b-[10px]">
-        <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-0 px-6 lg:pl-0 lg:pr-10 py-10 lg:min-h-[640px]">
-          <div className="lg:col-span-7 lg:px-14 pt-6 lg:pt-14 pb-4">
-            <div className="inline-flex items-center gap-2.5 text-[13px] font-bold tracking-[0.12em] uppercase text-accent-dark">
-              <span className="w-7 h-0.5 bg-accent-dark hero-line" />
+      {/* Hero: full-width lilac banner, title left, gradient card with the communities right */}
+      <section className="bg-lilac rounded-b-xl">
+        <div className="wrap grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pt-12 pb-7 lg:py-24">
+          <div className="lg:col-span-7">
+            <div className="inline-flex items-center gap-3 text-[13px] lg:text-sm font-bold tracking-[0.14em] uppercase text-accent-dark">
+              <span className="w-7 lg:w-8 h-0.5 bg-accent-dark hero-line" />
               Ecosistema cultural
             </div>
             {canEdit ? (
@@ -117,12 +117,12 @@ export default async function HomePage() {
                 canEdit
                 value={hero.title}
                 onSave={saveHeroTitle}
-                className="mt-[22px] font-serif font-extrabold text-[52px] sm:text-[72px] lg:text-[92px] leading-[0.95] tracking-[-0.02em]"
+                className="mt-5 lg:mt-7 font-serif font-extrabold text-[42px] sm:text-[60px] lg:text-[76px] leading-[1.03] tracking-[-0.02em]"
               />
             ) : (
               <AnimatedTitle
                 text={hero.title}
-                className="mt-[22px] font-serif font-extrabold text-[52px] sm:text-[72px] lg:text-[92px] leading-[0.95] tracking-[-0.02em]"
+                className="mt-5 lg:mt-7 font-serif font-extrabold text-[42px] sm:text-[60px] lg:text-[76px] leading-[1.03] tracking-[-0.02em]"
               />
             )}
             <EditableText
@@ -131,33 +131,33 @@ export default async function HomePage() {
               multiline
               value={hero.subtitle ?? HERO_SUBTITLE_DEFAULT}
               onSave={saveHeroSubtitle}
-              className="mt-7 max-w-[480px] text-[17px] leading-relaxed text-neutral-800 hero-fade"
+              className="mt-5 lg:mt-8 max-w-[540px] text-[17px] lg:text-[19px] leading-relaxed text-neutral-800 hero-fade"
             />
-            <div className="mt-9 flex flex-wrap items-center gap-3.5">
+            <div className="mt-7 lg:mt-10 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3.5">
               <EditableButton
                 canEdit={canEdit}
                 text={hero.buttonText}
                 url={hero.buttonUrl || "/blog"}
                 onSave={saveHeroButton}
-                className="inline-block bg-ink text-white rounded-full px-7 py-4 text-[15px] font-medium"
+                className="block sm:inline-block text-center bg-ink text-white rounded-full px-8 py-4 text-[17px] font-medium"
               />
               <EditableButtonList
                 canEdit={canEdit}
                 buttons={hero.buttons ?? []}
                 onSave={saveHeroExtraButtons}
-                buttonClassName="inline-block border-[1.5px] border-ink rounded-full px-7 py-[15px] text-[15px] font-medium"
+                buttonClassName="inline-block border-[1.5px] border-ink rounded-full px-8 py-[15px] text-[17px] font-medium"
               />
             </div>
           </div>
 
-          <div className="lg:col-span-5 relative rounded-md overflow-hidden min-h-[420px] text-white">
+          <div className="lg:col-span-5 relative rounded-lg overflow-hidden lg:min-h-[480px] text-white">
             <div className="absolute inset-0">
               <EditableImage canEdit={canEdit} url={hero.imageUrl ?? ""} onSave={saveHeroImage} className="w-full h-full">
                 <div className="w-full h-full hero-gradient" />
               </EditableImage>
             </div>
-            <div className="relative h-full flex flex-col justify-end p-7 lg:p-10 pointer-events-none">
-              <div className="font-serif italic text-xl mb-4">En este ecosistema conviven</div>
+            <div className="relative h-full flex flex-col justify-end px-[22px] py-7 lg:p-10 pointer-events-none lg:min-h-[480px]">
+              <div className="font-serif italic text-[21px] mb-3 lg:mb-4">En este ecosistema conviven</div>
               <div className="pointer-events-auto">
                 <EcosystemAccordion
                   items={ecosystemItems}
@@ -172,24 +172,26 @@ export default async function HomePage() {
       </section>
 
       {/* Recent posts */}
-      <section className="max-w-[1280px] mx-auto w-full px-6 md:px-14 pt-20">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <h2 className="font-serif font-semibold text-3xl md:text-[36px] tracking-[-0.01em]">Entradas recientes</h2>
-          <div className="flex flex-wrap gap-2.5 lg:justify-end">
-            <Link href="/blog" className="bg-ink text-white rounded-full px-[18px] py-2.5 text-sm">
-              Todos ({totalPosts})
+      <section className="wrap pt-[72px] lg:pt-[120px]">
+        <h2 className="font-serif font-semibold text-[28px] lg:text-[40px] leading-tight">Entradas recientes</h2>
+        <div className="mt-[18px] lg:mt-6 flex flex-wrap gap-2 lg:gap-3 text-sm lg:text-[15px]">
+          <Link href="/blog" className="bg-ink text-white rounded-full px-3.5 lg:px-5 py-2 lg:py-2.5">
+            Todos ({totalPosts})
+          </Link>
+          {categories.map((c) => (
+            <Link
+              key={c.id}
+              href={`/blog?categoria=${c.slug}`}
+              className="border border-ink rounded-full px-3.5 lg:px-5 py-[7px] lg:py-[9px] hover:bg-ink hover:text-white"
+            >
+              {c.name} ({c._count.posts})
             </Link>
-            {categories.map((c) => (
-              <Link key={c.id} href={`/blog?categoria=${c.slug}`} className="border border-ink rounded-full px-[18px] py-[9px] text-sm hover:bg-ink hover:text-white">
-                {c.name} ({c._count.posts})
-              </Link>
-            ))}
-          </div>
+          ))}
         </div>
         {posts.length === 0 ? (
           <p className="mt-10 text-neutral-600">Aún no hay entradas publicadas.</p>
         ) : (
-          <div className="mt-11 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 gap-y-12">
+          <div className="mt-9 lg:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-12 lg:gap-y-16">
             {posts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
@@ -198,20 +200,20 @@ export default async function HomePage() {
       </section>
 
       {/* Workshops and community voices */}
-      <section id="talleres" className="mt-[104px] bg-navy text-white px-6 md:px-14 py-[88px]">
-        <div className="max-w-[1168px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8">
-          <h2 className="lg:col-span-4 font-serif italic text-3xl md:text-4xl leading-[1.1]">Talleres y voces de la comunidad</h2>
-          <div className="lg:col-start-6 lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <section id="talleres" className="mt-20 lg:mt-32 bg-navy text-white">
+        <div className="wrap py-[72px] lg:py-28 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          <h2 className="lg:col-span-4 font-serif italic text-[29px] lg:text-[38px] leading-[1.15]">Talleres y voces de la comunidad</h2>
+          <div className="lg:col-start-6 lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
             {workshops.map((c) => {
               const saveCardTitle = updateCategoryField.bind(null, c.id, "cardTitle");
               const saveCardImage = updateCategoryField.bind(null, c.id, "imageUrl");
               return (
-                <div key={c.id} className="flex gap-[18px] items-center bg-white/[0.06] rounded-md p-3.5">
+                <div key={c.id} className="flex gap-4 lg:gap-5 items-center bg-white/[0.06] rounded-lg p-3.5 lg:p-[18px]">
                   <EditableImage
                     canEdit={canEdit}
                     url={c.imageUrl ?? ""}
                     onSave={saveCardImage}
-                    className="w-[92px] h-[92px] shrink-0 rounded overflow-hidden bg-white/10"
+                    className="w-[84px] h-[84px] lg:w-[104px] lg:h-[104px] shrink-0 rounded-md overflow-hidden bg-white/10"
                   />
                   <div className="min-w-0">
                     <EditableText
@@ -219,9 +221,9 @@ export default async function HomePage() {
                       canEdit={canEdit}
                       value={c.cardTitle ?? c.name}
                       onSave={saveCardTitle}
-                      className="font-serif font-semibold text-lg leading-snug"
+                      className="font-serif font-semibold text-lg lg:text-[19px] leading-snug"
                     />
-                    <Link href={`/blog?categoria=${c.slug}`} className="inline-block mt-1.5 text-sm text-lilac underline underline-offset-4">
+                    <Link href={`/blog?categoria=${c.slug}`} className="inline-block mt-1.5 text-[15px] text-lilac underline underline-offset-4">
                       {c._count.posts} textos · Leer entradas
                     </Link>
                   </div>
@@ -233,37 +235,39 @@ export default async function HomePage() {
       </section>
 
       {/* About the founder */}
-      <section className="max-w-[1280px] mx-auto w-full px-6 md:px-14 py-[104px] flex flex-col md:flex-row gap-12 md:gap-[72px] items-center">
-        <EditableImage
-          canEdit={canEdit}
-          url={about.imageUrl ?? ""}
-          onSave={saveAboutImage}
-          className="w-[240px] h-[240px] md:w-[320px] md:h-[320px] shrink-0 rounded-full overflow-hidden outline-[14px] outline-solid outline-lilac"
-        />
-        <div>
-          <div className="text-[13px] font-bold tracking-[0.12em] uppercase text-accent-dark">Fundadora</div>
-          <h2 className="mt-3 font-serif font-extrabold text-4xl md:text-[52px] leading-none">{author.name || "Ángeles Nava"}</h2>
+      <section className="wrap py-20 lg:py-32 grid grid-cols-1 lg:grid-cols-12 gap-9 lg:gap-12 items-center">
+        <div className="lg:col-span-5 flex justify-center">
+          <EditableImage
+            canEdit={canEdit}
+            url={about.imageUrl ?? ""}
+            onSave={saveAboutImage}
+            className="w-[220px] h-[220px] lg:w-[400px] lg:h-[400px] rounded-full overflow-hidden outline-[12px] lg:outline-[16px] outline-solid outline-lilac"
+          />
+        </div>
+        <div className="lg:col-start-7 lg:col-span-6 text-center lg:text-left">
+          <div className="text-[13px] lg:text-sm font-bold tracking-[0.14em] uppercase text-accent-dark">Fundadora</div>
+          <h2 className="mt-2.5 lg:mt-3.5 font-serif font-extrabold text-[34px] lg:text-[50px] leading-[1.05]">{author.name || "Ángeles Nava"}</h2>
           <EditableText
             as="div"
             canEdit={canEdit}
             multiline
             value={about.bio}
             onSave={saveAboutBio}
-            className="mt-5 max-w-[560px] text-[15px] leading-relaxed text-neutral-800"
+            className="mt-[18px] lg:mt-[22px] text-left text-[17px] leading-[1.75] text-neutral-800"
           />
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          <div className="mt-7 lg:mt-8 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
             <EditableButton
               canEdit={canEdit}
               text={about.buttonText}
               url={about.buttonUrl || "/acerca-de-nosotros"}
               onSave={saveAboutButton}
-              className="inline-block bg-ink text-white rounded-full px-7 py-4 text-[15px] font-medium"
+              className="block sm:inline-block text-center bg-ink text-white rounded-full px-8 py-4 text-[17px] font-medium"
             />
             <EditableButtonList
               canEdit={canEdit}
               buttons={about.buttons ?? []}
               onSave={saveAboutExtraButtons}
-              buttonClassName="inline-block border-[1.5px] border-ink rounded-full px-7 py-[15px] text-[15px] font-medium"
+              buttonClassName="inline-block border-[1.5px] border-ink rounded-full px-8 py-[15px] text-[17px] font-medium"
             />
           </div>
         </div>

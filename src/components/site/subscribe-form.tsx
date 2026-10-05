@@ -8,16 +8,16 @@ export function SubscribeForm({ id, className = "" }: { id?: string; className?:
   const inputId = `${id ?? "subscribe"}-email`;
 
   return (
-    <form id={id} action={action} className={`bg-lilac rounded-lg p-5 flex flex-col gap-2 ${className}`}>
-      <h2 className="font-serif font-semibold text-lg">Recibe todas las entradas</h2>
+    <form id={id} action={action} className={`bg-lilac rounded-lg p-6 flex flex-col gap-2.5 ${className}`}>
+      <h2 className="font-serif font-semibold text-xl leading-snug">Recibe todas las entradas</h2>
       {state.ok ? (
-        <p className="text-sm" role="status">{state.message}</p>
+        <p className="text-[15px]" role="status">{state.message}</p>
       ) : (
         <>
-          <label htmlFor={inputId} className="text-[13px] font-medium">Email</label>
-          <input id={inputId} name="email" type="email" required className="h-10 rounded-md bg-white px-3 text-sm" />
+          <label htmlFor={inputId} className="text-[15px] font-medium">Email</label>
+          <input id={inputId} name="email" type="email" required className="h-12 rounded-lg bg-white px-3.5 text-base" />
           {state.error && <p className="text-[13px] text-red-800" role="alert">{state.error}</p>}
-          <button type="submit" disabled={pending} className="h-10 rounded-full bg-ink text-white text-sm font-medium disabled:opacity-60">
+          <button type="submit" disabled={pending} className="h-12 rounded-full bg-ink text-white text-base font-medium disabled:opacity-60">
             {pending ? "Enviando..." : "Suscribirse"}
           </button>
         </>

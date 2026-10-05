@@ -78,3 +78,14 @@
 /* Floated images inside a post never spill out of it. */
 .post-content::after { content: ""; display: table; clear: both; }
 .post-content img { border-radius: 4px; max-width: 100%; }
+
+/* Page width: 1200px of content, 20px side margins on phones and 40px from tablets up. */
+.wrap {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+@media (min-width: 768px) {
+  .wrap { padding-inline: 40px; }
+}

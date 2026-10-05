@@ -37,7 +37,7 @@ export function ImageUploadField({
 
   return (
     <div>
-      <label className="block text-sm font-bold mb-2.5">
+      <label className="block text-[15px] font-bold mb-2.5">
         {label}
       </label>
       <input type="hidden" name={name} value={url} />
@@ -49,14 +49,14 @@ export function ImageUploadField({
           <button
             type="button"
             onClick={() => setUrl("")}
-            className="absolute top-2 right-2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full"
+            className="absolute top-2 right-2 bg-black/70 text-white text-[13px] px-3 py-1.5 rounded-full"
           >
             Quitar
           </button>
         </div>
       ) : null}
 
-      <label className="flex items-center justify-center gap-2 border border-ink rounded-full h-10 text-[13px] cursor-pointer hover:bg-ink hover:text-white">
+      <label className="flex items-center justify-center gap-2 border border-ink rounded-full h-11 text-[15px] cursor-pointer hover:bg-ink hover:text-white">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
           <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
@@ -71,7 +71,7 @@ export function ImageUploadField({
           disabled={uploading}
         />
       </label>
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      {error && <p className="text-[13px] text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

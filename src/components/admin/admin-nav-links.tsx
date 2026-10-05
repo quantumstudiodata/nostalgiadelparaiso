@@ -62,7 +62,7 @@ export function AdminNavLinks({ manager }: { manager: boolean }) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-row flex-wrap lg:flex-col gap-1 text-[13px]">
+    <nav className="flex flex-row flex-wrap lg:flex-col gap-1 text-[15px]">
       {LINKS.filter((l) => manager || !l.managerOnly).map((link) => {
         const active = link.match(pathname);
         return (
@@ -70,11 +70,11 @@ export function AdminNavLinks({ manager }: { manager: boolean }) {
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-2.5 rounded-full px-3.5 py-2.5 ${
+            className={`flex items-center gap-2.5 rounded-full px-4 py-3 ${
               active ? "bg-lilac text-ink font-medium" : "text-white hover:bg-white/10"
             }`}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               {link.icon}
             </svg>
             {link.label}
@@ -82,8 +82,8 @@ export function AdminNavLinks({ manager }: { manager: boolean }) {
         );
       })}
       <div className="hidden lg:block h-px bg-neutral-800 mx-2 my-2.5" />
-      <Link href="/" className="flex items-center gap-2.5 rounded-full px-3.5 py-2.5 text-white hover:bg-white/10">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <Link href="/" className="flex items-center gap-2.5 rounded-full px-4 py-3 text-white hover:bg-white/10">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" />
         </svg>
         {manager ? "Ver y editar el sitio" : "Ver el sitio"}
