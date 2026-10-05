@@ -6,12 +6,14 @@ import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { FontFamily } from "@tiptap/extension-font-family";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { PostImage, type ImageAlign } from "./post-image";
+import { uploadImage } from "@/lib/upload-image";
 
 const FONT_OPTIONS = [
   { label: "Por defecto", value: "" },
   { label: "Serif (títulos)", value: "Georgia, 'Times New Roman', serif" },
-  { label: "Sans (cuerpo)", value: "'Source Sans Pro', system-ui, sans-serif" },
+  { label: "Sans (cuerpo)", value: "'DM Sans', system-ui, sans-serif" },
   { label: "Monoespaciada", value: "'Courier New', monospace" },
 ];
 
@@ -33,7 +35,7 @@ function ToolbarButton({
       title={label}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm ${
+      className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] ${
         active ? "bg-ink text-white" : "hover:bg-panel text-neutral-800"
       }`}
     >
@@ -42,9 +44,101 @@ function ToolbarButton({
   );
 }
 
+const IMAGE_WIDTHS = ["25%", "33%", "50%", "75%", "100%"];
+
+function ImageButton({ editor }: { editor: Editor }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const src = await uploadImage(file);
+      editor.chain().focus().setImage({ src, alt: "" }).run();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "No se pudo subir la imagen");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="h-8 px-3 rounded-full flex items-center gap-1.5 text-[13px] hover:bg-panel disabled:opacity-60"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="9" cy="10" r="2" />
+          <path d="M21 16l-5-5-9 9" />
+        </svg>
+        {uploading ? "Subiendo..." : "Imagen"}
+      </button>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+    </>
+  );
+}
+
+/** Shown while an image in the text is selected: position and size, like in Word. */
+function ImageControls({ editor }: { editor: Editor }) {
+  const attrs = editor.getAttributes("image") as { align?: ImageAlign; width?: string };
+  const setAlign = (align: ImageAlign) => editor.chain().focus().updateAttributes("image", { align }).run();
+  const options: { value: ImageAlign; label: string }[] = [
+    { value: "left", label: "Izquierda, texto alrededor" },
+    { value: "center", label: "Centrada" },
+    { value: "right", label: "Derecha, texto alrededor" },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 mt-2 px-3 py-2 rounded-[18px] bg-lilac text-[13px]">
+      <span className="font-medium mr-1">Imagen:</span>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setAlign(o.value)}
+          className={`h-8 px-3 rounded-full ${attrs.align === o.value ? "bg-ink text-white" : "bg-white"}`}
+        >
+          {o.label}
+        </button>
+      ))}
+      <label className="flex items-center gap-1.5 ml-1">
+        Tamaño
+        <select
+          value={attrs.width ?? "100%"}
+          onChange={(e) => editor.chain().focus().updateAttributes("image", { width: e.target.value }).run()}
+          className="h-8 rounded-full px-2 bg-white"
+        >
+          {IMAGE_WIDTHS.map((w) => (
+            <option key={w} value={w}>{w}</option>
+          ))}
+        </select>
+      </label>
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => editor.chain().focus().deleteSelection().run()}
+        className="h-8 px-3 rounded-full bg-white text-accent-dark ml-auto"
+      >
+        Quitar imagen
+      </button>
+      <span className="basis-full text-xs text-slate">Consejo: arrastra la imagen para moverla a otra parte del texto.</span>
+    </div>
+  );
+}
+
 function Toolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 p-1.5 border border-mist rounded-[24px] bg-white">
+    <div className="sticky top-0 z-10 bg-white pb-1">
+    <div className="flex flex-wrap items-center gap-1 p-1.5 border border-mist rounded-[22px] bg-white">
       <ToolbarButton
         label="Negrita"
         active={editor.isActive("bold")}
@@ -78,7 +172,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <select
         aria-label="Tipo de letra"
-        className="text-sm h-9 rounded-full px-3 bg-panel"
+        className="text-[13px] h-8 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const value = e.target.value;
           if (value) editor.chain().focus().setFontFamily(value).run();
@@ -94,7 +188,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <select
         aria-label="Tamaño de texto"
-        className="text-sm h-9 rounded-full px-3 bg-panel"
+        className="text-[13px] h-8 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const level = Number(e.target.value);
           if (!level) editor.chain().focus().setParagraph().run();
@@ -170,6 +264,12 @@ function Toolbar({ editor }: { editor: Editor }) {
       >
         &ldquo;&rdquo;
       </ToolbarButton>
+
+      <div className="w-px h-[22px] bg-mist mx-1" />
+
+      <ImageButton editor={editor} />
+    </div>
+    {editor.isActive("image") && <ImageControls editor={editor} />}
     </div>
   );
 }
@@ -183,18 +283,21 @@ export function RichTextEditor({
 }) {
   const editor = useEditor({
     immediatelyRender: false,
+    // Re-render on every transaction so the toolbar reflects the current selection (bold, image selected, ...).
+    shouldRerenderOnTransaction: true,
     extensions: [
       StarterKit,
       Underline,
       TextStyle,
       FontFamily,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      PostImage,
     ],
     content: defaultValue || "<p></p>",
     editorProps: {
       attributes: {
         class:
-          "prose prose-lg max-w-none min-h-[360px] px-1 py-6 font-serif focus:outline-none",
+          "post-content prose max-w-none min-h-[360px] px-1 py-5 font-serif focus:outline-none [&_img.ProseMirror-selectednode]:outline-3 [&_img.ProseMirror-selectednode]:outline-accent [&_img]:cursor-grab",
       },
     },
   });

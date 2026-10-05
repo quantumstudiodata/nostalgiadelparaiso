@@ -16,9 +16,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ADMIN/EDITOR manage the whole site; AUTHOR can only write posts;
+// READER is a registered reader (can comment, gets new-post emails).
 enum Role {
   ADMIN
   EDITOR
+  AUTHOR
+  READER
 }
 
 enum PostStatus {
@@ -37,7 +41,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  posts Post[]
+  posts    Post[]
+  comments Comment[]
 }
 
 model Category {
@@ -74,6 +79,30 @@ model Post {
 
   categoryId String
   category   Category  @relation(fields: [categoryId], references: [id])
+
+  comments Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+}
+
+// People who get an email when a new post is published.
+model Subscriber {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  name             String?
+  unsubscribeToken String   @unique @default(cuid())
+  createdAt        DateTime @default(now())
 }
 
 // Fixed, structural sections of the public site (hero, about, etc).

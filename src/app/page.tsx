@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { isManager } from "@/lib/permissions";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -11,7 +12,11 @@ import {
   updateSiteBlockButton,
   updateSiteBlockButtons,
   updateCategoryField,
+  updateEcosystemItems,
+  type EcosystemItem,
 } from "@/app/actions/site-content";
+import { EcosystemAccordion } from "@/components/site/ecosystem-accordion";
+import { AnimatedTitle } from "@/components/site/animated-title";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +26,22 @@ const HERO_SUBTITLE_DEFAULT =
 // The author's own blog is not a workshop, so it stays out of the "talleres" lists.
 const AUTHOR_BLOG_SLUG = "blog-angeles-nava";
 
+// Used until the accordion is first edited.
+const DEFAULT_DESCRIPTIONS: Record<string, string> = {
+  "nostalgia-del-paraiso":
+    "Taller de poesía que nombra la poesía desde la balanza emocional y técnica para introducirse en las profundidades del lenguaje. Además, cuenta con una capa comunitaria que promueve la cultura de paz.",
+  "olas-de-pleamar": "Un grupo de escritoras que promueven la lectura y se ayudan mutuamente.",
+  "voces-del-sur":
+    "Aquí escriben escritores de nuestra comunidad que son bienvenidos para dejar su huella en este espacio literario.",
+  "cultura-de-paz":
+    "Círculo de lectura cuyo tema fundamental es la cultura de paz: un espacio donde la lectura es un acto de resistencia frente a las fuerzas que deshumanizan.",
+};
+
 export default async function HomePage() {
   const session = await auth();
-  const canEdit = !!session?.user;
+  const canEdit = isManager(session?.user?.role);
 
-  const [hero, about, author, categories, posts] = await Promise.all([
+  const [hero, about, author, categories, posts, ecosystem] = await Promise.all([
     getSiteBlock<{
       title: string;
       subtitle?: string;
@@ -53,14 +69,27 @@ export default async function HomePage() {
       take: 6,
       include: { category: true, author: true },
     }),
+    getSiteBlock<{ items?: EcosystemItem[] }>("home.ecosystem"),
   ]);
 
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
   const workshops = categories.filter((c) => c.slug !== AUTHOR_BLOG_SLUG);
+  const ecosystemItems: EcosystemItem[] =
+    ecosystem.items ??
+    workshops.map((c) => ({
+      id: c.id,
+      title: c.name,
+      description: DEFAULT_DESCRIPTIONS[c.slug] ?? c.description ?? "",
+      url: `/blog?categoria=${c.slug}`,
+    }));
+  const linkOptions = [
+    ...categories.map((c) => ({ label: `Entradas de ${c.name}`, url: `/blog?categoria=${c.slug}` })),
+    { label: "Todas las entradas", url: "/blog" },
+    { label: "Acerca de nosotros", url: "/acerca-de-nosotros" },
+  ];
 
   const saveHeroTitle = updateSiteBlockField.bind(null, "home.hero", "title");
   const saveHeroSubtitle = updateSiteBlockField.bind(null, "home.hero", "subtitle");
-  const saveHeroBody = updateSiteBlockField.bind(null, "home.hero", "body");
   const saveHeroImage = updateSiteBlockField.bind(null, "home.hero", "imageUrl");
   const saveHeroButton = updateSiteBlockButton.bind(null, "home.hero", "button");
   const saveHeroExtraButtons = updateSiteBlockButtons.bind(null, "home.hero");
@@ -79,23 +108,30 @@ export default async function HomePage() {
         <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-0 px-6 lg:pl-0 lg:pr-10 py-10 lg:min-h-[640px]">
           <div className="lg:col-span-7 lg:px-14 pt-6 lg:pt-14 pb-4">
             <div className="inline-flex items-center gap-2.5 text-[13px] font-bold tracking-[0.12em] uppercase text-accent-dark">
-              <span className="w-7 h-0.5 bg-accent-dark" />
+              <span className="w-7 h-0.5 bg-accent-dark hero-line" />
               Ecosistema cultural
             </div>
-            <EditableText
-              as="h1"
-              canEdit={canEdit}
-              value={hero.title}
-              onSave={saveHeroTitle}
-              className="mt-[22px] font-serif font-extrabold text-[56px] sm:text-[80px] lg:text-[104px] leading-[0.95] tracking-[-0.02em]"
-            />
+            {canEdit ? (
+              <EditableText
+                as="h1"
+                canEdit
+                value={hero.title}
+                onSave={saveHeroTitle}
+                className="mt-[22px] font-serif font-extrabold text-[52px] sm:text-[72px] lg:text-[92px] leading-[0.95] tracking-[-0.02em]"
+              />
+            ) : (
+              <AnimatedTitle
+                text={hero.title}
+                className="mt-[22px] font-serif font-extrabold text-[52px] sm:text-[72px] lg:text-[92px] leading-[0.95] tracking-[-0.02em]"
+              />
+            )}
             <EditableText
               as="p"
               canEdit={canEdit}
               multiline
               value={hero.subtitle ?? HERO_SUBTITLE_DEFAULT}
               onSave={saveHeroSubtitle}
-              className="mt-8 max-w-[520px] text-[19px] leading-relaxed text-neutral-800"
+              className="mt-7 max-w-[480px] text-[17px] leading-relaxed text-neutral-800 hero-fade"
             />
             <div className="mt-9 flex flex-wrap items-center gap-3.5">
               <EditableButton
@@ -120,19 +156,15 @@ export default async function HomePage() {
                 <div className="w-full h-full hero-gradient" />
               </EditableImage>
             </div>
-            <div className="relative h-full flex flex-col justify-end p-8 lg:p-12 pointer-events-none">
-              <div className="font-serif italic text-[22px] mb-5">En este ecosistema conviven</div>
-              <div className="flex flex-col border-t border-white/45">
-                {workshops.map((c, i) => (
-                  <Link
-                    key={c.id}
-                    href={`/blog?categoria=${c.slug}`}
-                    className="pointer-events-auto flex justify-between py-4 border-b border-white/45 text-[17px] hover:text-lilac"
-                  >
-                    <span>{c.name}</span>
-                    <span>{String(i + 1).padStart(2, "0")}</span>
-                  </Link>
-                ))}
+            <div className="relative h-full flex flex-col justify-end p-7 lg:p-10 pointer-events-none">
+              <div className="font-serif italic text-xl mb-4">En este ecosistema conviven</div>
+              <div className="pointer-events-auto">
+                <EcosystemAccordion
+                  items={ecosystemItems}
+                  canEdit={canEdit}
+                  onSave={updateEcosystemItems}
+                  linkOptions={linkOptions}
+                />
               </div>
             </div>
           </div>
@@ -140,9 +172,9 @@ export default async function HomePage() {
       </section>
 
       {/* Recent posts */}
-      <section className="max-w-[1280px] mx-auto w-full px-6 md:px-14 pt-[88px]">
+      <section className="max-w-[1280px] mx-auto w-full px-6 md:px-14 pt-20">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <h2 className="font-serif font-semibold text-4xl md:text-[56px] tracking-[-0.01em]">Entradas recientes</h2>
+          <h2 className="font-serif font-semibold text-3xl md:text-[36px] tracking-[-0.01em]">Entradas recientes</h2>
           <div className="flex flex-wrap gap-2.5 lg:justify-end">
             <Link href="/blog" className="bg-ink text-white rounded-full px-[18px] py-2.5 text-sm">
               Todos ({totalPosts})
@@ -165,26 +197,10 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* The ecosystem, in its own words */}
-      <section className="max-w-[1280px] mx-auto w-full px-6 md:px-14 pt-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <h2 className="lg:col-span-4 font-serif italic text-4xl md:text-[44px] leading-[1.1]">¿Qué es Nostalgia del paraíso?</h2>
-          <EditableText
-            as="div"
-            canEdit={canEdit}
-            multiline
-            boldLeads
-            value={hero.body}
-            onSave={saveHeroBody}
-            className="lg:col-span-8 text-[16px] leading-[1.8] text-neutral-800"
-          />
-        </div>
-      </section>
-
       {/* Workshops and community voices */}
       <section id="talleres" className="mt-[104px] bg-navy text-white px-6 md:px-14 py-[88px]">
         <div className="max-w-[1168px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8">
-          <h2 className="lg:col-span-4 font-serif italic text-4xl md:text-5xl leading-[1.05]">Talleres y voces de la comunidad</h2>
+          <h2 className="lg:col-span-4 font-serif italic text-3xl md:text-4xl leading-[1.1]">Talleres y voces de la comunidad</h2>
           <div className="lg:col-start-6 lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
             {workshops.map((c) => {
               const saveCardTitle = updateCategoryField.bind(null, c.id, "cardTitle");
@@ -203,7 +219,7 @@ export default async function HomePage() {
                       canEdit={canEdit}
                       value={c.cardTitle ?? c.name}
                       onSave={saveCardTitle}
-                      className="font-serif font-semibold text-xl leading-snug"
+                      className="font-serif font-semibold text-lg leading-snug"
                     />
                     <Link href={`/blog?categoria=${c.slug}`} className="inline-block mt-1.5 text-sm text-lilac underline underline-offset-4">
                       {c._count.posts} textos · Leer entradas
@@ -222,18 +238,18 @@ export default async function HomePage() {
           canEdit={canEdit}
           url={about.imageUrl ?? ""}
           onSave={saveAboutImage}
-          className="w-[280px] h-[280px] md:w-[380px] md:h-[380px] shrink-0 rounded-full overflow-hidden outline-[14px] outline-solid outline-lilac"
+          className="w-[240px] h-[240px] md:w-[320px] md:h-[320px] shrink-0 rounded-full overflow-hidden outline-[14px] outline-solid outline-lilac"
         />
         <div>
           <div className="text-[13px] font-bold tracking-[0.12em] uppercase text-accent-dark">Fundadora</div>
-          <h2 className="mt-3 font-serif font-extrabold text-5xl md:text-[72px] leading-none">{author.name || "Ángeles Nava"}</h2>
+          <h2 className="mt-3 font-serif font-extrabold text-4xl md:text-[52px] leading-none">{author.name || "Ángeles Nava"}</h2>
           <EditableText
             as="div"
             canEdit={canEdit}
             multiline
             value={about.bio}
             onSave={saveAboutBio}
-            className="mt-[22px] max-w-[600px] text-lg leading-relaxed text-neutral-800"
+            className="mt-5 max-w-[560px] text-[15px] leading-relaxed text-neutral-800"
           />
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <EditableButton

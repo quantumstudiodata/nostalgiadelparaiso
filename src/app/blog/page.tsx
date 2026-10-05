@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { isManager } from "@/lib/permissions";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -16,7 +17,7 @@ export default async function BlogPage({
 }) {
   const { categoria, pagina } = await searchParams;
   const session = await auth();
-  const canEdit = !!session?.user;
+  const canEdit = isManager(session?.user?.role);
 
   const where = {
     status: "PUBLISHED" as const,
@@ -71,7 +72,7 @@ export default async function BlogPage({
 
         <main className="order-1 lg:order-2">
           <div className="flex items-baseline justify-between gap-4 border-b border-mist pb-4">
-            <h1 className="font-serif font-semibold text-[34px] leading-tight">
+            <h1 className="font-serif font-semibold text-2xl leading-tight">
               {activeCategory ? activeCategory.name : "Todos los textos"}
             </h1>
             <span className="text-sm text-neutral-600 shrink-0">

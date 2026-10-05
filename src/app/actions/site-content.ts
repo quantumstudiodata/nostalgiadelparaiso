@@ -4,12 +4,13 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { isManager } from "@/lib/permissions";
 
 export type EditableButton = { id: string; text: string; url: string };
 
 async function requireEditor() {
   const session = await auth();
-  if (!session?.user) throw new Error("No autenticado");
+  if (!session?.user || !isManager(session.user.role)) throw new Error("No autorizado");
   return session.user;
 }
 
@@ -99,4 +100,29 @@ export async function updateSocialLinks(links: { instagram: string; tiktok: stri
   });
   revalidateSiteContentPaths();
   return fields;
+}
+
+export type EcosystemItem = { id: string; title: string; description: string; url: string };
+
+/** Items of the "En este ecosistema conviven" accordion on the home page. */
+export async function updateEcosystemItems(items: EcosystemItem[]) {
+  await requireEditor();
+
+  const clean = items
+    .map((item) => ({
+      id: String(item.id || crypto.randomUUID()),
+      title: String(item.title ?? "").trim().slice(0, 120),
+      description: String(item.description ?? "").trim().slice(0, 2000),
+      url: String(item.url ?? "").trim().slice(0, 500),
+    }))
+    .filter((item) => item.title)
+    .slice(0, 12);
+
+  const fields = { items: clean } as Prisma.InputJsonValue;
+  await prisma.siteBlock.upsert({
+    where: { id: "home.ecosystem" },
+    update: { fields },
+    create: { id: "home.ecosystem", page: "home", label: "En este ecosistema conviven", fields },
+  });
+  revalidateSiteContentPaths();
 }

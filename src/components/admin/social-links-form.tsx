@@ -17,7 +17,7 @@ export function SocialLinksForm({ links }: { links: SocialLinks }) {
 
   return (
     <form
-      className="mt-8 bg-white rounded-[10px] p-6 flex flex-col gap-4"
+      className="mt-5 bg-white rounded-[10px] p-5 flex flex-col gap-3.5 text-[13px]"
       onSubmit={(e) => {
         e.preventDefault();
         setMessage(null);
@@ -33,7 +33,7 @@ export function SocialLinksForm({ links }: { links: SocialLinks }) {
     >
       {FIELDS.map((f) => (
         <div key={f.key} className="flex flex-col gap-1.5">
-          <label htmlFor={`admin-social-${f.key}`} className="text-sm font-bold">
+          <label htmlFor={`admin-social-${f.key}`} className="font-bold">
             {f.label}
           </label>
           <input
@@ -41,15 +41,15 @@ export function SocialLinksForm({ links }: { links: SocialLinks }) {
             value={draft[f.key]}
             placeholder={f.placeholder}
             onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
-            className="h-11 border border-neutral-300 rounded-md px-3 text-[15px]"
+            className="h-9 border border-neutral-300 rounded-md px-2.5"
           />
         </div>
       ))}
       <div className="flex items-center gap-4 mt-2">
-        <button type="submit" disabled={pending} className="bg-ink text-white rounded-full px-6 py-3 text-[15px] font-medium disabled:opacity-60">
+        <button type="submit" disabled={pending} className="bg-ink text-white rounded-full px-5 py-2.5 font-medium disabled:opacity-60">
           {pending ? "Guardando..." : "Guardar enlaces"}
         </button>
-        {message && <span className="text-sm text-neutral-700" role="status">{message}</span>}
+        {message && <span className="text-neutral-700" role="status">{message}</span>}
       </div>
     </form>
   );

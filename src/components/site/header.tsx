@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth, signOut } from "@/auth";
 import { getSocialLinks } from "@/lib/social-links";
+import { isManager, canWritePosts } from "@/lib/permissions";
 import { SiteMenu } from "@/components/site/site-menu";
 import { NAV_LINKS } from "@/components/site/nav-links";
 import { SocialLinksEditor } from "@/components/site/social-links-editor";
@@ -10,6 +11,12 @@ import { InstagramIcon, TikTokIcon, FacebookIcon, SearchIcon, UserIcon, PencilIc
 export async function SiteHeader() {
   const [session, social] = await Promise.all([auth(), getSocialLinks()]);
   const user = session?.user;
+  const manager = isManager(user?.role);
+
+  async function logout() {
+    "use server";
+    await signOut({ redirectTo: "/" });
+  }
 
   const socialItems = [
     { url: social.instagram, label: "Instagram", Icon: InstagramIcon },
@@ -19,7 +26,7 @@ export async function SiteHeader() {
 
   return (
     <header>
-      {user && (
+      {manager && (
         <div className="bg-slate text-white">
           <div className="max-w-[1280px] mx-auto px-6 md:px-14 py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-2 font-bold">
@@ -36,12 +43,7 @@ export async function SiteHeader() {
               <Link href="/admin" className="border border-white/50 rounded-full px-4 py-1.5">
                 Mis entradas
               </Link>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
+              <form action={logout}>
                 <button className="px-1">Salir</button>
               </form>
             </div>
@@ -60,18 +62,33 @@ export async function SiteHeader() {
                 <Icon />
               </a>
             ))}
-            {user && <SocialLinksEditor links={social} />}
+            {manager && <SocialLinksEditor links={social} />}
           </div>
           {user ? (
-            <span className="flex items-center gap-2">
-              <UserIcon />
-              {user.name}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:flex items-center gap-2">
+                <UserIcon />
+                {user.name}
+              </span>
+              {!manager && canWritePosts(user.role) && (
+                <Link href="/admin" className="underline underline-offset-4">Mis entradas</Link>
+              )}
+              {!manager && (
+                <form action={logout}>
+                  <button>Salir</button>
+                </form>
+              )}
+            </div>
           ) : (
-            <Link href="/admin/login" className="flex items-center gap-2">
-              <UserIcon />
-              Iniciar sesión
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/admin/login" className="flex items-center gap-2">
+                <UserIcon />
+                Iniciar sesión
+              </Link>
+              <Link href="/registro" className="hidden sm:inline underline underline-offset-4">
+                Registrarse
+              </Link>
+            </div>
           )}
         </div>
       </div>

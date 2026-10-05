@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { canWritePosts } from "@/lib/permissions";
 import { findBlobToken } from "@/lib/blob-token";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -41,7 +42,7 @@ function blobAuthStatus(): BlobAuthStatus {
 /** Diagnostic for logged-in editors: open /api/upload in the browser to check the Blob setup. */
 export async function GET() {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user || !canWritePosts(session.user.role)) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
   const status = blobAuthStatus();
@@ -53,7 +54,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user || !canWritePosts(session.user.role)) {
     return NextResponse.json({ error: "Tu sesión expiró. Vuelve a iniciar sesión." }, { status: 401 });
   }
 

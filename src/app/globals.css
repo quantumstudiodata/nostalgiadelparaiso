@@ -54,3 +54,27 @@
   background-size: cover;
   background-position: center;
 }
+
+/* Hero entrance: words rise in, then the subtitle and accent line follow. */
+@keyframes hero-word-in {
+  from { transform: translateY(105%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes hero-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hero-line-in {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.hero-word { animation: hero-word-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.hero-fade { animation: hero-fade-in 0.9s ease-out 0.7s both; }
+.hero-line { transform-origin: left; animation: hero-line-in 0.8s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-word, .hero-fade, .hero-line { animation: none; }
+}
+
+/* Floated images inside a post never spill out of it. */
+.post-content::after { content: ""; display: table; clear: both; }
+.post-content img { border-radius: 4px; max-width: 100%; }

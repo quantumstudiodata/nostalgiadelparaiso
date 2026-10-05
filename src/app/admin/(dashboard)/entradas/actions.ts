@@ -2,15 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
+import { canWritePosts, isManager, requireWriter } from "@/lib/permissions";
+import { notifySubscribersOfPost } from "@/lib/email";
 
-async function requireUser() {
-  const session = await auth();
-  if (!session?.user) throw new Error("No autenticado");
-  return session.user;
-}
+export type PostFormState = { ok?: boolean; error?: string; savedAt?: number };
 
 async function uniqueSlug(base: string, ignoreId?: string) {
   let slug = slugify(base) || "entrada";
@@ -26,84 +24,95 @@ async function uniqueSlug(base: string, ignoreId?: string) {
   return slug;
 }
 
-export async function createPost(formData: FormData) {
-  const user = await requireUser();
+function readForm(formData: FormData) {
+  return {
+    title: String(formData.get("title") ?? "").trim(),
+    categoryId: String(formData.get("categoryId") ?? ""),
+    excerpt: String(formData.get("excerpt") ?? ""),
+    content: String(formData.get("content") ?? ""),
+    coverImage: String(formData.get("coverImage") ?? ""),
+    authorId: String(formData.get("authorId") ?? ""),
+    status: formData.get("status") === "PUBLISHED" ? ("PUBLISHED" as const) : ("DRAFT" as const),
+  };
+}
 
-  const title = String(formData.get("title") ?? "").trim();
-  const categoryId = String(formData.get("categoryId") ?? "");
-  const excerpt = String(formData.get("excerpt") ?? "");
-  const content = String(formData.get("content") ?? "");
-  const coverImage = String(formData.get("coverImage") ?? "");
-  const status = formData.get("status") === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
+/** Managers may publish on behalf of any writer; authors always publish as themselves. */
+async function resolveAuthorId(user: { id: string; role: string }, requested: string) {
+  if (!isManager(user.role) || !requested) return user.id;
+  const author = await prisma.user.findUnique({ where: { id: requested } });
+  return author && canWritePosts(author.role) ? author.id : user.id;
+}
 
-  if (!title || !categoryId) {
-    throw new Error("Título y categoría son obligatorios.");
-  }
+function revalidatePosts(slug?: string) {
+  revalidatePath("/admin");
+  revalidatePath("/blog");
+  revalidatePath("/");
+  if (slug) revalidatePath(`/blog/${slug}`);
+}
 
-  const slug = await uniqueSlug(title);
+export async function createPost(_prev: PostFormState, formData: FormData): Promise<PostFormState> {
+  const user = await requireWriter();
+  const data = readForm(formData);
+  if (!data.title || !data.categoryId) return { error: "El título y la categoría son obligatorios." };
 
   const post = await prisma.post.create({
     data: {
-      title,
-      slug,
-      excerpt,
-      content,
-      coverImage,
-      status,
-      publishedAt: status === "PUBLISHED" ? new Date() : null,
-      authorId: user.id,
-      categoryId,
+      title: data.title,
+      slug: await uniqueSlug(data.title),
+      excerpt: data.excerpt,
+      content: data.content,
+      coverImage: data.coverImage,
+      status: data.status,
+      publishedAt: data.status === "PUBLISHED" ? new Date() : null,
+      authorId: await resolveAuthorId(user, data.authorId),
+      categoryId: data.categoryId,
     },
   });
 
-  revalidatePath("/admin");
-  revalidatePath("/blog");
-  redirect(`/admin/entradas/${post.id}`);
+  if (post.status === "PUBLISHED") after(() => notifySubscribersOfPost(post.id));
+  revalidatePosts(post.slug);
+  redirect(`/admin/entradas/${post.id}?guardada=1`);
 }
 
-export async function updatePost(postId: string, formData: FormData) {
-  await requireUser();
+export async function updatePost(postId: string, _prev: PostFormState, formData: FormData): Promise<PostFormState> {
+  const user = await requireWriter();
+  const data = readForm(formData);
+  if (!data.title || !data.categoryId) return { error: "El título y la categoría son obligatorios." };
 
-  const title = String(formData.get("title") ?? "").trim();
-  const categoryId = String(formData.get("categoryId") ?? "");
-  const excerpt = String(formData.get("excerpt") ?? "");
-  const content = String(formData.get("content") ?? "");
-  const coverImage = String(formData.get("coverImage") ?? "");
-  const status = formData.get("status") === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
+  const existing = await prisma.post.findUnique({ where: { id: postId } });
+  if (!existing) return { error: "Esta entrada ya no existe." };
+  if (!isManager(user.role) && existing.authorId !== user.id) return { error: "Solo puedes editar tus propias entradas." };
 
-  if (!title || !categoryId) {
-    throw new Error("Título y categoría son obligatorios.");
-  }
-
-  const existing = await prisma.post.findUniqueOrThrow({ where: { id: postId } });
-  const slug =
-    existing.title === title ? existing.slug : await uniqueSlug(title, postId);
+  const slug = existing.title === data.title ? existing.slug : await uniqueSlug(data.title, postId);
+  const firstPublish = data.status === "PUBLISHED" && !existing.publishedAt;
 
   await prisma.post.update({
     where: { id: postId },
     data: {
-      title,
+      title: data.title,
       slug,
-      excerpt,
-      content,
-      coverImage,
-      status,
-      publishedAt:
-        status === "PUBLISHED" ? existing.publishedAt ?? new Date() : existing.publishedAt,
-      categoryId,
+      excerpt: data.excerpt,
+      content: data.content,
+      coverImage: data.coverImage,
+      status: data.status,
+      publishedAt: firstPublish ? new Date() : existing.publishedAt,
+      categoryId: data.categoryId,
+      ...(isManager(user.role) ? { authorId: await resolveAuthorId(user, data.authorId) } : {}),
     },
   });
 
-  revalidatePath("/admin");
-  revalidatePath(`/admin/entradas/${postId}`);
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${slug}`);
+  if (firstPublish) after(() => notifySubscribersOfPost(postId));
+  revalidatePosts(slug);
+  if (slug !== existing.slug) revalidatePath(`/blog/${existing.slug}`);
+  return { ok: true, savedAt: Date.now() };
 }
 
 export async function deletePost(postId: string) {
-  await requireUser();
-  await prisma.post.delete({ where: { id: postId } });
-  revalidatePath("/admin");
-  revalidatePath("/blog");
+  const user = await requireWriter();
+  const existing = await prisma.post.findUnique({ where: { id: postId } });
+  if (existing && (isManager(user.role) || existing.authorId === user.id)) {
+    await prisma.post.delete({ where: { id: postId } });
+    revalidatePosts(existing.slug);
+  }
   redirect("/admin");
 }

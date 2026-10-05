@@ -1,11 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export function SiteFooter() {
   return (
     <>
       <section id="contacto" className="bg-lilac px-6 md:px-14 py-20">
         <div className="max-w-[1168px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
-          <h2 className="md:col-span-5 font-serif font-semibold text-4xl md:text-[52px] leading-[1.05]">
+          <h2 className="md:col-span-5 font-serif font-semibold text-[28px] md:text-[32px] leading-[1.15]">
             Escríbenos. La palabra es tuya, mía y de todos.
           </h2>
           <form className="md:col-start-7 md:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-[18px]">
@@ -32,8 +33,8 @@ export function SiteFooter() {
         <div className="max-w-[1168px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <Image src="/images/logo-blanco.png" alt="Nostalgia del paraíso" width={540} height={244} className="h-12 w-auto" />
           <div className="flex gap-7 text-sm">
-            <a href="#">Términos y Condiciones</a>
-            <a href="#">Política de Privacidad</a>
+            <Link href="/terminos-y-condiciones">Términos y Condiciones</Link>
+            <Link href="/politica-de-privacidad">Política de Privacidad</Link>
           </div>
           <span className="text-sm text-neutral-300">© {new Date().getFullYear()} Nostalgia del paraíso</span>
         </div>

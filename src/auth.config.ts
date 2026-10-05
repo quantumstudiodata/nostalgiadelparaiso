@@ -19,7 +19,7 @@ export const authConfig = {
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as "ADMIN" | "EDITOR";
+        session.user.role = token.role as "ADMIN" | "EDITOR" | "AUTHOR" | "READER";
       }
       return session;
     },

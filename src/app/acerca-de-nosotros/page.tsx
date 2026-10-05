@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { isManager } from "@/lib/permissions";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -30,7 +31,7 @@ const NOSTALGIA_DEFAULTS = {
 
 export default async function AboutPage() {
   const session = await auth();
-  const canEdit = !!session?.user;
+  const canEdit = isManager(session?.user?.role);
 
   const [about, nostalgia, recentPosts] = await Promise.all([
     getSiteBlock<{
