@@ -1,44 +1,45 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SiteMenu } from "@/components/site/site-menu";
 
 export function SiteHeader() {
   return (
-    <>
-      <div className="bg-ink text-white h-10">
-        <div className="site-container h-full flex items-center px-6 gap-4 text-sm">
+    <header>
+      <div className="bg-ink text-white h-[45px]">
+        <div className="max-w-[1100px] mx-auto h-full flex items-center px-6 md:px-10 gap-5">
           <button aria-label="Buscar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="10.5" cy="10.5" r="7" />
+              <path d="M21 21l-5.5-5.5" />
             </svg>
           </button>
-          <a href="#" aria-label="Instagram">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <a href="#" aria-label="Instagram" className="w-5 h-5 rounded-full bg-white text-ink flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
               <rect x="3" y="3" width="18" height="18" rx="5" />
               <circle cx="12" cy="12" r="4" />
             </svg>
           </a>
           <a href="#" aria-label="TikTok">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 3v11.5a3.5 3.5 0 1 1-3.5-3.5" />
-              <path d="M15 3c0 2.5 2 4.5 4.5 4.5" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16.6 5.8A4.3 4.3 0 0 1 15.5 3h-3.3v12.4a2.6 2.6 0 1 1-1.8-2.5V9.5a5.9 5.9 0 1 0 5.1 5.9V9a7.6 7.6 0 0 0 4.4 1.4V7.1a4.3 4.3 0 0 1-3.3-1.3Z" />
             </svg>
           </a>
           <a href="#" aria-label="Facebook">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 4h-2a4 4 0 0 0-4 4v3H7v3h2v6h3v-6h2.5l.5-3H12V8a1 1 0 0 1 1-1h2Z" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14 8V6.3c0-.8.2-1.3 1.4-1.3H17V2h-2.6C11.3 2 10.3 3.5 10.3 6v2H8v3h2.3v11H14V11h2.6l.4-3Z" />
             </svg>
           </a>
         </div>
       </div>
-      <div className="border-b border-neutral-100">
-        <div className="site-container h-[76px] flex items-center justify-between px-6">
-          <Link href="/admin/login" className="flex items-center gap-2 text-sm text-neutral-500 whitespace-nowrap">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+      <div className="bg-white">
+        <div className="max-w-[1100px] mx-auto h-[73px] flex items-center px-6 md:px-10 gap-6">
+          <Link href="/admin/login" className="flex items-center gap-3 text-[15px] text-accent whitespace-nowrap md:w-[260px]">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-ink shrink-0">
+              <circle cx="12" cy="12" r="12" />
+              <circle cx="12" cy="9.5" r="3.6" fill="white" />
+              <path d="M5.5 19.2c1.3-2.6 3.8-4 6.5-4s5.2 1.4 6.5 4a9 9 0 0 1-13 0Z" fill="white" />
             </svg>
-            Iniciar sesión
+            <span className="hidden sm:inline">Iniciar sesión</span>
           </Link>
           <Link href="/" className="flex items-center">
             <Image
@@ -50,13 +51,11 @@ export function SiteHeader() {
               priority
             />
           </Link>
-          <button aria-label="Menú" className="w-10 h-10 shrink-0 rounded-full bg-ink text-white flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          <div className="ml-auto">
+            <SiteMenu />
+          </div>
         </div>
       </div>
-    </>
+    </header>
   );
 }

@@ -5,6 +5,7 @@ import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { BlogSidebar } from "@/components/site/blog-sidebar";
+import { PostCard } from "@/components/site/post-card";
 import { EditableText, EditableImage } from "@/components/site/editable";
 import { updateCategoryField } from "@/app/actions/site-content";
 
@@ -68,7 +69,7 @@ export default async function BlogPage({
                 canEdit={canEdit}
                 value={activeCategory.cardTitle ?? activeCategory.name}
                 onSave={saveCardTitle}
-                className="font-serif text-3xl md:text-4xl leading-tight mb-6"
+                className="font-serif font-bold text-3xl md:text-5xl leading-tight mb-6"
               />
               <Link
                 href="#entradas"
@@ -80,7 +81,7 @@ export default async function BlogPage({
           </div>
           <div className="flex items-center px-6 md:px-10 py-10 text-sm leading-relaxed text-neutral-700">
             <div className="w-full">
-              <h2 className="font-serif text-lg mb-3">
+              <h2 className="font-serif font-bold text-xl mb-3">
                 Acerca de {activeCategory.cardTitle ?? activeCategory.name}
               </h2>
               <EditableText
@@ -96,7 +97,7 @@ export default async function BlogPage({
         </section>
       )}
 
-      <section id="entradas" className="site-container px-6 md:px-10 py-12 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10">
+      <section id="entradas" className="max-w-[980px] mx-auto px-6 pt-20 pb-20 grid grid-cols-1 md:grid-cols-[256px_1fr] gap-10 md:gap-16">
         <BlogSidebar
           categories={categories}
           totalPosts={totalPosts}
@@ -108,38 +109,16 @@ export default async function BlogPage({
         />
 
         <div>
-          <h2 className="font-serif text-2xl mb-6">
+          <h2 className="font-cormorant font-semibold text-xl tracking-wide mb-4">
             {activeCategory ? `Lista de entradas de ${activeCategory.name}` : "Lista de todos los textos"}
           </h2>
 
           {posts.length === 0 ? (
             <p className="text-sm text-neutral-500">No hay entradas en esta categoría todavía.</p>
           ) : (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col">
               {posts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/blog/${post.slug}`}
-                  className="grid grid-cols-[110px_1fr] gap-4 pb-6 border-b border-neutral-100"
-                >
-                  <div className="aspect-square bg-neutral-100 overflow-hidden">
-                    {post.coverImage && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={post.coverImage} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xs text-neutral-500 mb-1">
-                      {post.author.name} ·{" "}
-                      {post.publishedAt?.toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
-                    </div>
-                    <div className="text-xs text-accent mb-1">{post.category.name}</div>
-                    <h3 className="font-serif font-bold text-base mb-1">{post.title}</h3>
-                    {post.excerpt && (
-                      <p className="text-sm text-neutral-600 line-clamp-2">{post.excerpt}</p>
-                    )}
-                  </div>
-                </Link>
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
           )}

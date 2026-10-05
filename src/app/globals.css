@@ -2,11 +2,13 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #faf9f5;
+  --background: #ffffff;
   --foreground: #1a1a1a;
-  --accent: #c15f3c;
-  --lilac: #e2dcee;
-  --ink: #111111;
+  --accent: #c0603e;
+  --lilac: #ddd7e3;
+  --ink: #000000;
+  --mist: #dcdcdc;
+  --slate: #3c3e57;
 }
 
 @theme inline {
@@ -15,19 +17,26 @@
   --color-accent: var(--accent);
   --color-lilac: var(--lilac);
   --color-ink: var(--ink);
+  --color-mist: var(--mist);
+  --color-slate: var(--slate);
   --font-sans: var(--font-sans-body);
   --font-serif: var(--font-serif-display);
+  --font-cormorant: var(--font-cormorant);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans-body), system-ui, sans-serif;
-}
+/* Base styles live in a layer so Tailwind utilities (e.g. text-white on a link) win. */
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans-body), system-ui, sans-serif;
+    font-weight: 300;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 .site-container {

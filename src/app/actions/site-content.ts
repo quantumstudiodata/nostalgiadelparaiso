@@ -22,13 +22,18 @@ function revalidateSiteContentPaths() {
 export async function updateSiteBlockField(blockId: string, key: string, value: string) {
   await requireEditor();
 
-  const block = await prisma.siteBlock.findUniqueOrThrow({ where: { id: blockId } });
+  // Blocks added after the initial seed (e.g. "about.nostalgia") are created on first edit.
+  const block = await prisma.siteBlock.findUnique({ where: { id: blockId } });
   const fields = {
-    ...(block.fields as Record<string, unknown>),
+    ...((block?.fields as Record<string, unknown>) ?? {}),
     [key]: value,
   } as Prisma.InputJsonValue;
 
-  await prisma.siteBlock.update({ where: { id: blockId }, data: { fields } });
+  await prisma.siteBlock.upsert({
+    where: { id: blockId },
+    update: { fields },
+    create: { id: blockId, page: blockId.split(".")[0], label: blockId, fields },
+  });
   revalidateSiteContentPaths();
 }
 

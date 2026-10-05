@@ -27,7 +27,7 @@ export default async function PostPage({
         <Link href={`/blog?categoria=${post.category.slug}`} className="text-xs text-accent">
           {post.category.name}
         </Link>
-        <h1 className="font-serif text-3xl md:text-4xl mt-3 mb-4 leading-tight">
+        <h1 className="font-serif font-bold text-3xl md:text-[40px] mt-3 mb-4 leading-tight">
           {post.title}
         </h1>
         <div className="text-xs text-neutral-500 mb-8">
@@ -47,7 +47,7 @@ export default async function PostPage({
         )}
 
         <div
-          className="prose prose-neutral max-w-none text-[15px] leading-relaxed [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif"
+          className="prose prose-neutral max-w-none text-[16px] leading-relaxed font-normal [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif"
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
         />
       </article>

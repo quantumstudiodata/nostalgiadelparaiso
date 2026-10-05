@@ -26,6 +26,28 @@ function PencilButton({ onClick, label = "Editar" }: { onClick: () => void; labe
   );
 }
 
+/** Bolds the lead-in of each paragraph up to its first colon ("Voces del sur: ..."). */
+function withBoldLeads(text: string): ReactNode {
+  return text.split("\n").map((line, i, lines) => {
+    const colon = line.indexOf(":");
+    const content =
+      colon > 0 && colon < 120 ? (
+        <>
+          <strong className="font-semibold text-ink">{line.slice(0, colon + 1)}</strong>
+          {line.slice(colon + 1)}
+        </>
+      ) : (
+        line
+      );
+    return (
+      <span key={i}>
+        {content}
+        {i < lines.length - 1 && "\n"}
+      </span>
+    );
+  });
+}
+
 /** Inline-editable text (or multiline block) shown directly on the live page. */
 export function EditableText({
   canEdit,
@@ -35,6 +57,7 @@ export function EditableText({
   className = "",
   placeholder = "Escribe aquí...",
   as: Tag = "div",
+  boldLeads = false,
 }: {
   canEdit: boolean;
   value: string;
@@ -43,6 +66,8 @@ export function EditableText({
   className?: string;
   placeholder?: string;
   as?: "div" | "h1" | "h2" | "h3" | "p" | "span";
+  /** Display-only: bold each paragraph's text up to its first colon. */
+  boldLeads?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -52,7 +77,7 @@ export function EditableText({
   if (!canEdit) {
     return (
       <Tag className={className} style={multiline ? { whiteSpace: "pre-line" } : undefined}>
-        {current}
+        {boldLeads ? withBoldLeads(current) : current}
       </Tag>
     );
   }
@@ -61,7 +86,7 @@ export function EditableText({
     return (
       <span className="group relative block">
         <Tag className={className} style={multiline ? { whiteSpace: "pre-line" } : undefined}>
-          {current || <span className="text-neutral-400">{placeholder}</span>}
+          {current ? (boldLeads ? withBoldLeads(current) : current) : <span className="text-neutral-400">{placeholder}</span>}
         </Tag>
         <PencilButton
           onClick={() => {

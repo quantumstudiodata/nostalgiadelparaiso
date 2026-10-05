@@ -5,6 +5,7 @@ import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { BlogSidebar } from "@/components/site/blog-sidebar";
+import { PostCard } from "@/components/site/post-card";
 import { EditableText, EditableButton, EditableButtonList, EditableImage, type EditableButtonItem } from "@/components/site/editable";
 import {
   updateSiteBlockField,
@@ -43,7 +44,7 @@ export default async function HomePage() {
     prisma.post.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
-      take: 6,
+      take: 4,
       include: { category: true, author: true },
     }),
   ]);
@@ -65,52 +66,68 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      {/* Hero */}
-      <section className="relative min-h-[520px] overflow-hidden">
-        <EditableImage canEdit={canEdit} url={hero.imageUrl ?? ""} onSave={saveHeroImage} className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1c1a2b] via-[#34324a] to-[#6b7280]" />
-        </EditableImage>
-        {hero.imageUrl && <div className="absolute inset-0 bg-black/45 pointer-events-none" />}
+      {/* Hero: dark panel with the title on the left, white text card on the right */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-[#1b1a2c] via-[#d3d6e0] via-60% to-[#1b1a2c]">
+        <div className="absolute inset-y-0 left-0 w-full md:w-[40%]">
+          <EditableImage canEdit={canEdit} url={hero.imageUrl ?? ""} onSave={saveHeroImage} className="w-full h-full">
+            <div className="w-full h-full bg-gradient-to-br from-[#1b1a2c] via-[#3a4566] to-[#c9ccd6]" />
+          </EditableImage>
+        </div>
 
-        <div className="site-container relative grid grid-cols-1 md:grid-cols-2 gap-10 items-center min-h-[520px] px-6 md:px-10 py-16 text-white">
-          <div>
-            <EditableText
-              as="h1"
-              canEdit={canEdit}
-              value={hero.title}
-              onSave={saveHeroTitle}
-              className="font-serif text-4xl md:text-5xl leading-tight mb-6"
-            />
-            <div className="w-10 h-px bg-white mb-4" />
-            <div className="flex flex-wrap items-center gap-3">
+        <div className="relative grid grid-cols-1 md:grid-cols-[40%_60%] md:min-h-[767px] pointer-events-none">
+          <div className="relative text-white px-8 md:pl-[155px] md:pr-4 pt-16 md:pt-[100px] pb-16">
+            <div className="hidden md:flex absolute left-[30px] top-[290px] flex-col items-center gap-3 text-[11px] tracking-wider">
+              <span className="[writing-mode:vertical-rl]">DESLIZA ABAJO</span>
+              <svg width="10" height="50" viewBox="0 0 10 50" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <path d="M5 0v48M1 44l4 5 4-5" />
+              </svg>
+            </div>
+            <div className="pointer-events-auto">
+              <EditableText
+                as="h1"
+                canEdit={canEdit}
+                value={hero.title}
+                onSave={saveHeroTitle}
+                className="font-serif font-bold text-5xl md:text-[68px] leading-[1.2] mb-8"
+              />
+            </div>
+            <div className="w-16 h-px bg-white mb-3" />
+            <div className="flex flex-wrap items-center gap-3 pl-9 pointer-events-auto">
               <EditableButton
                 canEdit={canEdit}
                 text={hero.buttonText}
                 url={hero.buttonUrl || "/acerca-de-nosotros"}
                 onSave={saveHeroButton}
-                className="text-sm tracking-wide"
+                className="text-[11px] text-white md:text-ink"
               />
+              <svg width="42" height="24" viewBox="0 0 42 24" fill="none" strokeWidth="3" className="-mt-2 stroke-white md:stroke-black">
+                <path d="M2 22 21 4l19 18" />
+              </svg>
               <EditableButtonList
                 canEdit={canEdit}
                 buttons={hero.buttons ?? []}
                 onSave={saveHeroExtraButtons}
-                buttonClassName="text-sm tracking-wide bg-white/15 px-4 py-2 rounded"
+                buttonClassName="text-xs bg-white/15 px-4 py-2"
               />
             </div>
           </div>
-          <EditableText
-            as="div"
-            canEdit={canEdit}
-            multiline
-            value={hero.body}
-            onSave={saveHeroBody}
-            className="text-sm leading-relaxed text-white/90 max-h-[420px] overflow-y-auto pr-2"
-          />
+
+          <div className="bg-white md:mt-[19px] px-6 md:pl-[86px] md:pr-[130px] py-12 md:pt-[86px] pointer-events-auto">
+            <EditableText
+              as="div"
+              canEdit={canEdit}
+              multiline
+              boldLeads
+              value={hero.body}
+              onSave={saveHeroBody}
+              className="text-[13px] leading-[1.8] text-neutral-800 text-justify"
+            />
+          </div>
         </div>
       </section>
 
       {/* Blog list */}
-      <section id="entradas" className="site-container px-6 md:px-10 py-14 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10">
+      <section id="entradas" className="max-w-[980px] mx-auto px-6 pt-16 pb-20 grid grid-cols-1 md:grid-cols-[224px_1fr] gap-10 md:gap-16">
         <BlogSidebar
           categories={categories}
           totalPosts={totalPosts}
@@ -121,35 +138,27 @@ export default async function HomePage() {
         />
 
         <div>
-          <h2 className="font-serif text-2xl mb-6">Entradas recientes</h2>
+          <h2 className="font-serif font-bold text-2xl mt-24 mb-16">Entradas recientes</h2>
           {posts.length === 0 ? (
-            <p className="text-sm text-neutral-500">
-              Aún no hay entradas publicadas.
-            </p>
+            <p className="text-sm text-neutral-500">Aún no hay entradas publicadas.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col">
               {posts.map((post) => (
-                <Link key={post.id} href={`/blog/${post.slug}`} className="border border-neutral-100">
-                  <div className="aspect-square bg-neutral-100 overflow-hidden">
-                    {post.coverImage && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={post.coverImage} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="text-xs text-neutral-500 mb-1">{post.author.name}</div>
-                    <h3 className="font-serif font-bold text-sm">{post.title}</h3>
-                  </div>
-                </Link>
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
           )}
+          <div className="text-center mt-8">
+            <Link href="/blog" className="text-sm underline underline-offset-4">
+              Ver todas las entradas
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Category cards */}
-      <section className="site-container px-6 md:px-10 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+      <section className="max-w-[1260px] mx-auto px-6 py-28">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-10">
           {categories.map((c) => {
             const saveCardTitle = updateCategoryField.bind(null, c.id, "cardTitle");
             const saveCardImage = updateCategoryField.bind(null, c.id, "imageUrl");
@@ -159,18 +168,18 @@ export default async function HomePage() {
                   canEdit={canEdit}
                   url={c.imageUrl ?? ""}
                   onSave={saveCardImage}
-                  className="w-full aspect-square bg-neutral-200 overflow-hidden mb-3"
+                  className="w-full aspect-[3/4] bg-neutral-300 overflow-hidden mb-4"
                 />
                 <EditableText
                   as="div"
                   canEdit={canEdit}
                   value={c.cardTitle ?? c.name}
                   onSave={saveCardTitle}
-                  className="text-sm mb-3"
+                  className="text-[13px] text-ink mb-3"
                 />
                 <Link
                   href={`/blog?categoria=${c.slug}`}
-                  className="bg-ink text-white text-xs px-4 py-2.5 w-full"
+                  className="bg-ink text-white text-[13px] px-6 py-2.5 mt-auto"
                 >
                   Leer entradas
                 </Link>
@@ -181,31 +190,34 @@ export default async function HomePage() {
       </section>
 
       {/* About Ángeles Nava */}
-      <section className="bg-neutral-100">
-        <div className="site-container px-6 md:px-10 py-14 grid grid-cols-1 md:grid-cols-[1fr_420px] gap-10 items-center">
-          <div>
-            <h2 className="font-serif text-2xl mb-5">Conoce a Ángeles Nava</h2>
+      <section className="bg-mist py-14 px-4">
+        <div className="max-w-[1245px] mx-auto bg-white grid grid-cols-1 md:grid-cols-[1fr_408px]">
+          <div className="px-8 md:pl-[230px] md:pr-[100px] py-12">
+            <h2 className="font-serif font-bold text-[28px] mb-6">Conoce a Ángeles Nava</h2>
             <EditableText
               as="div"
               canEdit={canEdit}
               multiline
               value={about.bio}
               onSave={saveAboutBio}
-              className="text-sm leading-relaxed text-neutral-700 mb-6 max-w-xl"
+              className="text-[13px] leading-relaxed text-neutral-800 text-justify mb-8"
             />
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 pl-7">
               <EditableButton
                 canEdit={canEdit}
                 text={about.buttonText}
                 url={about.buttonUrl || "/acerca-de-nosotros"}
                 onSave={saveAboutButton}
-                className="inline-block bg-accent text-white text-sm px-6 py-2.5"
+                className="text-[11px] text-ink"
               />
+              <svg width="42" height="24" viewBox="0 0 42 24" fill="none" stroke="black" strokeWidth="3" className="-mt-2">
+                <path d="M2 22 21 4l19 18" />
+              </svg>
               <EditableButtonList
                 canEdit={canEdit}
                 buttons={about.buttons ?? []}
                 onSave={saveAboutExtraButtons}
-                buttonClassName="inline-block bg-neutral-800 text-white text-sm px-6 py-2.5"
+                buttonClassName="inline-block bg-ink text-white text-xs px-6 py-2.5"
               />
             </div>
           </div>
@@ -213,7 +225,7 @@ export default async function HomePage() {
             canEdit={canEdit}
             url={about.imageUrl ?? ""}
             onSave={saveAboutImage}
-            className="aspect-[4/3] bg-neutral-300 overflow-hidden"
+            className="min-h-[360px] md:min-h-[520px] bg-neutral-300 overflow-hidden"
           />
         </div>
       </section>
