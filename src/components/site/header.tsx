@@ -66,10 +66,10 @@ export async function SiteHeader() {
           </div>
           {user ? (
             <div className="flex items-center gap-4">
-              <span className="hidden sm:flex items-center gap-2">
+              <Link href="/cuenta" className="hidden sm:flex items-center gap-2" title="Mi cuenta">
                 <UserIcon />
                 {user.name}
-              </span>
+              </Link>
               {!manager && canWritePosts(user.role) && (
                 <Link href="/admin" className="underline underline-offset-4">Mis entradas</Link>
               )}

@@ -56,14 +56,30 @@ export async function updateUserRole(userId: string, role: string) {
 }
 
 export async function updateUserProfile(userId: string, _prev: UserFormState, formData: FormData): Promise<UserFormState> {
-  await requireManager();
+  const manager = await requireManager();
   const name = String(formData.get("name") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const avatarUrl = String(formData.get("avatarUrl") ?? "").trim();
+  const newPassword = String(formData.get("newPassword") ?? "");
   if (!name) return { error: "Escribe el nombre." };
+  if (newPassword && newPassword.length < 8) return { error: "La nueva contraseña debe tener al menos 8 caracteres." };
 
-  await prisma.user.update({ where: { id: userId }, data: { name, bio: bio || null, avatarUrl: avatarUrl || null } });
+  const target = await prisma.user.findUnique({ where: { id: userId } });
+  if (!target) return { error: "Esta persona ya no existe." };
+  if (newPassword && target.role === "ADMIN" && manager.role !== "ADMIN") {
+    return { error: "No puedes cambiar la contraseña de una administradora." };
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name,
+      bio: bio || null,
+      avatarUrl: avatarUrl || null,
+      ...(newPassword ? { passwordHash: await bcrypt.hash(newPassword, 10) } : {}),
+    },
+  });
   revalidateUsers();
   revalidatePath("/blog", "layout");
-  return { ok: true, message: "Perfil guardado." };
+  return { ok: true, message: newPassword ? "Perfil y contraseña guardados. Compártele su nueva contraseña." : "Perfil guardado." };
 }

@@ -81,6 +81,16 @@ export function AdminNavLinks({ manager }: { manager: boolean }) {
           </Link>
         );
       })}
+      <Link
+        href="/cuenta"
+        className="flex items-center gap-2.5 rounded-full px-4 py-3 text-white hover:bg-white/10"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <rect x="5" y="11" width="14" height="10" rx="2" />
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+        Mi cuenta
+      </Link>
       <div className="hidden lg:block h-px bg-neutral-800 mx-2 my-2.5" />
       <Link href="/" className="flex items-center gap-2.5 rounded-full px-4 py-3 text-white hover:bg-white/10">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">

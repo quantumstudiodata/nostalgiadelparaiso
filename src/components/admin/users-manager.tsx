@@ -77,6 +77,10 @@ function ProfileForm({ user, onDone }: { user: UserRow; onDone: () => void }) {
           Biografía (se muestra junto a sus entradas)
           <textarea name="bio" rows={4} defaultValue={user.bio ?? ""} className="border border-mist rounded-md px-2.5 py-2 text-[15px] bg-white" />
         </label>
+        <label className="flex flex-col gap-1 text-[15px] font-medium">
+          Nueva contraseña (solo si la olvidó; mínimo 8)
+          <input name="newPassword" type="text" minLength={8} autoComplete="off" placeholder="Déjalo vacío para no cambiarla" className={inputClass} />
+        </label>
         {state.error && <p className="text-[13px] text-red-700">{state.error}</p>}
         {state.ok && <p className="text-[13px] text-[#1f5c2a]" role="status">{state.message}</p>}
         <div className="flex gap-2">

@@ -44,7 +44,10 @@ export default async function LoginPage({
           Iniciar sesión
         </button>
       </form>
-      <p className="mt-5 text-sm text-neutral-600 text-center">
+      <p className="mt-4 text-[13px] text-neutral-600 text-center">
+        ¿Olvidaste tu contraseña? Pídele a la administradora del sitio que te asigne una nueva desde el panel.
+      </p>
+      <p className="mt-3 text-sm text-neutral-600 text-center">
         ¿No tienes cuenta?{" "}
         <Link href="/registro" className="text-ink font-medium underline underline-offset-4">
           Regístrate

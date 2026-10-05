@@ -31,7 +31,7 @@ export function AdminSidebar({
           )}
         </div>
         <div className="flex-1 min-w-0 text-[15px]">
-          <div className="font-medium truncate">{name}</div>
+          <Link href="/cuenta" className="block font-medium truncate hover:underline" title="Mi cuenta: cambiar contraseña">{name}</Link>
           <div className="text-xs text-neutral-400 truncate">{ROLE_LABELS[role]}</div>
         </div>
         <form
