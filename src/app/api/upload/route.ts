@@ -1,23 +1,11 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { findBlobToken } from "@/lib/blob-token";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 // Vercel functions reject request bodies over ~4.5 MB; the client compresses photos below this.
 const MAX_BYTES = 4 * 1024 * 1024;
-
-/**
- * Vercel may add a custom prefix when a Blob store is connected (e.g. "NOSTALGIA_BLOB_READ_WRITE_TOKEN"),
- * so fall back to any variable ending in BLOB_READ_WRITE_TOKEN.
- */
-function findBlobToken(): { name: string; token: string } | null {
-  const names = ["BLOB_READ_WRITE_TOKEN", ...Object.keys(process.env).filter((k) => k.endsWith("BLOB_READ_WRITE_TOKEN"))];
-  for (const name of names) {
-    const token = process.env[name]?.trim();
-    if (token) return { name, token };
-  }
-  return null;
-}
 
 type BlobAuthStatus =
   | { ok: true; mode: "token"; variable: string; token: string }
@@ -88,14 +76,24 @@ export async function POST(request: Request) {
   }
 
   try {
-    const blob = await put(`uploads/${file.name}`, file, {
-      access: "public",
+    // The store is private, so images are stored privately and served through /api/images.
+    // Plain ASCII names keep the /api/images URLs free of encoding issues.
+    const safeName =
+      file.name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "imagen";
+    const blob = await put(`uploads/${safeName}`, file, {
+      access: "private",
       addRandomSuffix: true,
       contentType: file.type,
       // With OIDC, put() picks up the Vercel OIDC token and BLOB_STORE_ID on its own.
       ...(status.mode === "token" ? { token: status.token } : {}),
     });
-    return NextResponse.json({ url: blob.url });
+    const url = `/api/images/${blob.pathname}`;
+    return NextResponse.json({ url });
   } catch (error) {
     console.error("[/api/upload] put failed:", error);
     return NextResponse.json(
