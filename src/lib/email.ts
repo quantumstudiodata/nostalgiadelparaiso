@@ -37,6 +37,8 @@ export async function notifySubscribersOfPost(postId: string) {
 
   const messages = subscribers.map((s) => ({
     from: process.env.EMAIL_FROM!,
+    // The sending domain has no inbox, so replies go to a real address (e.g. the Gmail account).
+    ...(process.env.EMAIL_REPLY_TO ? { reply_to: process.env.EMAIL_REPLY_TO } : {}),
     to: s.email,
     subject: `Nueva entrada: ${post.title}`,
     html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#111">
