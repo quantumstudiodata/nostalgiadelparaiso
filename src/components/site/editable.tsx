@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition, type ReactNode } from "react";
 import { uploadImage } from "@/lib/upload-image";
 
@@ -60,6 +61,7 @@ export function EditableText({
   boldLeads = false,
   fontSize,
   onSaveSize,
+  href,
 }: {
   canEdit: boolean;
   value: string;
@@ -74,6 +76,8 @@ export function EditableText({
   fontSize?: number | string;
   /** When given, the editor shows a numeric font-size control. */
   onSaveSize?: (size: string) => Promise<void>;
+  /** Makes the text a link (it still navigates in edit mode; the pencil edits it). */
+  href?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -87,10 +91,13 @@ export function EditableText({
     ...(size ? { fontSize: `${size}px` } : {}),
   };
 
+  const shown = current ? (boldLeads ? withBoldLeads(current) : current) : null;
+  const linked = (content: ReactNode) => (href ? <Link href={href} className="hover:text-accent">{content}</Link> : content);
+
   if (!canEdit) {
     return (
       <Tag className={className} style={textStyle}>
-        {boldLeads ? withBoldLeads(current) : current}
+        {linked(shown)}
       </Tag>
     );
   }
@@ -99,7 +106,7 @@ export function EditableText({
     return (
       <span className="group relative block">
         <Tag className={className} style={textStyle}>
-          {current ? (boldLeads ? withBoldLeads(current) : current) : <span className="text-neutral-400">{placeholder}</span>}
+          {shown ? linked(shown) : <span className="text-neutral-400">{placeholder}</span>}
         </Tag>
         <PencilButton
           onClick={() => {
@@ -215,7 +222,7 @@ export function EditableButton({
   if (!editing) {
     return (
       <span className="group relative inline-flex">
-        <a href={current.url} onClick={(e) => e.preventDefault()} className={className}>
+        <a href={current.url} className={className}>
           {current.text}
         </a>
         <PencilButton
@@ -366,7 +373,7 @@ export function EditableButtonList({
             </span>
           ) : (
             <>
-              <a href={btn.url} onClick={(e) => e.preventDefault()} className={buttonClassName}>
+              <a href={btn.url} className={buttonClassName}>
                 {btn.text}
               </a>
               <button

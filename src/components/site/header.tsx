@@ -127,6 +127,7 @@ export async function SiteHeader() {
                   canEdit
                   value={link.label}
                   onSave={updateSiteBlockField.bind(null, "site.nav", link.key)}
+                  href={link.href}
                   className="whitespace-nowrap"
                 />
               ) : (

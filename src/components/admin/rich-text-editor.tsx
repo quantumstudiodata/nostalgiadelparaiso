@@ -87,6 +87,11 @@ function ImageButton({ editor }: { editor: Editor }) {
   );
 }
 
+// Stable references: new ones on each render make the bubble menu dispatch an update,
+// which re-renders the editor again (endless loop).
+const IMAGE_MENU_OPTIONS = { placement: "top" as const, offset: 8 };
+const showImageMenu = ({ editor }: { editor: Editor }) => editor.isActive("image");
+
 /** Floating menu on the selected image: position and size, like in Word. */
 function ImageControls({ editor }: { editor: Editor }) {
   const attrs = editor.getAttributes("image") as { align?: ImageAlign; width?: string };
@@ -102,8 +107,8 @@ function ImageControls({ editor }: { editor: Editor }) {
     <BubbleMenu
       editor={editor}
       pluginKey="imageMenu"
-      shouldShow={({ editor: ed }) => ed.isActive("image")}
-      options={{ placement: "top", offset: 8 }}
+      shouldShow={showImageMenu}
+      options={IMAGE_MENU_OPTIONS}
       className="z-20 flex flex-wrap items-center gap-1 p-1.5 rounded-full bg-ink text-white text-[13px] shadow-lg max-w-[92vw]"
     >
       {options.map((o) => (
