@@ -7,7 +7,7 @@ import { AuthError } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { auth, signIn } from "@/auth";
 import { isManager } from "@/lib/permissions";
-import { emailConfigured, sendEmail, emailLayout, escapeHtml, siteUrl, contactInbox } from "@/lib/email";
+import { emailConfigured, sendEmail, emailLayout, escapeHtml, contactInbox, sendWelcomeEmail } from "@/lib/email";
 import { sendCode, checkCode } from "@/lib/codes";
 import { notify } from "@/lib/notify";
 
@@ -43,25 +43,14 @@ export async function subscribe(_prev: FormState, formData: FormData): Promise<F
   const existing = await prisma.subscriber.findUnique({ where: { email } });
   if (existing?.verified) return { ok: true, message: "Ya estás suscrita/o. ¡Gracias!" };
 
-  await prisma.subscriber.upsert({
+  const subscriber = await prisma.subscriber.upsert({
     where: { email },
     update: { verified: true, confirmToken: null },
     create: { email, verified: true },
   });
   await notify("subscriber", `Nueva suscripción: ${email}`, "/admin/suscriptores");
   revalidatePath("/admin/suscriptores");
-
-  if (emailConfigured()) {
-    await sendEmail({
-      to: email,
-      subject: "Te suscribiste a Nostalgia del paraíso",
-      html: emailLayout(
-        "¡Gracias por suscribirte!",
-        `<p>Te suscribiste a <strong>Nostalgia del paraíso</strong>. Cada vez que se publique una entrada nueva te llegará un aviso a este correo.</p>
-<p><a href="${siteUrl()}/blog" style="display:inline-block;background:#000;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none">Leer las entradas</a></p>`,
-      ),
-    });
-  }
+  await sendWelcomeEmail(email, subscriber.unsubscribeToken);
   return { ok: true, message: "¡Listo! Te suscribiste. Te avisaremos por correo cada vez que haya una entrada nueva." };
 }
 

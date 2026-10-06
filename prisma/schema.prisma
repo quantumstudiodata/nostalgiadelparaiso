@@ -190,6 +190,9 @@ model ContactMessage {
   email     String
   message   String
   createdAt DateTime @default(now())
+  // Last reply sent from the panel; the conversation continues in Gmail.
+  reply     String?
+  repliedAt DateTime?
 }
 
 // Fixed, structural sections of the public site (hero, about, etc).

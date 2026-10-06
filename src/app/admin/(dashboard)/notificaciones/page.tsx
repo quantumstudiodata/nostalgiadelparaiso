@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireManager, requireManagerPage } from "@/lib/permissions";
 import { emailEnvStatus } from "@/lib/email";
 import { EmailTest } from "@/components/admin/email-test";
+import { ContactReply } from "@/components/admin/contact-reply";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +103,7 @@ export default async function NotificationsPage() {
                 <span className="text-[12px] text-neutral-500">{when(m.createdAt)}</span>
               </div>
               <p className="mt-1.5 whitespace-pre-line text-neutral-800">{m.message}</p>
+              <ContactReply messageId={m.id} name={m.name} repliedAt={m.repliedAt ? when(m.repliedAt) : null} />
             </div>
           ))}
         </div>

@@ -10,6 +10,7 @@ import { SiteMenu } from "@/components/site/site-menu";
 import { navWithLabels } from "@/components/site/nav-links";
 import { SocialLinksEditor } from "@/components/site/social-links-editor";
 import { EditableText } from "@/components/site/editable";
+import { SaveChangesBar } from "@/components/site/save-changes-bar";
 import { InstagramIcon, TikTokIcon, FacebookIcon, SearchIcon, UserIcon, PencilIcon } from "@/components/site/icons";
 
 function LogoutIcon() {
@@ -44,27 +45,32 @@ export async function SiteHeader() {
     { url: social.facebook, label: "Facebook", Icon: FacebookIcon },
   ].filter((s) => s.url);
 
+  // The edit/preview bar and the white bar with the logo stay fixed while scrolling.
+  // They are siblings in the page (no wrapping element) so "sticky" spans the whole page.
+  const barHeight = editing ? "top-[52px]" : manager && previewing ? "top-10" : "top-0";
+
   return (
-    <header>
+    <>
       {editing && (
-        <div className="bg-slate text-white">
-          <div className="wrap py-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-            <span className="flex items-center gap-2 font-bold">
+        <div className="sticky top-0 z-50 h-[52px] bg-slate text-white">
+          <div className="wrap h-full flex items-center gap-x-4 text-sm overflow-x-auto">
+            <span className="flex items-center gap-2 font-bold whitespace-nowrap">
               <PencilIcon size={15} />
               Modo edición
             </span>
-            <span className="hidden lg:inline text-lilac">Pasa el cursor sobre cualquier texto o imagen para editarlo.</span>
-            <div className="ml-auto flex items-center gap-3">
-              <Link href="/admin/entradas/nueva" className="border border-white/50 rounded-full px-4 py-1.5">+ Nueva entrada</Link>
-              <Link href="/admin" className="border border-white/50 rounded-full px-4 py-1.5">Panel</Link>
-              <a href="/admin/vista-previa" className="border border-white/50 rounded-full px-4 py-1.5">Ver mi página</a>
+            <span className="hidden xl:inline text-lilac whitespace-nowrap">Pasa el cursor sobre cualquier texto o imagen para editarlo.</span>
+            <div className="ml-auto flex items-center gap-2.5">
+              <SaveChangesBar />
+              <Link href="/admin/entradas/nueva" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">+ Nueva entrada</Link>
+              <Link href="/admin" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">Panel</Link>
+              <a href="/admin/vista-previa" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">Ver mi página</a>
             </div>
           </div>
         </div>
       )}
       {manager && previewing && (
-        <div className="bg-lilac text-ink">
-          <div className="wrap py-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+        <div className="sticky top-0 z-50 h-10 bg-lilac text-ink">
+          <div className="wrap h-full flex items-center gap-x-4 text-sm overflow-x-auto whitespace-nowrap">
             <span>Estás viendo tu página como la ven los visitantes.</span>
             <div className="ml-auto flex items-center gap-3">
               <a href="/admin/vista-previa?salir=1&a=/" className="underline underline-offset-4">Volver a editar</a>
@@ -113,7 +119,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="bg-white">
+      <div className={`sticky ${barHeight} z-40 bg-white border-b border-black/5`}>
         <div className="wrap h-[76px] lg:h-24 flex items-center gap-10 lg:gap-12">
           <Link href="/" className="flex items-center shrink-0">
             <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className="h-11 lg:h-[52px] w-auto" priority />
@@ -145,6 +151,6 @@ export async function SiteHeader() {
           </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }

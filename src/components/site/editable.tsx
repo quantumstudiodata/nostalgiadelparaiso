@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import { queueEdit } from "@/components/site/edit-session";
 import { uploadImage } from "@/lib/upload-image";
 
 function PencilIcon() {
@@ -85,7 +86,7 @@ export function EditableText({
   const initialSize = Number(fontSize) || 0;
   const [size, setSize] = useState(initialSize);
   const [sizeDraft, setSizeDraft] = useState(initialSize);
-  const [, startTransition] = useTransition();
+  const editKey = useId();
   const textStyle = {
     ...(multiline ? { whiteSpace: "pre-line" as const } : {}),
     ...(size ? { fontSize: `${size}px` } : {}),
@@ -125,10 +126,9 @@ export function EditableText({
     setCurrent(next);
     setSize(nextSize);
     setEditing(false);
-    startTransition(async () => {
-      if (next !== current) await onSave(next);
-      if (onSaveSize && nextSize !== size) await onSaveSize(nextSize ? String(nextSize) : "");
-    });
+    // Saved with "Guardar cambios" in the edit bar.
+    if (next !== current) queueEdit(`${editKey}:text`, () => onSave(next));
+    if (onSaveSize && nextSize !== size) queueEdit(`${editKey}:size`, () => onSaveSize(nextSize ? String(nextSize) : ""));
   }
 
   return (
@@ -209,7 +209,7 @@ export function EditableButton({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ text, url });
   const [current, setCurrent] = useState({ text, url });
-  const [, startTransition] = useTransition();
+  const editKey = useId();
 
   if (!canEdit) {
     return (
@@ -240,9 +240,7 @@ export function EditableButton({
     const next = draft;
     setCurrent(next);
     setEditing(false);
-    startTransition(async () => {
-      await onSave(next);
-    });
+    queueEdit(editKey, () => onSave(next));
   }
 
   return (
@@ -293,13 +291,11 @@ export function EditableButtonList({
   const [list, setList] = useState<EditableButtonItem[]>(buttons);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState({ text: "", url: "" });
-  const [, startTransition] = useTransition();
+  const editKey = useId();
 
   function persist(next: EditableButtonItem[]) {
     setList(next);
-    startTransition(async () => {
-      await onSave(next);
-    });
+    queueEdit(editKey, () => onSave(next));
   }
 
   function startEdit(btn: EditableButtonItem) {
@@ -423,7 +419,7 @@ export function EditableImage({
 }) {
   const [current, setCurrent] = useState(url);
   const [uploading, setUploading] = useState(false);
-  const [, startTransition] = useTransition();
+  const editKey = useId();
 
   const image = current ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -443,9 +439,7 @@ export function EditableImage({
     try {
       const url = await uploadImage(file);
       setCurrent(url);
-      startTransition(async () => {
-        await onSave(url);
-      });
+      queueEdit(editKey, () => onSave(url));
     } catch (err) {
       alert(err instanceof Error ? err.message : "No se pudo subir la imagen");
     } finally {

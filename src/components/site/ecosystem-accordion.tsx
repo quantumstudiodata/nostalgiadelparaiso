@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { createCategory, updateCategory, reorderCategories } from "@/app/actions/categories";
 import { PencilIcon } from "@/components/site/icons";
+import { queueEdit } from "@/components/site/edit-session";
 
 export type EcosystemEntry = { id: string; name: string; description: string; slug: string };
 
@@ -67,7 +68,7 @@ export function EcosystemAccordion({ items: initialItems, canEdit }: { items: Ec
     setDraft(null);
     if (exists) {
       setItems((list) => list.map((i) => (i.id === d.id ? d : i)));
-      run(() => updateCategory(d.id, { name: d.name, description: d.description }));
+      queueEdit(`eco:${d.id}:text`, () => updateCategory(d.id, { name: d.name, description: d.description }));
     } else {
       run(async () => {
         const c = await createCategory({ name: d.name, description: d.description, inEcosystem: true });
@@ -79,7 +80,7 @@ export function EcosystemAccordion({ items: initialItems, canEdit }: { items: Ec
   function hide(item: EcosystemEntry) {
     if (!confirm(`¿Quitar “${item.name}” del ecosistema? La categoría y sus entradas se conservan.`)) return;
     setItems((list) => list.filter((i) => i.id !== item.id));
-    run(() => updateCategory(item.id, { inEcosystem: false }));
+    queueEdit(`eco:${item.id}:hide`, () => updateCategory(item.id, { inEcosystem: false }));
   }
 
   function addNew() {
@@ -116,7 +117,7 @@ export function EcosystemAccordion({ items: initialItems, canEdit }: { items: Ec
     if (!dragId) return;
     setDragId(null);
     const ids = items.map((i) => i.id);
-    if (ids.join() !== orderAtStart.current) run(() => reorderCategories(ids));
+    if (ids.join() !== orderAtStart.current) queueEdit("eco:order", () => reorderCategories(ids));
   }
 
   const editor = (d: EcosystemEntry) => (

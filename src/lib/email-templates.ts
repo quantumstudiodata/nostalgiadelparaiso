@@ -24,7 +24,19 @@ export function postSummary(html: string, words = 70) {
   return list.length > words ? `${list.slice(0, words).join(" ")}…` : text;
 }
 
-function layout({ base, preheader, content, unsubscribeUrl }: { base: string; preheader: string; content: string; unsubscribeUrl?: string }) {
+function layout({
+  base,
+  preheader,
+  content,
+  unsubscribeUrl,
+  footer = "Recibes este correo porque te suscribiste a Nostalgia del paraíso.",
+}: {
+  base: string;
+  preheader: string;
+  content: string;
+  unsubscribeUrl?: string;
+  footer?: string;
+}) {
   return `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nostalgia del paraíso</title></head>
 <body style="margin:0;padding:0;background:${LILAC}">
@@ -40,7 +52,7 @@ function layout({ base, preheader, content, unsubscribeUrl }: { base: string; pr
   </table>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
     <tr><td align="center" style="padding:20px 24px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:${MUTED}">
-      Recibes este correo porque te suscribiste a Nostalgia del paraíso.${
+      ${escapeHtml(footer)}${
         unsubscribeUrl ? `<br><a href="${unsubscribeUrl}" style="color:${MUTED};text-decoration:underline">Darme de baja</a>` : ""
       }
     </td></tr>
@@ -98,5 +110,24 @@ export function welcomeEmail(p: { base: string; unsubscribeUrl: string }) {
       Cada vez que se publique una entrada nueva te llegará un aviso a este correo.
     </td></tr>
     <tr><td align="center" style="padding:28px 40px 40px">${button(`${p.base}/blog`, "Leer las entradas")}</td></tr>`,
+  });
+}
+
+/** Reply to a message sent from "Escríbenos", with the original message quoted. */
+export function contactReplyEmail(p: { base: string; name: string; reply: string; original: string }) {
+  const paragraphs = (text: string) => escapeHtml(text).replace(/\n/g, "<br>");
+  return layout({
+    base: p.base,
+    preheader: p.reply.slice(0, 120),
+    content: `
+    <tr><td style="padding:28px 40px 0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.75;color:#333333">
+      Hola ${escapeHtml(p.name)},<br><br>${paragraphs(p.reply)}
+    </td></tr>
+    <tr><td style="padding:28px 40px 40px">
+      <div style="border-left:3px solid ${LILAC};padding:4px 0 4px 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:${MUTED}">
+        <strong>Tu mensaje:</strong><br>${paragraphs(p.original)}
+      </div>
+    </td></tr>`,
+    footer: "Respondiendo a tu mensaje en Nostalgia del paraíso.",
   });
 }

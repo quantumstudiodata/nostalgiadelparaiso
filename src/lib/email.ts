@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { newPostEmail, postSummary, welcomeEmail } from "@/lib/email-templates";
 
 const RESEND_URL = "https://api.resend.com/emails/batch";
 
@@ -46,8 +47,7 @@ export async function notifySubscribersOfPost(postId: string) {
 
   const base = siteUrl();
   const postUrl = `${base}/blog/${post.slug}`;
-  const title = escapeHtml(post.title);
-  const excerpt = post.excerpt ? `<p style="font-size:15px;line-height:1.6;color:#333">${escapeHtml(post.excerpt)}</p>` : "";
+  const body = postSummary(post.content) || post.excerpt || "";
 
   const messages = subscribers.map((s) => ({
     from: env("EMAIL_FROM")!,
@@ -55,14 +55,15 @@ export async function notifySubscribersOfPost(postId: string) {
     ...(env("EMAIL_REPLY_TO") ? { reply_to: env("EMAIL_REPLY_TO") } : {}),
     to: s.email,
     subject: `Nueva entrada: ${post.title}`,
-    html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#111">
-<p style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#a24c2f">Nostalgia del paraíso</p>
-<h1 style="font-size:28px;margin:8px 0 4px">${title}</h1>
-<p style="font-size:14px;color:#555;margin:0 0 16px">por ${escapeHtml(post.writer.name)}</p>
-${excerpt}
-<p><a href="${postUrl}" style="display:inline-block;background:#000;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;font-family:Arial,sans-serif;font-size:14px">Leer la entrada</a></p>
-<p style="font-size:12px;color:#777;margin-top:32px">Recibes este correo porque te suscribiste a Nostalgia del paraíso. <a href="${base}/baja?token=${s.unsubscribeToken}" style="color:#777">Darme de baja</a></p>
-</div>`,
+    html: newPostEmail({
+      base,
+      title: post.title,
+      writerName: post.writer.name,
+      writerAvatarUrl: post.writer.avatarUrl,
+      body,
+      postUrl,
+      unsubscribeUrl: `${base}/baja?token=${s.unsubscribeToken}`,
+    }),
   }));
 
   for (let i = 0; i < messages.length; i += 100) {
@@ -104,6 +105,16 @@ export async function sendEmailDetailed({ to, subject, html, replyTo }: { to: st
     console.error("[email] Resend request failed:", error);
     return { ok: false, error: `No se pudo conectar con Resend: ${error instanceof Error ? error.message : String(error)}` };
   }
+}
+
+/** Welcome email sent right after someone subscribes. */
+export async function sendWelcomeEmail(email: string, unsubscribeToken: string) {
+  const base = siteUrl();
+  return sendEmail({
+    to: email,
+    subject: "Te suscribiste a Nostalgia del paraíso",
+    html: welcomeEmail({ base, unsubscribeUrl: `${base}/baja?token=${unsubscribeToken}` }),
+  });
 }
 
 /** Simple branded wrapper shared by every transactional email. */

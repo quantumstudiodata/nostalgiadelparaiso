@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { queueEdit } from "@/components/site/edit-session";
 import { updateSocialLinks } from "@/app/actions/site-content";
 import type { SocialLinks } from "@/lib/social-links";
 import { PencilIcon } from "@/components/site/icons";
@@ -15,19 +16,11 @@ const FIELDS: { key: keyof SocialLinks; label: string; placeholder: string }[] =
 export function SocialLinksEditor({ links }: { links: SocialLinks }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(links);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
+  // Saved with "Guardar cambios" in the edit bar.
   function save() {
-    setError(null);
-    startTransition(async () => {
-      try {
-        await updateSocialLinks(draft);
-        setOpen(false);
-      } catch {
-        setError("No se pudieron guardar los enlaces. Intenta de nuevo.");
-      }
-    });
+    const links = draft;
+    queueEdit("site.social", () => updateSocialLinks(links));
+    setOpen(false);
   }
 
   return (
@@ -79,7 +72,6 @@ export function SocialLinksEditor({ links }: { links: SocialLinks }) {
               </div>
             ))}
           </div>
-          {error && <p className="text-sm text-red-700 mt-3">{error}</p>}
           <div className="mt-5 flex justify-end gap-2.5">
             <button
               type="button"
@@ -91,10 +83,9 @@ export function SocialLinksEditor({ links }: { links: SocialLinks }) {
             <button
               type="button"
               onClick={save}
-              disabled={pending}
               className="h-11 px-6 bg-ink text-white rounded-full text-sm font-medium disabled:opacity-60"
             >
-              {pending ? "Guardando..." : "Guardar enlaces"}
+              Listo
             </button>
           </div>
         </div>

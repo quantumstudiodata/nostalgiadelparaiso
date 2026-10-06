@@ -94,3 +94,5 @@
 /* Blank lines added in the editor are empty paragraphs; give them a line's height. */
 .post-content p:empty::before,
 .post-content p:has(> br:only-child)::before { content: "\00a0"; }
+/* Anchored sections (#talleres, #contacto…) land below the fixed header. */
+html { scroll-padding-top: 140px; }
