@@ -1,7 +1,7 @@
 import { siteUrl } from "@/lib/email";
 
 export const SITE_NAME = "Nostalgia del Paraíso";
-export const SITE_TITLE = "Nostalgia del Paraíso · Ángeles Nava";
+export const SITE_TITLE = "Nostalgia del Paraíso | Ecosistema cultural";
 export const SITE_DESCRIPTION =
   "Nostalgia del Paraíso es el ecosistema cultural de Ángeles Nava, escritora y tallerista: poesía, talleres de escritura, círculos de lectura y cultura de paz.";
 export const SITE_KEYWORDS = [

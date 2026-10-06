@@ -410,7 +410,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "post-content prose max-w-none min-h-[360px] px-1 py-5 font-serif focus:outline-none [&_img.ProseMirror-selectednode]:outline-3 [&_img.ProseMirror-selectednode]:outline-accent [&_img]:cursor-grab",
+          "post-content post-body min-h-[360px] px-1 py-5 focus:outline-none [&_img.ProseMirror-selectednode]:outline-3 [&_img.ProseMirror-selectednode]:outline-accent [&_img]:cursor-grab",
       },
     },
   });

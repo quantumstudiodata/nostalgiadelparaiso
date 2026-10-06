@@ -167,7 +167,7 @@ export default async function PostPage({
             )}
 
             <div
-              className="post-content mt-5 text-[13.5px] leading-[1.65] text-neutral-900 text-justify [&_p]:my-0 [&_p+p]:mt-0 [&_h1]:font-playfair [&_h1]:font-bold [&_h1]:text-xl [&_h1]:my-4 [&_h2]:font-playfair [&_h2]:font-bold [&_h2]:text-lg [&_h2]:my-3 [&_h3]:font-playfair [&_h3]:font-bold [&_h3]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:border-lilac [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:underline"
+              className="post-content post-body mt-5"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
             />
 

@@ -96,3 +96,17 @@
 .post-content p:has(> br:only-child)::before { content: "\00a0"; }
 /* Anchored sections (#talleres, #contacto…) land below the fixed header. */
 html { scroll-padding-top: 140px; }
+
+/* Post body: the same rules in the editor and on the post page, so it looks exactly as written. */
+.post-body { font-size: 13.5px; line-height: 1.65; color: #171717; text-align: justify; }
+.post-body p { margin: 0 0 1.25em; }
+.post-body > :last-child { margin-bottom: 0; }
+.post-body h1, .post-body h2, .post-body h3 { font-family: var(--font-playfair); font-weight: 700; line-height: 1.3; margin: 1.2em 0 0.6em; }
+.post-body h1 { font-size: 1.25rem; }
+.post-body h2 { font-size: 1.125rem; }
+.post-body h3 { font-size: 1rem; }
+.post-body blockquote { border-left: 2px solid var(--lilac); padding-left: 1rem; font-style: italic; margin: 1em 0; }
+.post-body ul { list-style: disc; padding-left: 1.25rem; margin: 0 0 1.25em; }
+.post-body ol { list-style: decimal; padding-left: 1.25rem; margin: 0 0 1.25em; }
+.post-body li p { margin: 0; }
+.post-body a { text-decoration: underline; }
