@@ -100,7 +100,7 @@ type PostRowPost = {
   likes: number;
   publishedAt: Date | null;
   category: { name: string };
-  author: { id: string; name: string; avatarUrl: string | null };
+  writer: { id: string; name: string; avatarUrl: string | null };
   _count: { comments: number };
 };
 
@@ -117,15 +117,15 @@ export function PostRow({ post }: { post: PostRowPost }) {
       </Link>
       <div className="px-6 sm:px-[34px] pt-6 pb-4 flex flex-col min-w-0">
         <div className="flex items-center gap-2.5">
-          {post.author.avatarUrl ? (
+          {post.writer.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.author.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+            <img src={post.writer.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
           ) : (
             <span className="w-8 h-8 rounded-full bg-lilac" />
           )}
           <div className="text-xs leading-snug min-w-0">
-            <Link href={`/autor/${post.author.id}`} className="relative z-10 block truncate hover:text-accent">
-              {post.author.name}
+            <Link href={`/autor/${post.writer.id}`} className="relative z-10 block truncate hover:text-accent">
+              {post.writer.name}
             </Link>
             <div className="text-neutral-600">
               {shortDate(post.publishedAt)} · {readingMinutes(post.content)} min de lectura

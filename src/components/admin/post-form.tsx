@@ -9,13 +9,13 @@ import { ImageUploadField } from "./image-upload-field";
 import { RichTextEditor } from "./rich-text-editor";
 import { DeletePostButton } from "./delete-post-button";
 
-type AuthorOption = { id: string; name: string };
+type WriterOption = { id: string; name: string };
 
 export function PostForm({
   post,
   categories,
-  authors,
-  currentUserId,
+  writers,
+  defaultWriterId,
   action,
   deleteAction,
   heading,
@@ -23,9 +23,9 @@ export function PostForm({
 }: {
   post?: Post;
   categories: Category[];
-  /** Only passed to managers, who may publish on behalf of another writer. */
-  authors?: AuthorOption[];
-  currentUserId: string;
+  /** Writer profiles (Escritores); the chosen one appears as the post's author. */
+  writers: WriterOption[];
+  defaultWriterId: string;
   action: (prev: PostFormState, formData: FormData) => Promise<PostFormState>;
   deleteAction?: () => Promise<void>;
   heading: string;
@@ -161,19 +161,23 @@ export function PostForm({
             </select>
           </div>
 
-          {authors && (
-            <div className="bg-white rounded-[10px] p-4 flex flex-col gap-1.5">
-              <label htmlFor="post-author" className="font-bold">Publicada por</label>
-              <select id="post-author" name="authorId" defaultValue={post?.authorId ?? currentUserId} className="h-11 border border-mist rounded-lg px-2.5 bg-white">
-                {authors.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-              <span className="text-[13px] text-neutral-600">Para agregar a alguien, dale permisos en Escritores.</span>
-            </div>
-          )}
+          <div className="bg-white rounded-[10px] p-4 flex flex-col gap-1.5">
+            <label htmlFor="post-writer" className="font-bold">Escritor</label>
+            <select id="post-writer" name="writerId" required defaultValue={post?.writerId ?? defaultWriterId} className="h-11 border border-mist rounded-lg px-2.5 bg-white">
+              <option value="" disabled>
+                Selecciona un escritor
+              </option>
+              {writers.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-[13px] text-neutral-600">
+              Su nombre aparece como autor de la entrada. Para agregar uno,{" "}
+              <Link href="/admin/escritores" className="underline">ve a Escritores</Link>.
+            </span>
+          </div>
 
           <div className="bg-white rounded-[10px] p-4">
             <ImageUploadField name="coverImage" label="Imagen destacada" defaultValue={post?.coverImage ?? ""} />

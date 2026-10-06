@@ -30,12 +30,12 @@ export default async function AdminPostsPage({
     ...(estado === "publicadas" ? { status: "PUBLISHED" } : {}),
     ...(estado === "borradores" ? { status: "DRAFT" } : {}),
     ...(categoria ? { category: { slug: categoria } } : {}),
-    ...(autor && manager ? { authorId: autor } : {}),
+    ...(autor ? { writerId: autor } : {}),
     ...(query
       ? {
           OR: [
             { title: { contains: query, mode: "insensitive" } },
-            { author: { name: { contains: query, mode: "insensitive" } } },
+            { writer: { name: { contains: query, mode: "insensitive" } } },
           ],
         }
       : {}),
@@ -47,15 +47,13 @@ export default async function AdminPostsPage({
     prisma.post.count({ where: { ...own, status: "DRAFT" } }),
     manager ? prisma.subscriber.count({ where: { verified: true } }) : Promise.resolve(0),
     prisma.category.findMany({ orderBy: { order: "asc" }, select: { slug: true, name: true } }),
-    manager
-      ? prisma.user.findMany({ where: { posts: { some: {} } }, orderBy: { name: "asc" }, select: { id: true, name: true } })
-      : Promise.resolve([]),
+    prisma.writer.findMany({ where: { posts: { some: {} } }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(pageCount, Math.max(1, Number(pagina) || 1));
   const posts = await prisma.post.findMany({
     where,
-    include: { category: true, author: true },
+    include: { category: true, writer: true },
     orderBy: [{ publishedAt: { sort: "desc", nulls: "first" } }, { updatedAt: "desc" }],
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
@@ -146,7 +144,7 @@ export default async function AdminPostsPage({
                 </div>
                 <div className="min-w-0">
                   <div className="font-semibold truncate">{post.title}</div>
-                  <div className="text-[13px] text-neutral-600">{post.author.name}</div>
+                  <div className="text-[13px] text-neutral-600">{post.writer.name}</div>
                 </div>
                 <span className="text-[15px]">{post.category.name}</span>
                 <span

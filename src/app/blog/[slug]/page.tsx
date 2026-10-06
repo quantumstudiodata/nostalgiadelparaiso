@@ -27,7 +27,7 @@ export default async function PostPage({
     where: { slug, status: "PUBLISHED" },
     include: {
       category: true,
-      author: true,
+      writer: true,
       comments: { orderBy: { createdAt: "asc" }, include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
     },
   });
@@ -53,14 +53,15 @@ export default async function PostPage({
       where: { status: "PUBLISHED", categoryId: post.categoryId, id: { not: post.id } },
       orderBy: { publishedAt: "desc" },
       take: 3,
-      include: { category: true, author: true },
+      include: { category: true, writer: true },
     }),
     getSiteBlock<{ name?: string; bio?: string; avatarUrl?: string }>("sidebar.author"),
   ]);
-  // The founder's profile lives in the editable sidebar block; use it when her user record has no bio yet.
-  const isFounder = founder.name?.trim().toLowerCase() === post.author.name.trim().toLowerCase();
-  const authorBio = post.author.bio || (isFounder ? founder.bio ?? "" : "");
-  const authorAvatar = post.author.avatarUrl || (isFounder ? founder.avatarUrl : null);
+  // The founder's profile also lives in the editable sidebar block; use it when her writer profile is empty.
+  const isFounder = founder.name?.trim().toLowerCase() === post.writer.name.trim().toLowerCase();
+  const authorBio = post.writer.bio || (isFounder ? founder.bio ?? "" : "");
+  const authorAvatar = post.writer.avatarUrl || (isFounder ? founder.avatarUrl : null);
+  const writerHref = `/autor/${post.writer.id}`;
   const viewer = session?.user;
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
   const date = shortDate(post.publishedAt);
@@ -73,25 +74,29 @@ export default async function PostPage({
         <aside className="order-3 lg:order-1">
           {/* Phone order: categories, post, related, comments, then this column. */}
           <WixBlackColumn
-            authorName={post.author.name}
+            authorName={post.writer.name}
             authorBio={authorBio}
             authorAvatarUrl={authorAvatar}
             editable={false}
-            moreHref={isFounder ? "/acerca-de-nosotros" : `/autor/${post.author.id}`}
+            moreHref={writerHref}
           />
         </aside>
 
         <main className="order-2 min-w-0">
           <article>
             <div className="flex items-center gap-2.5">
-              {authorAvatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={authorAvatar} alt="" className="w-8 h-8 rounded-full object-cover" />
-              ) : (
-                <span className="w-8 h-8 rounded-full bg-lilac" />
-              )}
+              <Link href={writerHref} aria-hidden="true" tabIndex={-1}>
+                {authorAvatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={authorAvatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <span className="block w-8 h-8 rounded-full bg-lilac" />
+                )}
+              </Link>
               <div className="text-[13px] leading-snug">
-                <div>{post.author.name}</div>
+                <Link href={writerHref} className="hover:text-accent">
+                  {post.writer.name}
+                </Link>
                 <div className="text-xs text-neutral-600">
                   {date} · {readingMinutes(post.content)} min de lectura
                 </div>

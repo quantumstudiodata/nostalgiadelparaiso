@@ -58,7 +58,7 @@ export default async function HomePage() {
         excerpt: true,
         coverImage: true,
         category: { select: { id: true, name: true } },
-        author: { select: { name: true, avatarUrl: true } },
+        writer: { select: { id: true, name: true, avatarUrl: true } },
       },
     }),
     getSiteBlock<Record<string, string | undefined>>("home.sections"),

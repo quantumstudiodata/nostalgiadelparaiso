@@ -11,7 +11,7 @@ type Post = {
   excerpt: string | null;
   coverImage: string | null;
   category: { id: string; name: string };
-  author: { name: string; avatarUrl: string | null };
+  writer: { id: string; name: string; avatarUrl: string | null };
 };
 
 const SHOWN = 6;

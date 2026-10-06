@@ -1,21 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { addWriter, updateWriterProfile, type WriterFormState } from "@/app/admin/(dashboard)/escritores/actions";
+import { useActionState, useState, useTransition } from "react";
+import { createWriter, updateWriter, deleteWriter, type WriterFormState } from "@/app/admin/(dashboard)/escritores/actions";
 import { ImageUploadField } from "./image-upload-field";
-import { RoleSelect, ROLE_OPTIONS, inputClass, type Role } from "./role-select";
 
 export type WriterRow = {
   id: string;
   name: string;
-  role: Role;
   bio: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
-  websiteUrl: string | null;
   postCount: number;
 };
+
+const inputClass = "h-10 border border-mist rounded-md px-2.5 text-[15px] bg-white";
 
 function Avatar({ name, url }: { name: string; url: string | null }) {
   return url ? (
@@ -26,34 +25,42 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   );
 }
 
-function WriterProfileForm({ writer, onDone }: { writer: WriterRow; onDone: () => void }) {
-  const [state, action, pending] = useActionState<WriterFormState, FormData>(updateWriterProfile.bind(null, writer.id), {});
+/** Name, photo, cover and "Acerca de": what the writer's public profile shows. */
+function WriterForm({
+  writer,
+  action,
+  submitLabel,
+  onDone,
+}: {
+  writer?: WriterRow;
+  action: (prev: WriterFormState, formData: FormData) => Promise<WriterFormState>;
+  submitLabel: string;
+  onDone: () => void;
+}) {
+  const [state, formAction, pending] = useActionState<WriterFormState, FormData>(action, {});
   return (
-    <form action={action} className="mt-3 bg-panel rounded-lg p-4 flex flex-col gap-4">
-      <ImageUploadField name="coverUrl" label="Imagen de portada del perfil" defaultValue={writer.coverUrl ?? ""} aspectClassName="aspect-[4/1]" />
+    <form action={formAction} className="bg-panel rounded-lg p-4 flex flex-col gap-4">
+      <p className="text-[13px] text-neutral-600">Esta información se muestra en el perfil público del escritor.</p>
+      <ImageUploadField name="coverUrl" label="Imagen de portada" defaultValue={writer?.coverUrl ?? ""} aspectClassName="aspect-[4/1]" />
       <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-4">
-        <ImageUploadField name="avatarUrl" label="Foto de perfil" defaultValue={writer.avatarUrl ?? ""} aspectClassName="aspect-square" />
+        <ImageUploadField name="avatarUrl" label="Foto de perfil" defaultValue={writer?.avatarUrl ?? ""} aspectClassName="aspect-square" />
         <div className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-[15px] font-medium">
             Nombre
-            <input name="name" defaultValue={writer.name} required className={inputClass} />
+            <input name="name" defaultValue={writer?.name} required maxLength={80} className={inputClass} />
           </label>
           <label className="flex flex-col gap-1 text-[15px] font-medium">
-            Acerca de / Biografía
-            <textarea name="bio" rows={4} defaultValue={writer.bio ?? ""} className="border border-mist rounded-md px-2.5 py-2 text-[15px] bg-white" />
+            Acerca de
+            <textarea name="bio" rows={5} defaultValue={writer?.bio ?? ""} className="border border-mist rounded-md px-2.5 py-2 text-[15px] bg-white" />
           </label>
-          <label className="flex flex-col gap-1 text-[15px] font-medium">
-            Enlace del autor
-            <input name="websiteUrl" defaultValue={writer.websiteUrl ?? ""} placeholder="instagram.com/… o su sitio web" className={inputClass} />
-          </label>
-          {state.error && <p className="text-[13px] text-red-700">{state.error}</p>}
+          {state.error && <p className="text-[13px] text-red-700" role="alert">{state.error}</p>}
           {state.ok && <p className="text-[13px] text-[#1f5c2a]" role="status">{state.message}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={pending} className="bg-ink text-white rounded-full px-4 py-2 text-[15px] disabled:opacity-60">
-              {pending ? "Guardando..." : "Guardar perfil"}
+              {pending ? "Guardando..." : submitLabel}
             </button>
             <button type="button" onClick={onDone} className="border border-ink rounded-full px-4 py-2 text-[15px]">
-              Cerrar
+              {state.ok ? "Cerrar" : "Cancelar"}
             </button>
           </div>
         </div>
@@ -62,70 +69,46 @@ function WriterProfileForm({ writer, onDone }: { writer: WriterRow; onDone: () =
   );
 }
 
-function AddWriterForm({ currentUserIsAdmin }: { currentUserIsAdmin: boolean }) {
-  const [state, action, pending] = useActionState<WriterFormState, FormData>(addWriter, {});
-  return (
-    <form action={action} className="bg-white rounded-[10px] p-5 flex flex-col gap-3">
-      <p className="text-[14px] text-neutral-600">
-        Pide a la persona que se registre en el sitio. Luego escribe aquí su correo y elige qué podrá hacer. Ella crea y cuida su propia contraseña.
-      </p>
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-[15px] font-medium">
-          Correo con el que se registró
-          <input name="email" type="email" required className={`${inputClass} w-72 max-w-full`} />
-        </label>
-        <label className="flex flex-col gap-1 text-[15px] font-medium">
-          Rol
-          <select name="role" defaultValue="AUTHOR" className={inputClass}>
-            {ROLE_OPTIONS.filter((o) => o.value !== "READER" && (o.value !== "ADMIN" || currentUserIsAdmin)).map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={pending} className="h-10 bg-ink text-white rounded-full px-4 text-[15px] font-medium disabled:opacity-60">
-          {pending ? "Guardando..." : "Dar permisos"}
-        </button>
-      </div>
-      {state.error && <p className="text-[13px] text-red-700" role="alert">{state.error}</p>}
-      {state.ok && <p className="text-[13px] text-[#1f5c2a]" role="status">{state.message}</p>}
-    </form>
-  );
-}
-
-export function WritersManager({
-  writers,
-  currentUserId,
-  currentUserIsAdmin,
-}: {
-  writers: WriterRow[];
-  currentUserId: string;
-  currentUserIsAdmin: boolean;
-}) {
+export function WritersManager({ writers }: { writers: WriterRow[] }) {
   const [editing, setEditing] = useState<string | null>(null);
-  const [showAdd, setShowAdd] = useState(false);
+  const [adding, setAdding] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  function remove(w: WriterRow) {
+    if (!confirm(`¿Borrar el perfil de ${w.name}?`)) return;
+    setError(null);
+    startTransition(async () => {
+      try {
+        await deleteWriter(w.id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No se pudo borrar.");
+      }
+    });
+  }
 
   return (
     <div className="mt-5 flex flex-col gap-5">
       <div>
-        <button type="button" onClick={() => setShowAdd((v) => !v)} className="bg-ink text-white rounded-full px-5 py-2.5 text-[15px] font-medium">
-          {showAdd ? "Cerrar" : "+ Agregar escritor"}
-        </button>
-        {showAdd && <div className="mt-3"><AddWriterForm currentUserIsAdmin={currentUserIsAdmin} /></div>}
+        {adding ? (
+          <WriterForm key={adding} action={createWriter} submitLabel="Agregar escritor" onDone={() => setAdding(0)} />
+        ) : (
+          <button type="button" onClick={() => setAdding(Date.now())} className="bg-ink text-white rounded-full px-5 py-2.5 text-[15px] font-medium">
+            + Agregar escritor
+          </button>
+        )}
       </div>
+      {error && <p className="text-[14px] text-red-700" role="alert">{error}</p>}
 
       <div className="bg-white rounded-[10px]">
+        {writers.length === 0 && <p className="px-5 py-8 text-center text-neutral-600">Aún no hay escritores.</p>}
         {writers.map((w) => (
           <div key={w.id} className="px-5 py-3.5 border-b border-neutral-100 last:border-0">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-3 min-w-0 flex-1 basis-[220px]">
                 <Avatar name={w.name} url={w.avatarUrl} />
                 <div className="min-w-0">
-                  <div className="font-semibold truncate">
-                    {w.name}
-                    {w.id === currentUserId && <span className="font-normal text-neutral-500"> (tú)</span>}
-                  </div>
+                  <div className="font-semibold truncate">{w.name}</div>
                   <div className="text-[13px] text-neutral-600">
                     {w.postCount} {w.postCount === 1 ? "entrada" : "entradas"} ·{" "}
                     <Link href={`/autor/${w.id}`} target="_blank" className="underline">
@@ -134,20 +117,24 @@ export function WritersManager({
                   </div>
                 </div>
               </div>
-              <div className="w-[250px] max-w-full">
-                <RoleSelect
-                  userId={w.id}
-                  name={w.name}
-                  role={w.role}
-                  disabled={w.id === currentUserId || (w.role === "ADMIN" && !currentUserIsAdmin)}
-                  currentUserIsAdmin={currentUserIsAdmin}
-                />
-              </div>
               <button type="button" onClick={() => setEditing(editing === w.id ? null : w.id)} className="border border-ink rounded-full px-3 py-1.5 text-[13px]">
                 {editing === w.id ? "Cerrar" : "Editar perfil"}
               </button>
+              <button
+                type="button"
+                onClick={() => remove(w)}
+                disabled={w.postCount > 0}
+                title={w.postCount > 0 ? "Tiene entradas: cámbialas a otro escritor antes de borrarlo" : undefined}
+                className="text-[13px] text-accent-dark hover:underline disabled:opacity-40 disabled:no-underline"
+              >
+                Borrar
+              </button>
             </div>
-            {editing === w.id && <WriterProfileForm writer={w} onDone={() => setEditing(null)} />}
+            {editing === w.id && (
+              <div className="mt-3">
+                <WriterForm writer={w} action={updateWriter.bind(null, w.id)} submitLabel="Guardar perfil" onDone={() => setEditing(null)} />
+              </div>
+            )}
           </div>
         ))}
       </div>

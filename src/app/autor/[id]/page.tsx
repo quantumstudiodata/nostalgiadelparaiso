@@ -5,10 +5,8 @@ import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { PostRow } from "@/components/site/wix-blog";
 
-type Socials = { instagram?: string; facebook?: string; tiktok?: string };
-
 async function getWriter(id: string) {
-  return prisma.user.findFirst({ where: { id, role: { in: ["ADMIN", "EDITOR", "AUTHOR"] } } });
+  return prisma.writer.findUnique({ where: { id } });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -21,18 +19,11 @@ export default async function WriterPage({ params }: { params: Promise<{ id: str
   if (!writer) notFound();
 
   const posts = await prisma.post.findMany({
-    where: { authorId: writer.id, status: "PUBLISHED" },
+    where: { writerId: writer.id, status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
     take: 12,
-    include: { category: true, author: true, _count: { select: { comments: true } } },
+    include: { category: true, writer: true, _count: { select: { comments: true } } },
   });
-  const socials = (writer.socialLinks ?? {}) as Socials;
-  const links = [
-    writer.websiteUrl && { href: writer.websiteUrl, label: "Enlace del autor" },
-    socials.instagram && { href: socials.instagram, label: "Instagram" },
-    socials.facebook && { href: socials.facebook, label: "Facebook" },
-    socials.tiktok && { href: socials.tiktok, label: "TikTok" },
-  ].filter(Boolean) as { href: string; label: string }[];
 
   return (
     <>
@@ -55,15 +46,6 @@ export default async function WriterPage({ params }: { params: Promise<{ id: str
           )}
           <h1 className="mt-3 font-playfair text-[28px] leading-tight">{writer.name}</h1>
           {writer.bio && <p className="mt-3 max-w-[640px] text-[15px] leading-[1.7] whitespace-pre-line text-neutral-700">{writer.bio}</p>}
-          {links.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
-              {links.map((l) => (
-                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="border border-ink rounded-full px-3.5 py-1.5 text-[13px] hover:bg-ink hover:text-white">
-                  {l.label}
-                </a>
-              ))}
-            </div>
-          )}
         </div>
 
         <h2 className="mt-12 font-cormorant font-semibold text-[21px] tracking-[0.04em] mb-3">Entradas recientes</h2>

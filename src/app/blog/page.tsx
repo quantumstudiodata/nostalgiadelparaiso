@@ -30,7 +30,7 @@ export default async function BlogPage({
             { title: { contains: query, mode: "insensitive" } },
             { excerpt: { contains: query, mode: "insensitive" } },
             { content: { contains: query, mode: "insensitive" } },
-            { author: { name: { contains: query, mode: "insensitive" } } },
+            { writer: { name: { contains: query, mode: "insensitive" } } },
           ],
         }
       : {}),
@@ -52,7 +52,7 @@ export default async function BlogPage({
     orderBy: { publishedAt: "desc" },
     skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
-    include: { category: true, author: true, _count: { select: { comments: true } } },
+    include: { category: true, writer: true, _count: { select: { comments: true } } },
   });
 
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);

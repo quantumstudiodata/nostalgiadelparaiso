@@ -25,7 +25,7 @@ export async function notifySubscribersOfPost(postId: string) {
     return;
   }
 
-  const post = await prisma.post.findUnique({ where: { id: postId }, include: { author: true } });
+  const post = await prisma.post.findUnique({ where: { id: postId }, include: { writer: true } });
   if (!post || post.status !== "PUBLISHED") return;
   const subscribers = await prisma.subscriber.findMany({ where: { verified: true } });
   if (subscribers.length === 0) return;
@@ -44,7 +44,7 @@ export async function notifySubscribersOfPost(postId: string) {
     html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#111">
 <p style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#a24c2f">Nostalgia del paraíso</p>
 <h1 style="font-size:28px;margin:8px 0 4px">${title}</h1>
-<p style="font-size:14px;color:#555;margin:0 0 16px">por ${escapeHtml(post.author.name)}</p>
+<p style="font-size:14px;color:#555;margin:0 0 16px">por ${escapeHtml(post.writer.name)}</p>
 ${excerpt}
 <p><a href="${postUrl}" style="display:inline-block;background:#000;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;font-family:Arial,sans-serif;font-size:14px">Leer la entrada</a></p>
 <p style="font-size:12px;color:#777;margin-top:32px">Recibes este correo porque te suscribiste a Nostalgia del paraíso. <a href="${base}/baja?token=${s.unsubscribeToken}" style="color:#777">Darme de baja</a></p>

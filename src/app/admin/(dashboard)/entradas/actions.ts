@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
-import { canWritePosts, isManager, requireWriter } from "@/lib/permissions";
+import { isManager, requireWriter } from "@/lib/permissions";
 import { notifySubscribersOfPost } from "@/lib/email";
 
 export type PostFormState = { ok?: boolean; error?: string; savedAt?: number };
@@ -31,7 +31,7 @@ function readForm(formData: FormData) {
     excerpt: String(formData.get("excerpt") ?? ""),
     content: String(formData.get("content") ?? ""),
     coverImage: String(formData.get("coverImage") ?? ""),
-    authorId: String(formData.get("authorId") ?? ""),
+    writerId: String(formData.get("writerId") ?? ""),
     status: formData.get("status") === "PUBLISHED" ? ("PUBLISHED" as const) : ("DRAFT" as const),
     publishedDay: String(formData.get("publishedAt") ?? "").trim(),
   };
@@ -47,11 +47,8 @@ function chosenDate(day: string, current: Date | null): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** Managers may publish on behalf of any writer; authors always publish as themselves. */
-async function resolveAuthorId(user: { id: string; role: string }, requested: string) {
-  if (!isManager(user.role) || !requested) return user.id;
-  const author = await prisma.user.findUnique({ where: { id: requested } });
-  return author && canWritePosts(author.role) ? author.id : user.id;
+async function validWriter(id: string) {
+  return id ? Boolean(await prisma.writer.findUnique({ where: { id }, select: { id: true } })) : false;
 }
 
 function revalidatePosts(slug?: string) {
@@ -65,6 +62,7 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
   const user = await requireWriter();
   const data = readForm(formData);
   if (!data.title || !data.categoryId) return { error: "El título y la categoría son obligatorios." };
+  if (!(await validWriter(data.writerId))) return { error: "Elige el escritor de la entrada." };
 
   const post = await prisma.post.create({
     data: {
@@ -76,7 +74,8 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
       status: data.status,
       // A draft has no date yet: publishedAt also marks "already announced to subscribers".
       publishedAt: data.status === "PUBLISHED" ? (chosenDate(data.publishedDay, null) ?? new Date()) : null,
-      authorId: await resolveAuthorId(user, data.authorId),
+      authorId: user.id,
+      writerId: data.writerId,
       categoryId: data.categoryId,
     },
   });
@@ -90,6 +89,7 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
   const user = await requireWriter();
   const data = readForm(formData);
   if (!data.title || !data.categoryId) return { error: "El título y la categoría son obligatorios." };
+  if (!(await validWriter(data.writerId))) return { error: "Elige el escritor de la entrada." };
 
   const existing = await prisma.post.findUnique({ where: { id: postId } });
   if (!existing) return { error: "Esta entrada ya no existe." };
@@ -113,7 +113,7 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
       status: data.status,
       publishedAt,
       categoryId: data.categoryId,
-      ...(isManager(user.role) ? { authorId: await resolveAuthorId(user, data.authorId) } : {}),
+      writerId: data.writerId,
     },
   });
 

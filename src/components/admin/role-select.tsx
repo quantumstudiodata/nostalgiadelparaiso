@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateUserRole } from "@/app/admin/(dashboard)/escritores/actions";
+import { updateUserRole } from "@/app/admin/(dashboard)/suscriptores/actions";
 
 export type Role = "ADMIN" | "EDITOR" | "AUTHOR" | "READER";
 
 export const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: "READER", label: "Lectora (recibe correos, comenta)" },
-  { value: "AUTHOR", label: "Escritora (sube entradas)" },
+  { value: "AUTHOR", label: "Autora (sube entradas)" },
   { value: "EDITOR", label: "Editora (edita todo el sitio)" },
   { value: "ADMIN", label: "Administradora" },
 ];

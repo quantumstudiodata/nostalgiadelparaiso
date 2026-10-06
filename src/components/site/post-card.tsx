@@ -6,7 +6,7 @@ type PostCardPost = {
   excerpt: string | null;
   coverImage: string | null;
   category: { name: string };
-  author: { name: string; avatarUrl: string | null };
+  writer: { id: string; name: string; avatarUrl: string | null };
 };
 
 /** Vertical post card: image, category, title, excerpt and author. */
@@ -24,13 +24,13 @@ export function PostCard({ post, showAuthor = true, compact = false }: { post: P
       {post.excerpt && !compact && <p className="mt-2.5 lg:mt-3 text-[15px] leading-[1.65] text-neutral-700 line-clamp-3">{post.excerpt}</p>}
       {showAuthor && (
         <div className="mt-3.5 lg:mt-[18px] flex items-center gap-2.5 text-[15px] font-medium">
-          {post.author.avatarUrl ? (
+          {post.writer.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.author.avatarUrl} alt="" className="w-8 h-8 lg:w-[34px] lg:h-[34px] rounded-full object-cover" />
+            <img src={post.writer.avatarUrl} alt="" className="w-8 h-8 lg:w-[34px] lg:h-[34px] rounded-full object-cover" />
           ) : (
             <span className="w-8 h-8 lg:w-[34px] lg:h-[34px] rounded-full bg-mist" />
           )}
-          {post.author.name}
+          {post.writer.name}
         </div>
       )}
     </Link>

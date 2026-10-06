@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { isManager, requireWriterPage as requireWriter } from "@/lib/permissions";
-import { getWriters } from "@/lib/writers";
+import { getWriters, defaultWriterId } from "@/lib/writers";
 import { PostForm } from "@/components/admin/post-form";
 import { updatePost, deletePost } from "../actions";
 
@@ -14,10 +14,10 @@ export default async function EditPostPage({
   const user = await requireWriter();
   const manager = isManager(user.role);
 
-  const [post, categories, authors] = await Promise.all([
+  const [post, categories, writers] = await Promise.all([
     prisma.post.findUnique({ where: { id } }),
     prisma.category.findMany({ orderBy: { order: "asc" } }),
-    manager ? getWriters() : Promise.resolve(undefined),
+    getWriters(),
   ]);
 
   // Authors only see their own posts.
@@ -27,8 +27,8 @@ export default async function EditPostPage({
     <PostForm
       post={post}
       categories={categories}
-      authors={authors}
-      currentUserId={user.id}
+      writers={writers}
+      defaultWriterId={defaultWriterId(writers, user.name)}
       action={updatePost.bind(null, post.id)}
       deleteAction={deletePost.bind(null, post.id)}
       heading={`Editando “${post.title}”`}

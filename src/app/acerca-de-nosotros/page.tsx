@@ -46,7 +46,7 @@ export default async function AboutPage() {
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
       take: 3,
-      include: { category: true, author: true },
+      include: { category: true, writer: true },
     }),
   ]);
 

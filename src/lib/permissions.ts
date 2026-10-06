@@ -6,7 +6,7 @@ export type AppRole = "ADMIN" | "EDITOR" | "AUTHOR" | "READER";
 export const ROLE_LABELS: Record<AppRole, string> = {
   ADMIN: "Administradora",
   EDITOR: "Editora del sitio",
-  AUTHOR: "Escritora",
+  AUTHOR: "Autora",
   READER: "Lectora",
 };
 
