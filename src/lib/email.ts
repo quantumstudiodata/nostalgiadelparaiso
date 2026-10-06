@@ -24,11 +24,6 @@ export function emailConfigured() {
   return Boolean(env("RESEND_API_KEY") && env("EMAIL_FROM"));
 }
 
-/** Which email variables are set in this deploy (values are never shown). */
-export function emailEnvStatus() {
-  return ["RESEND_API_KEY", "EMAIL_FROM", "EMAIL_REPLY_TO", "CONTACT_EMAIL", "SITE_URL"].map((name) => ({ name, set: Boolean(env(name)) }));
-}
-
 export function contactInbox() {
   return env("CONTACT_EMAIL") ?? env("EMAIL_REPLY_TO");
 }

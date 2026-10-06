@@ -2,8 +2,6 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireManager, requireManagerPage } from "@/lib/permissions";
-import { emailEnvStatus } from "@/lib/email";
-import { EmailTest } from "@/components/admin/email-test";
 import { ContactReply } from "@/components/admin/contact-reply";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +26,7 @@ function when(date: Date) {
 }
 
 export default async function NotificationsPage() {
-  const viewer = await requireManagerPage();
+  await requireManagerPage();
   const startOfDay = new Date(new Date().toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" }) + "T06:00:00Z");
   const [notifications, messages, visitsToday] = await Promise.all([
     prisma.notification.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
@@ -84,8 +82,6 @@ export default async function NotificationsPage() {
           );
         })}
       </section>
-
-      <EmailTest defaultTo={viewer.email ?? ""} vars={emailEnvStatus()} />
 
       <section>
         <h2 className="font-bold text-[19px] mb-3">Mensajes de “Escríbenos”</h2>
