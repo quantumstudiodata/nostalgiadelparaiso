@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { canWritePosts, isManager } from "@/lib/permissions";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { getSiteBlock } from "@/lib/site-blocks";
+import { canEditSite } from "@/lib/edit-mode";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { WixCategories, WixBlackColumn } from "@/components/site/wix-blog";
@@ -60,12 +61,12 @@ export default async function PostPage({
     }),
     getSiteBlock<{ name?: string; bio?: string; avatarUrl?: string }>("sidebar.author"),
   ]);
-  // The founder's profile also lives in the editable sidebar block; use it when her writer profile is empty.
+  // The writer's photo next to the title; the left column always shows the founder's card, as on the blog list.
   const isFounder = founder.name?.trim().toLowerCase() === post.writer.name.trim().toLowerCase();
-  const authorBio = post.writer.bio || (isFounder ? founder.bio ?? "" : "");
   const authorAvatar = post.writer.avatarUrl || (isFounder ? founder.avatarUrl : null);
   const writerHref = `/autor/${post.writer.id}`;
   const viewer = session?.user;
+  const canEdit = await canEditSite(session);
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
   const date = shortDate(post.publishedAt);
 
@@ -82,11 +83,10 @@ export default async function PostPage({
         <aside className="order-3 lg:order-1">
           {/* Phone order: categories, post, related, comments, then this column. */}
           <WixBlackColumn
-            authorName={post.writer.name}
-            authorBio={authorBio}
-            authorAvatarUrl={authorAvatar}
-            editable={false}
-            moreHref={writerHref}
+            authorName={founder.name || "Ángeles Nava"}
+            authorBio={founder.bio ?? ""}
+            authorAvatarUrl={founder.avatarUrl}
+            canEdit={canEdit}
           />
         </aside>
 
