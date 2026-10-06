@@ -13,6 +13,7 @@ import { SearchPill } from "@/components/site/search-pill";
 import { LikeButton, PostMenu } from "@/components/site/post-actions";
 import { readingMinutes, shortDate } from "@/lib/reading-time";
 import { CommentForm } from "@/components/site/comment-form";
+import { Stars, WithPixelEmojis } from "@/components/site/pixel-emoji";
 import { addComment, deleteComment } from "@/app/actions/community";
 
 export default async function PostPage({
@@ -70,16 +71,17 @@ export default async function PostPage({
 
       <div className="max-w-[1120px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)_180px] gap-12 lg:gap-16 items-start">
         <aside className="order-3 lg:order-1">
+          {/* Phone order: categories, post, related, comments, then this column. */}
           <WixBlackColumn
             authorName={post.author.name}
             authorBio={authorBio}
             authorAvatarUrl={authorAvatar}
             editable={false}
-            moreHref={isFounder ? "/acerca-de-nosotros" : `/blog?q=${encodeURIComponent(post.author.name)}`}
+            moreHref={isFounder ? "/acerca-de-nosotros" : `/autor/${post.author.id}`}
           />
         </aside>
 
-        <main className="order-1 lg:order-2 min-w-0">
+        <main className="order-2 min-w-0">
           <article>
             <div className="flex items-center gap-2.5">
               {authorAvatar ? (
@@ -152,46 +154,47 @@ export default async function PostPage({
             {post.comments.length === 0 && <p className="mt-4 text-[13px] text-neutral-600">Aún no hay comentarios. ¡Sé la primera persona en comentar!</p>}
 
             <ul className="mt-5 flex flex-col gap-5">
-              {post.comments.map((c) => (
-                <li key={c.id} className="flex gap-3">
-                  {c.user.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
-                  ) : (
-                    <span className="w-8 h-8 rounded-full bg-lilac shrink-0 flex items-center justify-center text-xs font-medium">
-                      {c.user.name.slice(0, 1).toUpperCase()}
-                    </span>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 text-[13px]">
-                      <span className="font-medium">{c.user.name}</span>
-                      <span className="text-neutral-500 text-xs">{shortDate(c.createdAt)}</span>
-                      {viewer && (viewer.id === c.user.id || isManager(viewer.role)) && (
-                        <form action={deleteComment.bind(null, c.id)} className="ml-auto">
-                          <button className="text-xs text-accent-dark hover:underline">Borrar</button>
-                        </form>
+              {post.comments.map((c) => {
+                const name = c.user?.name ?? c.authorName ?? "Anónimo";
+                return (
+                  <li key={c.id} className="flex gap-3">
+                    {c.user?.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <span className="w-8 h-8 rounded-full bg-lilac shrink-0 flex items-center justify-center text-xs font-medium">
+                        {name.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px]">
+                        <span className="font-medium">{name}</span>
+                        {c.rating ? <Stars value={c.rating} /> : null}
+                        <span className="text-neutral-500 text-xs">{shortDate(c.createdAt)}</span>
+                        {viewer && ((c.user && viewer.id === c.user.id) || isManager(viewer.role)) && (
+                          <form action={deleteComment.bind(null, c.id)} className="ml-auto">
+                            <button className="text-xs text-accent-dark hover:underline">Borrar</button>
+                          </form>
+                        )}
+                      </div>
+                      {c.body && (
+                        <p className="mt-1 text-[13.5px] leading-relaxed whitespace-pre-line">
+                          <WithPixelEmojis text={c.body} />
+                        </p>
                       )}
                     </div>
-                    <p className="mt-1 text-[13.5px] leading-relaxed whitespace-pre-line">{c.body}</p>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
 
             <div className="mt-7">
-              {viewer ? (
-                <CommentForm action={addComment.bind(null, post.id)} />
-              ) : (
-                <p className="text-[13px] border border-mist p-4">
-                  <Link href="/admin/login" className="font-medium underline underline-offset-4">Inicia sesión</Link> o{" "}
-                  <Link href="/registro" className="font-medium underline underline-offset-4">crea una cuenta</Link> para comentar.
-                </p>
-              )}
+              <CommentForm action={addComment.bind(null, post.id)} signedInAs={viewer?.name} />
             </div>
           </section>
         </main>
 
-        <aside className="order-2 lg:order-3 flex flex-col gap-3">
+        <aside className="order-1 lg:order-3 flex flex-col gap-3">
           <WixCategories categories={categories} totalPosts={totalPosts} activeSlug={post.category.slug} />
           <SearchPill variant="outline" />
         </aside>

@@ -38,11 +38,32 @@ model User {
   role         Role     @default(EDITOR)
   avatarUrl    String?
   bio          String?
+  // Public writer profile (Escritores): cover image and an external link.
+  coverUrl     String?
+  websiteUrl   String?
+  // Personal social links shown on the writer profile: { instagram, facebook, tiktok }.
+  socialLinks  Json?
+  // Null until the person confirms the code sent to their email.
+  emailVerified DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   posts    Post[]
   comments Comment[]
+}
+
+// One-time codes sent by email: sign-up confirmation, password reset, email change.
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  purpose   String // "register" | "reset" | "email-change"
+  codeHash  String
+  data      Json?
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, purpose])
 }
 
 model Category {
@@ -58,6 +79,8 @@ model Category {
   cardTitle   String?
   description String?
   imageUrl    String?
+  // Listed in "En este ecosistema conviven" and "Talleres y voces de la comunidad".
+  inEcosystem Boolean @default(true)
 
   posts Post[]
 }
@@ -87,12 +110,17 @@ model Post {
 model Comment {
   id        String   @id @default(cuid())
   body      String
+  // 1–5 stars, optional.
+  rating    Int?
   createdAt DateTime @default(now())
 
   postId String
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Signed-in commenters link their account; guests leave a name and a private email.
+  userId      String?
+  user        User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  authorName  String?
+  authorEmail String?
 
   @@index([postId, createdAt])
 }
@@ -103,7 +131,45 @@ model Subscriber {
   email            String   @unique
   name             String?
   unsubscribeToken String   @unique @default(cuid())
+  // Double opt-in: emails go only to confirmed subscribers.
+  verified         Boolean  @default(false)
+  confirmToken     String?  @unique
   createdAt        DateTime @default(now())
+}
+
+// One row per page view, for the Estadísticas page.
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  postId    String?
+  source    String // "google" | "instagram" | "facebook" | "tiktok" | "anuncios" | "directo" | "otros"
+  visitorId String
+  sessionId String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([postId])
+}
+
+// Bell in the admin panel: sign-ups, subscribers, comments, likes, messages.
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([read, createdAt])
+}
+
+// Messages sent through "Escríbenos".
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
 }
 
 // Fixed, structural sections of the public site (hero, about, etc).

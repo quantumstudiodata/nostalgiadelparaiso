@@ -3,101 +3,109 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type NavLink = { href: string; label: string; icon: React.ReactNode; match: (p: string) => boolean; managerOnly?: boolean };
+type NavLink = { href: string; label: string; icon: React.ReactNode; match: (p: string) => boolean; indent?: boolean };
 
-const LINKS: NavLink[] = [
-  {
-    href: "/admin",
-    label: "Entradas",
-    icon: <path d="M4 5h16M4 12h16M4 19h10" />,
-    match: (p) => p === "/admin" || (p.startsWith("/admin/entradas/") && p !== "/admin/entradas/nueva"),
-  },
-  {
-    href: "/admin/entradas/nueva",
-    label: "Nueva entrada",
-    icon: <path d="M12 5v14M5 12h14" />,
-    match: (p) => p === "/admin/entradas/nueva",
-  },
-  {
-    href: "/admin/usuarios",
-    label: "Usuarios",
-    managerOnly: true,
-    icon: (
-      <>
-        <circle cx="9" cy="8" r="3.5" />
-        <path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.5 2.4 3.5 5.2" />
-      </>
-    ),
-    match: (p) => p.startsWith("/admin/usuarios"),
-  },
-  {
-    href: "/admin/suscriptores",
-    label: "Suscriptores",
-    managerOnly: true,
-    icon: (
-      <>
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="M3 7l9 6 9-6" />
-      </>
-    ),
-    match: (p) => p.startsWith("/admin/suscriptores"),
-  },
-  {
-    href: "/admin/redes-sociales",
-    label: "Redes sociales",
-    managerOnly: true,
-    icon: (
-      <>
-        <circle cx="18" cy="5" r="3" />
-        <circle cx="6" cy="12" r="3" />
-        <circle cx="18" cy="19" r="3" />
-        <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
-      </>
-    ),
-    match: (p) => p === "/admin/redes-sociales",
-  },
-];
+const ICONS = {
+  cuenta: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+    </>
+  ),
+  entradas: <path d="M4 5h16M4 12h16M4 19h10" />,
+  categorias: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </>
+  ),
+  escritores: <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />,
+  suscriptores: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </>
+  ),
+  estadisticas: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+};
 
-export function AdminNavLinks({ manager }: { manager: boolean }) {
+function Item({ link, active }: { link: NavLink; active: boolean }) {
+  return (
+    <Link
+      href={link.href}
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-2.5 rounded-full py-2.5 ${link.indent ? "pl-9 pr-4 text-[14px]" : "px-4"} ${
+        active ? "bg-lilac text-ink font-medium" : "text-white hover:bg-white/10"
+      }`}
+    >
+      {!link.indent && (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          {link.icon}
+        </svg>
+      )}
+      {link.label}
+    </Link>
+  );
+}
+
+export function AdminNavLinks({ manager, writer }: { manager: boolean; writer: boolean }) {
   const pathname = usePathname();
+  const isPostPage = (p: string) => p === "/admin" || p.startsWith("/admin/entradas");
+
+  const cuenta: NavLink = { href: "/admin/cuenta", label: "Cuenta", icon: ICONS.cuenta, match: (p) => p.startsWith("/admin/cuenta") };
+  const pages: NavLink[] = [
+    { href: "/admin", label: "Entradas", icon: ICONS.entradas, match: isPostPage, indent: true },
+    ...(manager ? [{ href: "/admin/categorias", label: "Categorías", icon: ICONS.categorias, match: (p: string) => p.startsWith("/admin/categorias"), indent: true }] : []),
+  ];
+  const management: NavLink[] = manager
+    ? [
+        { href: "/admin/escritores", label: "Escritores", icon: ICONS.escritores, match: (p) => p.startsWith("/admin/escritores") },
+        { href: "/admin/suscriptores", label: "Suscriptores", icon: ICONS.suscriptores, match: (p) => p.startsWith("/admin/suscriptores") },
+        { href: "/admin/estadisticas", label: "Estadísticas", icon: ICONS.estadisticas, match: (p) => p.startsWith("/admin/estadisticas") },
+      ]
+    : [];
 
   return (
-    <nav className="flex flex-row flex-wrap lg:flex-col gap-1 text-[15px]">
-      {LINKS.filter((l) => manager || !l.managerOnly).map((link) => {
-        const active = link.match(pathname);
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-2.5 rounded-full px-4 py-3 ${
-              active ? "bg-lilac text-ink font-medium" : "text-white hover:bg-white/10"
-            }`}
-          >
+    <nav className="flex flex-col gap-1 text-[15px]">
+      <Item link={cuenta} active={cuenta.match(pathname)} />
+
+      {writer && (
+        <div className="mt-1">
+          <div className="flex items-center gap-2.5 px-4 py-2.5 text-white/90">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              {link.icon}
+              <rect x="4" y="3" width="16" height="18" rx="2" />
+              <path d="M8 8h8M8 12h8M8 16h5" />
             </svg>
-            {link.label}
-          </Link>
-        );
-      })}
-      <Link
-        href="/cuenta"
-        className="flex items-center gap-2.5 rounded-full px-4 py-3 text-white hover:bg-white/10"
-      >
+            Páginas del sitio
+          </div>
+          {pages.map((l) => (
+            <Item key={l.href} link={l} active={l.match(pathname)} />
+          ))}
+        </div>
+      )}
+
+      {management.map((l) => (
+        <Item key={l.href} link={l} active={l.match(pathname)} />
+      ))}
+
+      <div className="h-px bg-neutral-800 mx-2 my-3" />
+      {manager && (
+        <a href="/admin/vista-previa?salir=1&a=/" className="flex items-center gap-2.5 rounded-full px-4 py-2.5 text-white hover:bg-white/10">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+          Ver y editar sitio
+        </a>
+      )}
+      <a href={manager ? "/admin/vista-previa" : "/"} className="flex items-center gap-2.5 rounded-full px-4 py-2.5 text-white hover:bg-white/10">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <rect x="5" y="11" width="14" height="10" rx="2" />
-          <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+          <circle cx="12" cy="12" r="3" />
         </svg>
-        Mi cuenta
-      </Link>
-      <div className="hidden lg:block h-px bg-neutral-800 mx-2 my-2.5" />
-      <Link href="/" className="flex items-center gap-2.5 rounded-full px-4 py-3 text-white hover:bg-white/10">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" />
-        </svg>
-        {manager ? "Ver y editar el sitio" : "Ver el sitio"}
-      </Link>
+        Ver mi página
+      </a>
     </nav>
   );
 }

@@ -100,7 +100,7 @@ type PostRowPost = {
   likes: number;
   publishedAt: Date | null;
   category: { name: string };
-  author: { name: string; avatarUrl: string | null };
+  author: { id: string; name: string; avatarUrl: string | null };
   _count: { comments: number };
 };
 
@@ -124,7 +124,9 @@ export function PostRow({ post }: { post: PostRowPost }) {
             <span className="w-8 h-8 rounded-full bg-lilac" />
           )}
           <div className="text-xs leading-snug min-w-0">
-            <div className="truncate">{post.author.name}</div>
+            <Link href={`/autor/${post.author.id}`} className="relative z-10 block truncate hover:text-accent">
+              {post.author.name}
+            </Link>
             <div className="text-neutral-600">
               {shortDate(post.publishedAt)} · {readingMinutes(post.content)} min de lectura
             </div>

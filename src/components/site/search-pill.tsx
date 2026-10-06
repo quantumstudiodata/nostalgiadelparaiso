@@ -17,7 +17,7 @@ export function SearchPill({ variant = "filled", defaultValue = "" }: { variant?
           <circle cx="10.5" cy="10.5" r="7" />
           <path d="M21 21l-5.5-5.5" />
         </svg>
-        Search
+        Buscar
       </button>
     );
   }

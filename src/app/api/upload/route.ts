@@ -54,7 +54,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user || !canWritePosts(session.user.role)) {
+  if (!session?.user) {
     return NextResponse.json({ error: "Tu sesión expiró. Vuelve a iniciar sesión." }, { status: 401 });
   }
 

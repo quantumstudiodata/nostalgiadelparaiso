@@ -58,6 +58,8 @@ export function EditableText({
   placeholder = "Escribe aquí...",
   as: Tag = "div",
   boldLeads = false,
+  fontSize,
+  onSaveSize,
 }: {
   canEdit: boolean;
   value: string;
@@ -68,15 +70,26 @@ export function EditableText({
   as?: "div" | "h1" | "h2" | "h3" | "p" | "span";
   /** Display-only: bold each paragraph's text up to its first colon. */
   boldLeads?: boolean;
+  /** Saved font size in px; overrides the size in className (on every screen). */
+  fontSize?: number | string;
+  /** When given, the editor shows a numeric font-size control. */
+  onSaveSize?: (size: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [current, setCurrent] = useState(value);
+  const initialSize = Number(fontSize) || 0;
+  const [size, setSize] = useState(initialSize);
+  const [sizeDraft, setSizeDraft] = useState(initialSize);
   const [, startTransition] = useTransition();
+  const textStyle = {
+    ...(multiline ? { whiteSpace: "pre-line" as const } : {}),
+    ...(size ? { fontSize: `${size}px` } : {}),
+  };
 
   if (!canEdit) {
     return (
-      <Tag className={className} style={multiline ? { whiteSpace: "pre-line" } : undefined}>
+      <Tag className={className} style={textStyle}>
         {boldLeads ? withBoldLeads(current) : current}
       </Tag>
     );
@@ -85,12 +98,13 @@ export function EditableText({
   if (!editing) {
     return (
       <span className="group relative block">
-        <Tag className={className} style={multiline ? { whiteSpace: "pre-line" } : undefined}>
+        <Tag className={className} style={textStyle}>
           {current ? (boldLeads ? withBoldLeads(current) : current) : <span className="text-neutral-400">{placeholder}</span>}
         </Tag>
         <PencilButton
           onClick={() => {
             setDraft(current);
+            setSizeDraft(size);
             setEditing(true);
           }}
         />
@@ -100,10 +114,13 @@ export function EditableText({
 
   function save() {
     const next = draft;
+    const nextSize = sizeDraft;
     setCurrent(next);
+    setSize(nextSize);
     setEditing(false);
     startTransition(async () => {
-      await onSave(next);
+      if (next !== current) await onSave(next);
+      if (onSaveSize && nextSize !== size) await onSaveSize(nextSize ? String(nextSize) : "");
     });
   }
 
@@ -124,6 +141,33 @@ export function EditableText({
           onChange={(e) => setDraft(e.target.value)}
           className="w-full text-sm text-neutral-900 border border-neutral-300 rounded p-2"
         />
+      )}
+      {onSaveSize && (
+        <span className="flex flex-wrap items-center gap-2 mt-2 text-xs text-neutral-800">
+          <label htmlFor={`size-${value.slice(0, 8)}`}>Tamaño de letra</label>
+          <button type="button" aria-label="Más chica" onClick={() => setSizeDraft((n) => Math.max(8, (n || 16) - 1))} className="w-7 h-7 border border-neutral-300 rounded">
+            −
+          </button>
+          <input
+            id={`size-${value.slice(0, 8)}`}
+            type="number"
+            min={8}
+            max={160}
+            value={sizeDraft || ""}
+            placeholder="auto"
+            onChange={(e) => setSizeDraft(Math.min(160, Math.max(0, Number(e.target.value) || 0)))}
+            className="w-16 h-7 border border-neutral-300 rounded px-1.5 text-center"
+          />
+          <button type="button" aria-label="Más grande" onClick={() => setSizeDraft((n) => Math.min(160, (n || 16) + 1))} className="w-7 h-7 border border-neutral-300 rounded">
+            +
+          </button>
+          <span className="text-neutral-500">px</span>
+          {sizeDraft > 0 && (
+            <button type="button" onClick={() => setSizeDraft(0)} className="underline text-neutral-600">
+              Tamaño original
+            </button>
+          )}
+        </span>
       )}
       <div className="flex gap-2 mt-2">
         <button type="button" onClick={save} className="text-xs bg-ink text-white px-3 py-1.5 rounded">

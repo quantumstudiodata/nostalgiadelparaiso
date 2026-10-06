@@ -2,21 +2,22 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { isManager } from "@/lib/permissions";
+import { canWritePosts, isManager } from "@/lib/permissions";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { PostsFilters } from "@/components/admin/posts-filters";
 
-const FILTERS = [
-  { value: undefined, label: "Todas" },
-  { value: "publicadas", label: "Publicadas" },
-  { value: "borradores", label: "Borradores" },
-] as const;
+const PAGE_SIZE = 20;
 
 export default async function AdminPostsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; estado?: string }>;
+  searchParams: Promise<{ q?: string; estado?: string; categoria?: string; autor?: string; pagina?: string }>;
 }) {
-  const { q, estado } = await searchParams;
+  const { q, estado, categoria, autor, pagina } = await searchParams;
   const session = await auth();
+  // Readers only have "Cuenta" in their panel.
+  if (!canWritePosts(session?.user?.role)) redirect("/admin/cuenta");
   const firstName = session?.user?.name?.split(" ")[0] ?? "";
 
   const manager = isManager(session?.user?.role);
@@ -28,6 +29,8 @@ export default async function AdminPostsPage({
     ...own,
     ...(estado === "publicadas" ? { status: "PUBLISHED" } : {}),
     ...(estado === "borradores" ? { status: "DRAFT" } : {}),
+    ...(categoria ? { category: { slug: categoria } } : {}),
+    ...(autor && manager ? { authorId: autor } : {}),
     ...(query
       ? {
           OR: [
@@ -38,24 +41,37 @@ export default async function AdminPostsPage({
       : {}),
   };
 
-  const [posts, publishedCount, draftCount, subscriberCount] = await Promise.all([
-    prisma.post.findMany({
-      where,
-      include: { category: true, author: true },
-      orderBy: { updatedAt: "desc" },
-    }),
+  const [total, publishedCount, draftCount, subscriberCount, categories, authors] = await Promise.all([
+    prisma.post.count({ where }),
     prisma.post.count({ where: { ...own, status: "PUBLISHED" } }),
     prisma.post.count({ where: { ...own, status: "DRAFT" } }),
-    manager ? prisma.subscriber.count() : Promise.resolve(0),
+    manager ? prisma.subscriber.count({ where: { verified: true } }) : Promise.resolve(0),
+    prisma.category.findMany({ orderBy: { order: "asc" }, select: { slug: true, name: true } }),
+    manager
+      ? prisma.user.findMany({ where: { posts: { some: {} } }, orderBy: { name: "asc" }, select: { id: true, name: true } })
+      : Promise.resolve([]),
   ]);
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(pageCount, Math.max(1, Number(pagina) || 1));
+  const posts = await prisma.post.findMany({
+    where,
+    include: { category: true, author: true },
+    orderBy: [{ publishedAt: { sort: "desc", nulls: "first" } }, { updatedAt: "desc" }],
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+  });
 
-  const filterHref = (value?: string) => {
+  const pageHref = (n: number) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    if (value) params.set("estado", value);
+    if (estado) params.set("estado", estado);
+    if (categoria) params.set("categoria", categoria);
+    if (autor) params.set("autor", autor);
+    if (n > 1) params.set("pagina", String(n));
     const qs = params.toString();
     return qs ? `/admin?${qs}` : "/admin";
   };
+  const filtered = Boolean(query || estado || categoria || autor);
 
   return (
     <div className="px-5 md:px-10 py-9">
@@ -89,37 +105,15 @@ export default async function AdminPostsPage({
       </div>
 
       <div className="mt-5 bg-white rounded-[10px] py-1.5">
-        <div className="flex flex-wrap gap-3 items-center px-5 py-3">
-          <form action="/admin" className="flex-1 min-w-[240px]">
-            {estado && <input type="hidden" name="estado" value={estado} />}
-            <label htmlFor="admin-q" className="sr-only">Buscar entradas</label>
-            <div className="flex items-center gap-2.5 h-11 border border-mist rounded-full px-4">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2">
-                <circle cx="10.5" cy="10.5" r="7" />
-                <path d="M21 21l-5.5-5.5" />
-              </svg>
-              <input
-                id="admin-q"
-                name="q"
-                defaultValue={query}
-                placeholder="Buscar por título o autor"
-                className="flex-1 min-w-0 text-[15px] outline-none bg-transparent"
-              />
-            </div>
-          </form>
-          {FILTERS.map((f) => {
-            const active = (estado ?? undefined) === f.value;
-            return (
-              <Link
-                key={f.label}
-                href={filterHref(f.value)}
-                aria-current={active ? "page" : undefined}
-                className={`rounded-full px-3.5 py-2 text-[15px] ${active ? "bg-ink text-white" : "border border-ink hover:bg-ink hover:text-white"}`}
-              >
-                {f.label}
-              </Link>
-            );
-          })}
+        <Suspense>
+          <PostsFilters
+            categories={categories.map((c) => ({ value: c.slug, label: c.name }))}
+            authors={authors.map((u) => ({ value: u.id, label: u.name }))}
+          />
+        </Suspense>
+        <div className="px-5 pb-2 text-[13px] text-neutral-600">
+          {total} {total === 1 ? "entrada" : "entradas"}
+          {pageCount > 1 && ` · página ${page} de ${pageCount}`}
         </div>
 
         <div className="overflow-x-auto">
@@ -135,7 +129,7 @@ export default async function AdminPostsPage({
 
             {posts.length === 0 && (
               <div className="px-5 py-10 text-center text-neutral-600">
-                {query || estado ? "No hay entradas con esos filtros." : "Aún no hay entradas. Crea la primera con “Nueva entrada”."}
+                {filtered ? "No hay entradas con esos filtros." : "Aún no hay entradas. Crea la primera con “Nueva entrada”."}
               </div>
             )}
 
@@ -173,6 +167,31 @@ export default async function AdminPostsPage({
           </div>
         </div>
       </div>
+
+      {pageCount > 1 && (
+        <nav aria-label="Páginas" className="mt-5 flex justify-center items-center flex-wrap gap-1 text-[14px]">
+          {page > 1 && (
+            <Link href={pageHref(page - 1)} className="h-9 px-3 flex items-center rounded-full hover:bg-white">
+              ‹ Anterior
+            </Link>
+          )}
+          {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+            <Link
+              key={n}
+              href={pageHref(n)}
+              aria-current={n === page ? "page" : undefined}
+              className={`w-9 h-9 flex items-center justify-center rounded-full ${n === page ? "bg-ink text-white" : "hover:bg-white"}`}
+            >
+              {n}
+            </Link>
+          ))}
+          {page < pageCount && (
+            <Link href={pageHref(page + 1)} className="h-9 px-3 flex items-center rounded-full hover:bg-white">
+              Siguiente ›
+            </Link>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

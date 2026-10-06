@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import type { EcosystemItem } from "@/app/actions/site-content";
+import { useRouter } from "next/navigation";
+import { useRef, useState, useTransition } from "react";
+import { createCategory, updateCategory, reorderCategories } from "@/app/actions/categories";
 import { PencilIcon } from "@/components/site/icons";
+
+export type EcosystemEntry = { id: string; name: string; description: string; slug: string };
 
 function Chevron({ open }: { open: boolean }) {
   return (
@@ -13,80 +16,118 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-/** "En este ecosistema conviven": each community expands to its description, which links to its posts. */
-export function EcosystemAccordion({
-  items: initialItems,
-  canEdit,
-  onSave,
-  linkOptions,
-}: {
-  items: EcosystemItem[];
-  canEdit: boolean;
-  onSave: (items: EcosystemItem[]) => Promise<void>;
-  linkOptions: { label: string; url: string }[];
-}) {
+function GripIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      {[5, 12, 19].flatMap((y) => [9, 15].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1.8" />))}
+    </svg>
+  );
+}
+
+/**
+ * "En este ecosistema conviven": one row per category in the ecosystem. Each row expands
+ * to its description, which links to its posts. In edit mode rows can be renamed, added,
+ * hidden and dragged by the handle to change the order.
+ */
+export function EcosystemAccordion({ items: initialItems, canEdit }: { items: EcosystemEntry[]; canEdit: boolean }) {
+  const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [openId, setOpenId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<EcosystemItem | null>(null);
+  const [draft, setDraft] = useState<EcosystemEntry | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const rowRefs = useRef(new Map<string, HTMLDivElement>());
+  const orderAtStart = useRef<string>("");
 
-  function persist(next: EcosystemItem[]) {
-    setItems(next);
-    startTransition(() => onSave(next));
+  function run(task: () => Promise<void>) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await task();
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No se pudo guardar.");
+      }
+    });
   }
 
-  function startEdit(item: EcosystemItem) {
+  function startEdit(item: EcosystemEntry) {
     setDraft(item);
     setEditingId(item.id);
     setOpenId(item.id);
   }
 
   function saveDraft() {
-    if (!draft || !draft.title.trim()) return;
-    const exists = items.some((i) => i.id === draft.id);
-    persist(exists ? items.map((i) => (i.id === draft.id ? draft : i)) : [...items, draft]);
+    if (!draft || !draft.name.trim()) return;
+    const d = draft;
+    const exists = items.some((i) => i.id === d.id);
     setEditingId(null);
     setDraft(null);
+    if (exists) {
+      setItems((list) => list.map((i) => (i.id === d.id ? d : i)));
+      run(() => updateCategory(d.id, { name: d.name, description: d.description }));
+    } else {
+      run(async () => {
+        const c = await createCategory({ name: d.name, description: d.description, inEcosystem: true });
+        setItems((list) => [...list, { ...d, id: c.id, slug: c.slug, name: c.name }]);
+      });
+    }
   }
 
-  function remove(id: string) {
-    if (!confirm("¿Quitar esta comunidad de la lista?")) return;
-    persist(items.filter((i) => i.id !== id));
+  function hide(item: EcosystemEntry) {
+    if (!confirm(`¿Quitar “${item.name}” del ecosistema? La categoría y sus entradas se conservan.`)) return;
+    setItems((list) => list.filter((i) => i.id !== item.id));
+    run(() => updateCategory(item.id, { inEcosystem: false }));
   }
 
   function addNew() {
-    const item = { id: crypto.randomUUID(), title: "", description: "", url: linkOptions[0]?.url ?? "/blog" };
+    const item = { id: `new-${Date.now()}`, name: "", description: "", slug: "" };
     setDraft(item);
     setEditingId(item.id);
     setOpenId(item.id);
   }
 
-  const editor = (d: EcosystemItem) => (
+  // Drag to reorder: the row follows the pointer and the others make room.
+  function onPointerDown(e: React.PointerEvent, id: string) {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    orderAtStart.current = items.map((i) => i.id).join();
+    setDragId(id);
+    setOpenId(null);
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (!dragId) return;
+    const y = e.clientY;
+    const others = items.filter((i) => i.id !== dragId);
+    let index = 0;
+    for (const item of others) {
+      const rect = rowRefs.current.get(item.id)?.getBoundingClientRect();
+      if (rect && y > rect.top + rect.height / 2) index++;
+    }
+    const dragged = items.find((i) => i.id === dragId)!;
+    const next = [...others.slice(0, index), dragged, ...others.slice(index)];
+    if (next.map((i) => i.id).join() !== items.map((i) => i.id).join()) setItems(next);
+  }
+
+  function onPointerUp() {
+    if (!dragId) return;
+    setDragId(null);
+    const ids = items.map((i) => i.id);
+    if (ids.join() !== orderAtStart.current) run(() => reorderCategories(ids));
+  }
+
+  const editor = (d: EcosystemEntry) => (
     <div className="bg-white text-ink rounded-md p-4 my-3 flex flex-col gap-2.5 text-sm">
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-bold">Nombre</span>
-        <input value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })} className="h-9 border border-neutral-300 rounded px-2" />
+        <span className="text-xs font-bold">Nombre (cambia en todo el sitio)</span>
+        <input value={d.name} onChange={(e) => setDraft({ ...d, name: e.target.value })} className="h-9 border border-neutral-300 rounded px-2" />
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-xs font-bold">Descripción (se despliega al hacer clic)</span>
         <textarea rows={4} value={d.description} onChange={(e) => setDraft({ ...d, description: e.target.value })} className="border border-neutral-300 rounded px-2 py-1.5" />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-bold">Al hacer clic lleva a</span>
-        <select
-          value={linkOptions.some((o) => o.url === d.url) ? d.url : "__custom"}
-          onChange={(e) => setDraft({ ...d, url: e.target.value === "__custom" ? "" : e.target.value })}
-          className="h-9 border border-neutral-300 rounded px-2 bg-white"
-        >
-          {linkOptions.map((o) => (
-            <option key={o.url} value={o.url}>{o.label}</option>
-          ))}
-          <option value="__custom">Otro enlace…</option>
-        </select>
-        {!linkOptions.some((o) => o.url === d.url) && (
-          <input value={d.url} placeholder="https://… o /blog?categoria=…" onChange={(e) => setDraft({ ...d, url: e.target.value })} className="h-9 border border-neutral-300 rounded px-2" />
-        )}
       </label>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={() => { setEditingId(null); setDraft(null); }} className="px-3 py-1.5 border border-neutral-300 rounded-full">Cancelar</button>
@@ -98,19 +139,37 @@ export function EcosystemAccordion({
   const isNewDraft = draft && editingId === draft.id && !items.some((i) => i.id === draft.id);
 
   return (
-    <div className="flex flex-col border-t border-white/45">
+    <div className="flex flex-col border-t border-white/45" onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
       {items.map((item, i) => {
         const open = openId === item.id;
+        const dragging = dragId === item.id;
         return (
-          <div key={item.id} className="border-b border-white/45">
+          <div
+            key={item.id}
+            ref={(el) => {
+              if (el) rowRefs.current.set(item.id, el);
+              else rowRefs.current.delete(item.id);
+            }}
+            className={`border-b border-white/45 transition-[transform,background-color,box-shadow] duration-150 ${dragging ? "relative z-10 scale-[1.03] bg-white/15 shadow-lg rounded-md" : ""}`}
+          >
             <div className="flex items-center gap-2">
+              {canEdit && (
+                <button
+                  type="button"
+                  aria-label={`Arrastrar ${item.name} para cambiar el orden`}
+                  onPointerDown={(e) => onPointerDown(e, item.id)}
+                  className="w-7 h-7 shrink-0 flex items-center justify-center text-white/70 cursor-grab active:cursor-grabbing touch-none"
+                >
+                  <GripIcon />
+                </button>
+              )}
               <button
                 type="button"
                 aria-expanded={open}
                 onClick={() => setOpenId(open ? null : item.id)}
                 className="flex-1 flex items-center justify-between gap-4 py-4 lg:py-[18px] text-left text-base lg:text-[17px] hover:text-lilac"
               >
-                <span>{item.title}</span>
+                <span>{item.name}</span>
                 <span className="flex items-center gap-3 text-sm">
                   {String(i + 1).padStart(2, "0")}
                   <Chevron open={open} />
@@ -118,10 +177,10 @@ export function EcosystemAccordion({
               </button>
               {canEdit && (
                 <>
-                  <button type="button" aria-label={`Editar ${item.title}`} onClick={() => startEdit(item)} className="w-7 h-7 shrink-0 rounded-full bg-accent text-white flex items-center justify-center">
+                  <button type="button" aria-label={`Editar ${item.name}`} onClick={() => startEdit(item)} className="w-7 h-7 shrink-0 rounded-full bg-accent text-white flex items-center justify-center">
                     <PencilIcon />
                   </button>
-                  <button type="button" aria-label={`Quitar ${item.title}`} onClick={() => remove(item.id)} className="w-7 h-7 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center text-sm">
+                  <button type="button" aria-label={`Quitar ${item.name}`} onClick={() => hide(item)} className="w-7 h-7 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center text-sm">
                     ✕
                   </button>
                 </>
@@ -132,7 +191,7 @@ export function EcosystemAccordion({
             ) : (
               <div className={`grid transition-[grid-template-rows] duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                 <div className="overflow-hidden">
-                  <Link href={item.url || "/blog"} className="block pb-[18px] text-[15px] lg:text-base leading-relaxed text-white/85 hover:text-white">
+                  <Link href={`/blog?categoria=${item.slug}`} className="block pb-[18px] text-[15px] lg:text-base leading-relaxed text-white/85 hover:text-white">
                     {item.description}
                     <span className="block mt-2 text-[15px] font-medium text-lilac">Ver sus entradas →</span>
                   </Link>
@@ -143,6 +202,7 @@ export function EcosystemAccordion({
         );
       })}
       {isNewDraft && draft && editor(draft)}
+      {error && <p className="mt-2 text-sm text-[#ffd2c2]" role="alert">{error}</p>}
       {canEdit && !isNewDraft && (
         <button type="button" onClick={addNew} disabled={pending} className="mt-3 self-start text-sm border border-dashed border-white/60 rounded-full px-4 py-2 hover:bg-white/10">
           + Agregar comunidad

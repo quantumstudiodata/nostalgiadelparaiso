@@ -1,31 +1,34 @@
 import Image from "next/image";
 import Link from "next/link";
+import { auth } from "@/auth";
+import { canEditSite } from "@/lib/edit-mode";
+import { getSiteBlock } from "@/lib/site-blocks";
+import { updateSiteBlockField } from "@/app/actions/site-content";
+import { ContactForm } from "@/components/site/contact-form";
+import { EditableText } from "@/components/site/editable";
 
-export function SiteFooter() {
+const CONTACT_TITLE = "Escríbenos. La palabra es tuya, mía y de todos.";
+
+export async function SiteFooter() {
+  const [session, footer] = await Promise.all([auth(), getSiteBlock<{ contactTitle?: string; contactTitleSize?: string }>("site.footer")]);
+  const canEdit = await canEditSite(session);
+
   return (
     <>
       <section id="contacto" className="bg-lilac">
         <div className="wrap py-[72px] lg:py-28 grid grid-cols-1 md:grid-cols-12 gap-7 md:gap-12">
-          <h2 className="md:col-span-5 font-serif font-semibold text-[27px] lg:text-[36px] leading-[1.2]">
-            Escríbenos. La palabra es tuya, mía y de todos.
-          </h2>
-          <form className="md:col-start-7 md:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-[18px] lg:gap-[22px]">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="contacto-nombre" className="text-base font-medium">Nombre</label>
-              <input id="contacto-nombre" className="h-[52px] lg:h-[54px] rounded-lg bg-white px-4 text-[17px]" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="contacto-email" className="text-base font-medium">Email</label>
-              <input id="contacto-email" type="email" className="h-[52px] lg:h-[54px] rounded-lg bg-white px-4 text-[17px]" />
-            </div>
-            <div className="sm:col-span-2 flex flex-col gap-1.5">
-              <label htmlFor="contacto-mensaje" className="text-base font-medium">Mensaje</label>
-              <textarea id="contacto-mensaje" rows={5} className="rounded-lg bg-white px-4 py-3.5 text-[17px]" />
-            </div>
-            <button type="submit" className="sm:col-span-2 sm:justify-self-start bg-ink text-white rounded-full px-[34px] py-4 text-[17px] font-medium">
-              Enviar mensaje
-            </button>
-          </form>
+          <div className="md:col-span-5">
+            <EditableText
+              as="h2"
+              canEdit={canEdit}
+              value={footer.contactTitle || CONTACT_TITLE}
+              onSave={updateSiteBlockField.bind(null, "site.footer", "contactTitle")}
+              fontSize={footer.contactTitleSize}
+              onSaveSize={updateSiteBlockField.bind(null, "site.footer", "contactTitleSize")}
+              className="font-serif font-semibold text-[27px] lg:text-[36px] leading-[1.2]"
+            />
+          </div>
+          <ContactForm />
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AuthShell } from "@/components/site/auth-shell";
-import { RegisterForm } from "@/components/site/register-form";
+import { RegisterForm } from "@/components/site/auth-forms";
 
 export const metadata = { title: "Crear cuenta · Nostalgia del paraíso" };
 

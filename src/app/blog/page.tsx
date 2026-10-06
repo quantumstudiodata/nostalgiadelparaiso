@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { isManager } from "@/lib/permissions";
+import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -18,7 +18,7 @@ export default async function BlogPage({
 }) {
   const { categoria, pagina, q } = await searchParams;
   const session = await auth();
-  const canEdit = isManager(session?.user?.role);
+  const canEdit = await canEditSite(session);
   const query = q?.trim();
 
   const where: Prisma.PostWhereInput = {
@@ -75,21 +75,23 @@ export default async function BlogPage({
     <>
       <SiteHeader />
 
-      <div className="max-w-[1040px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)] gap-12 lg:gap-[72px] items-start">
-        <aside className="order-2 lg:order-1 flex flex-col gap-3">
+      {/* Phone order: categories, posts, then the subscribe/author column. */}
+      <div className="max-w-[1040px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)] lg:grid-rows-[auto_1fr] gap-x-[72px] gap-y-10 items-start">
+        <aside className="lg:col-start-1 lg:row-start-1 flex flex-col gap-3">
           <WixCategories categories={categories} totalPosts={totalPosts} activeSlug={categoria} />
           <SearchPill variant="filled" defaultValue={query} />
-          <div className="mt-6">
-            <WixBlackColumn
-              authorName={author.name || "Ángeles Nava"}
-              authorBio={author.bio}
-              authorAvatarUrl={author.avatarUrl}
-              canEdit={canEdit}
-            />
-          </div>
         </aside>
 
-        <main className="order-1 lg:order-2 min-w-0">
+        <div className="lg:col-start-1 lg:row-start-2">
+          <WixBlackColumn
+            authorName={author.name || "Ángeles Nava"}
+            authorBio={author.bio}
+            authorAvatarUrl={author.avatarUrl}
+            canEdit={canEdit}
+          />
+        </div>
+
+        <main className="row-start-2 lg:col-start-2 lg:row-start-1 lg:row-span-2 min-w-0">
           <h1 className="font-cormorant font-semibold text-[21px] tracking-[0.04em] mb-3">{heading}</h1>
 
           {posts.length === 0 ? (

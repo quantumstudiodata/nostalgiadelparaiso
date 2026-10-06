@@ -2,16 +2,36 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth, signOut } from "@/auth";
 import { getSocialLinks } from "@/lib/social-links";
-import { isManager, canWritePosts } from "@/lib/permissions";
+import { getSiteBlock } from "@/lib/site-blocks";
+import { isManager } from "@/lib/permissions";
+import { isPreviewing } from "@/lib/edit-mode";
+import { updateSiteBlockField } from "@/app/actions/site-content";
 import { SiteMenu } from "@/components/site/site-menu";
-import { NAV_LINKS } from "@/components/site/nav-links";
+import { navWithLabels } from "@/components/site/nav-links";
 import { SocialLinksEditor } from "@/components/site/social-links-editor";
+import { EditableText } from "@/components/site/editable";
 import { InstagramIcon, TikTokIcon, FacebookIcon, SearchIcon, UserIcon, PencilIcon } from "@/components/site/icons";
 
+function LogoutIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+      <path d="M10 17l-5-5 5-5M5 12h11" />
+    </svg>
+  );
+}
+
 export async function SiteHeader() {
-  const [session, social] = await Promise.all([auth(), getSocialLinks()]);
+  const [session, social, navLabels, previewing] = await Promise.all([
+    auth(),
+    getSocialLinks(),
+    getSiteBlock<Record<string, string>>("site.nav"),
+    isPreviewing(),
+  ]);
   const user = session?.user;
   const manager = isManager(user?.role);
+  const editing = manager && !previewing;
+  const links = navWithLabels(navLabels);
 
   async function logout() {
     "use server";
@@ -26,26 +46,29 @@ export async function SiteHeader() {
 
   return (
     <header>
-      {manager && (
+      {editing && (
         <div className="bg-slate text-white">
-          <div className="wrap py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <div className="wrap py-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-2 font-bold">
               <PencilIcon size={15} />
               Modo edición
             </span>
-            <span className="hidden lg:inline text-lilac">
-              Pasa el cursor sobre cualquier texto o imagen para editarlo. Los cambios se guardan solos.
-            </span>
+            <span className="hidden lg:inline text-lilac">Pasa el cursor sobre cualquier texto o imagen para editarlo.</span>
             <div className="ml-auto flex items-center gap-3">
-              <Link href="/admin/entradas/nueva" className="border border-white/50 rounded-full px-4 py-1.5">
-                + Nueva entrada
-              </Link>
-              <Link href="/admin" className="border border-white/50 rounded-full px-4 py-1.5">
-                Mis entradas
-              </Link>
-              <form action={logout}>
-                <button className="px-1">Salir</button>
-              </form>
+              <Link href="/admin/entradas/nueva" className="border border-white/50 rounded-full px-4 py-1.5">+ Nueva entrada</Link>
+              <Link href="/admin" className="border border-white/50 rounded-full px-4 py-1.5">Panel</Link>
+              <a href="/admin/vista-previa" className="border border-white/50 rounded-full px-4 py-1.5">Ver mi página</a>
+            </div>
+          </div>
+        </div>
+      )}
+      {manager && previewing && (
+        <div className="bg-lilac text-ink">
+          <div className="wrap py-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+            <span>Estás viendo tu página como la ven los visitantes.</span>
+            <div className="ml-auto flex items-center gap-3">
+              <a href="/admin/vista-previa?salir=1&a=/" className="underline underline-offset-4">Volver a editar</a>
+              <a href="/admin/vista-previa?salir=1" className="underline underline-offset-4">Ir al panel</a>
             </div>
           </div>
         </div>
@@ -62,22 +85,19 @@ export async function SiteHeader() {
                 <Icon />
               </a>
             ))}
-            {manager && <SocialLinksEditor links={social} />}
+            {editing && <SocialLinksEditor links={social} />}
           </div>
           {user ? (
-            <div className="flex items-center gap-4">
-              <Link href="/cuenta" className="hidden sm:flex items-center gap-2" title="Mi cuenta">
+            <div className="flex items-center gap-3">
+              <Link href="/admin" className="flex items-center gap-2 hover:underline underline-offset-4" title="Ir a mi panel">
                 <UserIcon />
-                {user.name}
+                <span className="max-w-[160px] truncate">{user.name}</span>
               </Link>
-              {!manager && canWritePosts(user.role) && (
-                <Link href="/admin" className="underline underline-offset-4">Mis entradas</Link>
-              )}
-              {!manager && (
-                <form action={logout}>
-                  <button>Salir</button>
-                </form>
-              )}
+              <form action={logout}>
+                <button aria-label="Cerrar sesión" title="Cerrar sesión" className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/15">
+                  <LogoutIcon />
+                </button>
+              </form>
             </div>
           ) : (
             <div className="flex items-center gap-4">
@@ -98,18 +118,29 @@ export async function SiteHeader() {
           <Link href="/" className="flex items-center shrink-0">
             <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className="h-11 lg:h-[52px] w-auto" priority />
           </Link>
-          <nav className="hidden md:flex gap-8 lg:gap-10 text-base font-medium ml-auto">
-            {NAV_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="hover:text-accent">
-                {link.label}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-8 lg:gap-10 text-base font-medium ml-auto">
+            {links.map((link) =>
+              editing ? (
+                <EditableText
+                  key={link.key}
+                  as="span"
+                  canEdit
+                  value={link.label}
+                  onSave={updateSiteBlockField.bind(null, "site.nav", link.key)}
+                  className="whitespace-nowrap"
+                />
+              ) : (
+                <Link key={link.key} href={link.href} className="hover:text-accent whitespace-nowrap">
+                  {link.label}
+                </Link>
+              ),
+            )}
           </nav>
-          <a href="#contacto" className="hidden sm:inline-block bg-ink text-white rounded-full px-6 py-3.5 text-[15px] font-medium ml-auto md:ml-0">
+          <Link href="/blog#suscribirse" className="hidden sm:inline-block bg-ink text-white rounded-full px-6 py-3.5 text-[15px] font-medium ml-auto md:ml-0">
             Suscribirse
-          </a>
+          </Link>
           <div className="ml-auto sm:ml-0">
-            <SiteMenu />
+            <SiteMenu links={links} />
           </div>
         </div>
       </div>

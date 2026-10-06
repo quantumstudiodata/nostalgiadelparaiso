@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces, Playfair_Display, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
+import { PageTracker } from "@/components/site/page-tracker";
 
 const sansBody = DM_Sans({
   variable: "--font-sans-body",
@@ -38,7 +39,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${sansBody.variable} ${serifDisplay.variable} ${playfair.variable} ${cormorant.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-background text-foreground">{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        {children}
+        <PageTracker />
+      </body>
     </html>
   );
 }

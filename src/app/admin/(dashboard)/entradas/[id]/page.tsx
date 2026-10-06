@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { isManager, requireWriter } from "@/lib/permissions";
+import { isManager, requireWriterPage as requireWriter } from "@/lib/permissions";
 import { getWriters } from "@/lib/writers";
 import { PostForm } from "@/components/admin/post-form";
 import { updatePost, deletePost } from "../actions";

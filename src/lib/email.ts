@@ -2,14 +2,14 @@ import { prisma } from "@/lib/prisma";
 
 const RESEND_URL = "https://api.resend.com/emails/batch";
 
-function siteUrl() {
+export function siteUrl() {
   const url =
     process.env.SITE_URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
   return url.replace(/\/$/, "");
 }
 
-function escapeHtml(text: string) {
+export function escapeHtml(text: string) {
   return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
@@ -27,7 +27,7 @@ export async function notifySubscribersOfPost(postId: string) {
 
   const post = await prisma.post.findUnique({ where: { id: postId }, include: { author: true } });
   if (!post || post.status !== "PUBLISHED") return;
-  const subscribers = await prisma.subscriber.findMany();
+  const subscribers = await prisma.subscriber.findMany({ where: { verified: true } });
   if (subscribers.length === 0) return;
 
   const base = siteUrl();
@@ -59,4 +59,34 @@ ${excerpt}
     });
     if (!res.ok) console.error("[email] Resend batch failed:", res.status, await res.text());
   }
+}
+
+/** Sends one email through Resend. Returns false (and logs) when email isn't configured or the send fails. */
+export async function sendEmail({ to, subject, html, replyTo }: { to: string; subject: string; html: string; replyTo?: string }) {
+  if (!emailConfigured()) {
+    console.warn(`[email] not configured; skipped "${subject}" to ${to}`);
+    return false;
+  }
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM,
+      to,
+      subject,
+      html,
+      reply_to: replyTo ?? process.env.EMAIL_REPLY_TO ?? undefined,
+    }),
+  });
+  if (!res.ok) console.error("[email] Resend send failed:", res.status, await res.text());
+  return res.ok;
+}
+
+/** Simple branded wrapper shared by every transactional email. */
+export function emailLayout(title: string, body: string) {
+  return `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:24px;color:#111">
+<p style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#a24c2f">Nostalgia del paraíso</p>
+<h1 style="font-size:24px;margin:8px 0 16px">${escapeHtml(title)}</h1>
+<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#333">${body}</div>
+</div>`;
 }

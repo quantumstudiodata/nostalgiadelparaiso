@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
@@ -86,36 +87,44 @@ function ImageButton({ editor }: { editor: Editor }) {
   );
 }
 
-/** Shown while an image in the text is selected: position and size, like in Word. */
+/** Floating menu on the selected image: position and size, like in Word. */
 function ImageControls({ editor }: { editor: Editor }) {
   const attrs = editor.getAttributes("image") as { align?: ImageAlign; width?: string };
   const setAlign = (align: ImageAlign) => editor.chain().focus().updateAttributes("image", { align }).run();
-  const options: { value: ImageAlign; label: string }[] = [
-    { value: "left", label: "Izquierda, texto alrededor" },
-    { value: "center", label: "Centrada" },
-    { value: "right", label: "Derecha, texto alrededor" },
+  const options: { value: ImageAlign; label: string; title: string }[] = [
+    { value: "left", label: "Izquierda", title: "Izquierda, texto alrededor" },
+    { value: "center", label: "Centrada", title: "Centrada" },
+    { value: "right", label: "Derecha", title: "Derecha, texto alrededor" },
   ];
+  const keep = (e: React.MouseEvent) => e.preventDefault();
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 mt-2 px-3 py-2 rounded-[18px] bg-lilac text-[15px]">
-      <span className="font-medium mr-1">Imagen:</span>
+    <BubbleMenu
+      editor={editor}
+      pluginKey="imageMenu"
+      shouldShow={({ editor: ed }) => ed.isActive("image")}
+      options={{ placement: "top", offset: 8 }}
+      className="z-20 flex flex-wrap items-center gap-1 p-1.5 rounded-full bg-ink text-white text-[13px] shadow-lg max-w-[92vw]"
+    >
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
-          onMouseDown={(e) => e.preventDefault()}
+          title={o.title}
+          onMouseDown={keep}
           onClick={() => setAlign(o.value)}
-          className={`h-9 px-3 rounded-full ${attrs.align === o.value ? "bg-ink text-white" : "bg-white"}`}
+          className={`h-8 px-3 rounded-full ${attrs.align === o.value ? "bg-white text-ink" : "hover:bg-white/15"}`}
         >
           {o.label}
         </button>
       ))}
-      <label className="flex items-center gap-1.5 ml-1">
-        Tamaño
+      <span className="w-px h-5 bg-white/30 mx-0.5" />
+      <label className="flex items-center gap-1 pl-1">
+        <span className="sr-only sm:not-sr-only">Tamaño</span>
         <select
           value={attrs.width ?? "100%"}
           onChange={(e) => editor.chain().focus().updateAttributes("image", { width: e.target.value }).run()}
-          className="h-9 rounded-full px-2 bg-white"
+          className="h-8 rounded-full px-2 bg-white text-ink"
         >
           {IMAGE_WIDTHS.map((w) => (
             <option key={w} value={w}>{w}</option>
@@ -124,14 +133,15 @@ function ImageControls({ editor }: { editor: Editor }) {
       </label>
       <button
         type="button"
-        onMouseDown={(e) => e.preventDefault()}
+        title="Quitar imagen"
+        aria-label="Quitar imagen"
+        onMouseDown={keep}
         onClick={() => editor.chain().focus().deleteSelection().run()}
-        className="h-9 px-3 rounded-full bg-white text-accent-dark ml-auto"
+        className="h-8 w-8 rounded-full hover:bg-white/15"
       >
-        Quitar imagen
+        ✕
       </button>
-      <span className="basis-full text-[13px] text-slate">Consejo: arrastra la imagen para moverla a otra parte del texto.</span>
-    </div>
+    </BubbleMenu>
   );
 }
 
@@ -269,7 +279,6 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <ImageButton editor={editor} />
     </div>
-    {editor.isActive("image") && <ImageControls editor={editor} />}
     </div>
   );
 }
@@ -308,6 +317,7 @@ export function RichTextEditor({
   return (
     <div className="bg-white">
       {editor && <Toolbar editor={editor} />}
+      {editor && <ImageControls editor={editor} />}
       <EditorContent editor={editor} />
       <HiddenSync name={name} editor={editor} fallback={html} />
     </div>

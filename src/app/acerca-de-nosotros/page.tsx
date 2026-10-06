@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { isManager } from "@/lib/permissions";
+import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -31,7 +31,7 @@ const NOSTALGIA_DEFAULTS = {
 
 export default async function AboutPage() {
   const session = await auth();
-  const canEdit = isManager(session?.user?.role);
+  const canEdit = await canEditSite(session);
 
   const [about, nostalgia, recentPosts] = await Promise.all([
     getSiteBlock<{
@@ -39,8 +39,9 @@ export default async function AboutPage() {
       mainImageUrl: string;
       galleryImage1Url: string;
       galleryImage2Url: string;
+      bioSize?: string;
     }>("about.page"),
-    getSiteBlock<Partial<typeof NOSTALGIA_DEFAULTS>>("about.nostalgia"),
+    getSiteBlock<Partial<typeof NOSTALGIA_DEFAULTS> & { titleSize?: string; bodySize?: string }>("about.nostalgia"),
     prisma.post.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
@@ -67,6 +68,8 @@ export default async function AboutPage() {
             multiline
             value={about.bio}
             onSave={saveBio}
+            fontSize={about.bioSize}
+            onSaveSize={updateSiteBlockField.bind(null, "about.page", "bioSize")}
             className="text-[17px] leading-[1.75] text-black px-6 md:pl-10 md:pr-4 pt-8 md:pt-12"
           />
           <EditableImage
@@ -104,6 +107,8 @@ export default async function AboutPage() {
               canEdit={canEdit}
               value={nostalgia.title ?? NOSTALGIA_DEFAULTS.title}
               onSave={saveNostalgiaTitle}
+              fontSize={nostalgia.titleSize}
+              onSaveSize={updateSiteBlockField.bind(null, "about.nostalgia", "titleSize")}
               className="font-serif font-extrabold text-[32px] lg:text-[46px] leading-[1.08] mb-6"
             />
             <EditableText
@@ -112,6 +117,8 @@ export default async function AboutPage() {
               multiline
               value={nostalgia.body ?? NOSTALGIA_DEFAULTS.body}
               onSave={saveNostalgiaBody}
+              fontSize={nostalgia.bodySize}
+              onSaveSize={updateSiteBlockField.bind(null, "about.nostalgia", "bodySize")}
               className="text-[17px] leading-[1.8] text-neutral-900"
             />
           </div>

@@ -33,7 +33,18 @@ function readForm(formData: FormData) {
     coverImage: String(formData.get("coverImage") ?? ""),
     authorId: String(formData.get("authorId") ?? ""),
     status: formData.get("status") === "PUBLISHED" ? ("PUBLISHED" as const) : ("DRAFT" as const),
+    publishedDay: String(formData.get("publishedAt") ?? "").trim(),
   };
+}
+
+const TZ = "America/Mexico_City";
+
+/** The publish date chosen in the form (YYYY-MM-DD). Keeps the original time when the day did not change. */
+function chosenDate(day: string, current: Date | null): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  if (current && current.toLocaleDateString("en-CA", { timeZone: TZ }) === day) return current;
+  const date = new Date(`${day}T12:00:00-06:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 /** Managers may publish on behalf of any writer; authors always publish as themselves. */
@@ -63,7 +74,8 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
       content: data.content,
       coverImage: data.coverImage,
       status: data.status,
-      publishedAt: data.status === "PUBLISHED" ? new Date() : null,
+      // A draft has no date yet: publishedAt also marks "already announced to subscribers".
+      publishedAt: data.status === "PUBLISHED" ? (chosenDate(data.publishedDay, null) ?? new Date()) : null,
       authorId: await resolveAuthorId(user, data.authorId),
       categoryId: data.categoryId,
     },
@@ -85,6 +97,10 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
 
   const slug = existing.title === data.title ? existing.slug : await uniqueSlug(data.title, postId);
   const firstPublish = data.status === "PUBLISHED" && !existing.publishedAt;
+  const publishedAt =
+    data.status === "PUBLISHED" || existing.publishedAt
+      ? (chosenDate(data.publishedDay, existing.publishedAt) ?? existing.publishedAt ?? new Date())
+      : null;
 
   await prisma.post.update({
     where: { id: postId },
@@ -95,7 +111,7 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
       content: data.content,
       coverImage: data.coverImage,
       status: data.status,
-      publishedAt: firstPublish ? new Date() : existing.publishedAt,
+      publishedAt,
       categoryId: data.categoryId,
       ...(isManager(user.role) ? { authorId: await resolveAuthorId(user, data.authorId) } : {}),
     },

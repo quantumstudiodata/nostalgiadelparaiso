@@ -136,6 +136,18 @@ export function PostForm({
           </fieldset>
 
           <div className="bg-white rounded-[10px] p-4 flex flex-col gap-1.5">
+            <label htmlFor="post-date" className="font-bold">Fecha de publicación</label>
+            <input
+              id="post-date"
+              type="date"
+              name="publishedAt"
+              defaultValue={post?.publishedAt ? post.publishedAt.toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" }) : ""}
+              className="h-11 border border-mist rounded-lg px-2.5 bg-white"
+            />
+            <span className="text-[13px] text-neutral-600">Se aplica al publicar. Vacía: el día en que se publique.</span>
+          </div>
+
+          <div className="bg-white rounded-[10px] p-4 flex flex-col gap-1.5">
             <label htmlFor="post-category" className="font-bold">Categoría</label>
             <select id="post-category" name="categoryId" required defaultValue={post?.categoryId ?? ""} className="h-11 border border-mist rounded-lg px-2.5 bg-white">
               <option value="" disabled>
@@ -159,7 +171,7 @@ export function PostForm({
                   </option>
                 ))}
               </select>
-              <span className="text-[13px] text-neutral-600">Para agregar a alguien, regístrala en Usuarios.</span>
+              <span className="text-[13px] text-neutral-600">Para agregar a alguien, dale permisos en Escritores.</span>
             </div>
           )}
 

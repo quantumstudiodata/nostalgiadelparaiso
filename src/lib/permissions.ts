@@ -6,7 +6,7 @@ export type AppRole = "ADMIN" | "EDITOR" | "AUTHOR" | "READER";
 export const ROLE_LABELS: Record<AppRole, string> = {
   ADMIN: "Administradora",
   EDITOR: "Editora del sitio",
-  AUTHOR: "Autora (solo entradas)",
+  AUTHOR: "Escritora",
   READER: "Lectora",
 };
 
@@ -41,5 +41,12 @@ export async function requireWriter() {
 export async function requireManagerPage() {
   const user = await getViewer();
   if (!user || !isManager(user.role)) redirect("/admin");
+  return user;
+}
+
+/** For writer-only admin pages: readers go to their account page. */
+export async function requireWriterPage() {
+  const user = await getViewer();
+  if (!user || !canWritePosts(user.role)) redirect("/admin/cuenta");
   return user;
 }
