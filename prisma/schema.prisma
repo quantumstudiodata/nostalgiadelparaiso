@@ -108,6 +108,8 @@ model Post {
   status     PostStatus @default(DRAFT)
   likes      Int        @default(0)
   publishedAt DateTime?
+  // When subscribers were emailed about it; set once, on first publish.
+  announcedAt DateTime?
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 

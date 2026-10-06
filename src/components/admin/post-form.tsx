@@ -76,9 +76,9 @@ export function PostForm({
               {toast}
             </span>
           )}
-          {post?.status === "PUBLISHED" && (
+          {post && (
             <Link href={`/blog/${post.slug}`} target="_blank" className="border border-ink rounded-full px-4 py-2 text-[15px]">
-              Ver en el sitio
+              Vista previa
             </Link>
           )}
           <button type="submit" disabled={pending} className="bg-ink text-white rounded-full px-5 py-2 text-[15px] font-medium disabled:opacity-60">
@@ -144,7 +144,7 @@ export function PostForm({
               defaultValue={post?.publishedAt ? post.publishedAt.toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" }) : ""}
               className="h-11 border border-mist rounded-lg px-2.5 bg-white"
             />
-            <span className="text-[13px] text-neutral-600">Se aplica al publicar. Vacía: el día en que se publique.</span>
+            <span className="text-[13px] text-neutral-600">Las entradas se ordenan por esta fecha. Vacía: el día en que se publique.</span>
           </div>
 
           <div className="bg-white rounded-[10px] p-4 flex flex-col gap-1.5">

@@ -109,10 +109,6 @@ export default async function AdminPostsPage({
             authors={authors.map((u) => ({ value: u.id, label: u.name }))}
           />
         </Suspense>
-        <div className="px-5 pb-2 text-[13px] text-neutral-600">
-          {total} {total === 1 ? "entrada" : "entradas"}
-          {pageCount > 1 && ` · página ${page} de ${pageCount}`}
-        </div>
 
         <div className="overflow-x-auto">
           <div className="min-w-[760px]">
@@ -157,7 +153,7 @@ export default async function AdminPostsPage({
                 <span className="text-[15px] text-neutral-600">
                   {(post.publishedAt ?? post.updatedAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
-                <Link href={`/admin/entradas/${post.id}`} className="border border-ink rounded-full px-3 py-1.5 text-[13px] text-center hover:bg-ink hover:text-white">
+                <Link href={`/admin/entradas/${post.id}`} target="_blank" className="border border-ink rounded-full px-3 py-1.5 text-[13px] text-center hover:bg-ink hover:text-white">
                   Editar
                 </Link>
               </div>

@@ -3,7 +3,7 @@ import { slugify } from "@/lib/slug";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { isManager } from "@/lib/permissions";
+import { canWritePosts, isManager } from "@/lib/permissions";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { SiteHeader } from "@/components/site/header";
@@ -23,8 +23,11 @@ export default async function PostPage({
 }) {
   const { slug } = await params;
 
+  // Writers can preview drafts from the editor ("Vista previa"); everyone else sees published posts only.
+  const viewerSession = await auth();
+  const canPreview = canWritePosts(viewerSession?.user?.role);
   const post = await prisma.post.findFirst({
-    where: { slug, status: "PUBLISHED" },
+    where: { slug, ...(canPreview ? {} : { status: "PUBLISHED" }) },
     include: {
       category: true,
       writer: true,
@@ -43,8 +46,8 @@ export default async function PostPage({
     notFound();
   }
 
-  const [session, categories, related, founder] = await Promise.all([
-    auth(),
+  const session = viewerSession;
+  const [categories, related, founder] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
       include: { _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
@@ -69,6 +72,11 @@ export default async function PostPage({
   return (
     <>
       <SiteHeader />
+      {post.status !== "PUBLISHED" && (
+        <div className="bg-[#fff4e5] text-[#6b3d00] text-center text-[14px] px-5 py-2.5">
+          Vista previa: esta entrada es un borrador y todavía no la ve nadie más.
+        </div>
+      )}
 
       <div className="max-w-[1120px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)_180px] gap-12 lg:gap-16 items-start">
         <aside className="order-3 lg:order-1">

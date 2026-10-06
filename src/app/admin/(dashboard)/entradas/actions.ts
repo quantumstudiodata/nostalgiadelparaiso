@@ -72,8 +72,8 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
       content: data.content,
       coverImage: data.coverImage,
       status: data.status,
-      // A draft has no date yet: publishedAt also marks "already announced to subscribers".
-      publishedAt: data.status === "PUBLISHED" ? (chosenDate(data.publishedDay, null) ?? new Date()) : null,
+      publishedAt: chosenDate(data.publishedDay, null) ?? (data.status === "PUBLISHED" ? new Date() : null),
+      announcedAt: data.status === "PUBLISHED" ? new Date() : null,
       authorId: user.id,
       writerId: data.writerId,
       categoryId: data.categoryId,
@@ -96,11 +96,9 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
   if (!isManager(user.role) && existing.authorId !== user.id) return { error: "Solo puedes editar tus propias entradas." };
 
   const slug = existing.title === data.title ? existing.slug : await uniqueSlug(data.title, postId);
-  const firstPublish = data.status === "PUBLISHED" && !existing.publishedAt;
+  const firstPublish = data.status === "PUBLISHED" && !existing.announcedAt;
   const publishedAt =
-    data.status === "PUBLISHED" || existing.publishedAt
-      ? (chosenDate(data.publishedDay, existing.publishedAt) ?? existing.publishedAt ?? new Date())
-      : null;
+    chosenDate(data.publishedDay, existing.publishedAt) ?? (data.status === "PUBLISHED" ? (existing.publishedAt ?? new Date()) : null);
 
   await prisma.post.update({
     where: { id: postId },
@@ -112,6 +110,7 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
       coverImage: data.coverImage,
       status: data.status,
       publishedAt,
+      ...(firstPublish ? { announcedAt: new Date() } : {}),
       categoryId: data.categoryId,
       writerId: data.writerId,
     },

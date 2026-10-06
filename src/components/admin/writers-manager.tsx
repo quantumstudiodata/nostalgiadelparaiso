@@ -73,7 +73,18 @@ export function WritersManager({ writers }: { writers: WriterRow[] }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  // After adding a writer the form closes, ready to add another one.
+  async function create(prev: WriterFormState, formData: FormData) {
+    const result = await createWriter(prev, formData);
+    if (result.ok) {
+      setAdding(0);
+      setNotice(result.message ?? null);
+    }
+    return result;
+  }
 
   function remove(w: WriterRow) {
     if (!confirm(`¿Borrar el perfil de ${w.name}?`)) return;
@@ -91,13 +102,19 @@ export function WritersManager({ writers }: { writers: WriterRow[] }) {
     <div className="mt-5 flex flex-col gap-5">
       <div>
         {adding ? (
-          <WriterForm key={adding} action={createWriter} submitLabel="Agregar escritor" onDone={() => setAdding(0)} />
+          <WriterForm key={adding} action={create} submitLabel="Agregar escritor" onDone={() => setAdding(0)} />
         ) : (
-          <button type="button" onClick={() => setAdding(Date.now())} className="bg-ink text-white rounded-full px-5 py-2.5 text-[15px] font-medium">
+          <button
+            type="button"
+            onClick={() => {
+              setNotice(null);
+              setAdding(Date.now());
+            }} className="bg-ink text-white rounded-full px-5 py-2.5 text-[15px] font-medium">
             + Agregar escritor
           </button>
         )}
       </div>
+      {notice && <p className="text-[14px] text-[#1f5c2a]" role="status">{notice}</p>}
       {error && <p className="text-[14px] text-red-700" role="alert">{error}</p>}
 
       <div className="bg-white rounded-[10px]">

@@ -5,7 +5,7 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { TextStyle, FontSize } from "@tiptap/extension-text-style";
 import { FontFamily } from "@tiptap/extension-font-family";
 import { useEffect, useRef, useState } from "react";
 import { PostImage, type ImageAlign } from "./post-image";
@@ -46,6 +46,99 @@ function ToolbarButton({
 }
 
 const IMAGE_WIDTHS = ["25%", "33%", "50%", "75%", "100%"];
+
+const FONT_SIZES = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 36];
+
+/** Font size for the selected text only (like Word), not the whole paragraph. */
+function FontSizeSelect({ editor, className }: { editor: Editor; className: string }) {
+  const current = String(editor.getAttributes("textStyle").fontSize ?? "").replace("px", "");
+  return (
+    <select
+      aria-label="Tamaño de letra"
+      title="Tamaño de letra (solo lo seleccionado)"
+      value={current}
+      onChange={(e) => {
+        const size = e.target.value;
+        if (size) editor.chain().focus().setFontSize(`${size}px`).run();
+        else editor.chain().focus().unsetFontSize().run();
+      }}
+      className={className}
+    >
+      <option value="">Tamaño</option>
+      {current && !FONT_SIZES.includes(Number(current)) && <option value={current}>{current}</option>}
+      {FONT_SIZES.map((n) => (
+        <option key={n} value={n}>
+          {n}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+const TEXT_MENU_OPTIONS = { placement: "top" as const, offset: 8 };
+const showTextMenu = ({ editor, from, to }: { editor: Editor; from: number; to: number }) =>
+  from !== to && editor.isEditable && !editor.isActive("image");
+
+/** Floating menu on selected text, so formatting is at hand anywhere in a long post. */
+function TextBubble({ editor }: { editor: Editor }) {
+  const keep = (e: React.MouseEvent) => e.preventDefault();
+  const btn = (active: boolean) => `h-8 min-w-8 px-2 rounded-full ${active ? "bg-white text-ink" : "hover:bg-white/15"}`;
+  return (
+    <BubbleMenu
+      editor={editor}
+      pluginKey="textMenu"
+      shouldShow={showTextMenu}
+      options={TEXT_MENU_OPTIONS}
+      className="z-20 flex flex-wrap items-center gap-1 p-1.5 rounded-full bg-ink text-white text-[13px] shadow-lg max-w-[92vw]"
+    >
+      <button type="button" title="Negrita" onMouseDown={keep} onClick={() => editor.chain().focus().toggleBold().run()} className={btn(editor.isActive("bold"))}>
+        <strong>B</strong>
+      </button>
+      <button type="button" title="Cursiva" onMouseDown={keep} onClick={() => editor.chain().focus().toggleItalic().run()} className={btn(editor.isActive("italic"))}>
+        <em>I</em>
+      </button>
+      <button type="button" title="Subrayado" onMouseDown={keep} onClick={() => editor.chain().focus().toggleUnderline().run()} className={btn(editor.isActive("underline"))}>
+        <span className="underline">U</span>
+      </button>
+      <button type="button" title="Tachado" onMouseDown={keep} onClick={() => editor.chain().focus().toggleStrike().run()} className={btn(editor.isActive("strike"))}>
+        <span className="line-through">S</span>
+      </button>
+      <span className="w-px h-5 bg-white/30 mx-0.5" />
+      <FontSizeSelect editor={editor} className="h-8 rounded-full px-2 bg-white text-ink" />
+      <select
+        aria-label="Tipo de letra"
+        value={String(editor.getAttributes("textStyle").fontFamily ?? "")}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value) editor.chain().focus().setFontFamily(value).run();
+          else editor.chain().focus().unsetFontFamily().run();
+        }}
+        className="h-8 rounded-full px-2 bg-white text-ink max-w-[130px]"
+      >
+        {FONT_OPTIONS.map((f) => (
+          <option key={f.value} value={f.value}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+      <span className="w-px h-5 bg-white/30 mx-0.5" />
+      {(["left", "center", "right", "justify"] as const).map((a) => (
+        <button
+          key={a}
+          type="button"
+          title={{ left: "Izquierda", center: "Centrar", right: "Derecha", justify: "Justificar" }[a]}
+          onMouseDown={keep}
+          onClick={() => editor.chain().focus().setTextAlign(a).run()}
+          className={btn(editor.isActive({ textAlign: a }))}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mx-auto">
+            <path d={{ left: "M4 6h16M4 12h10M4 18h14", center: "M4 6h16M7 12h10M5 18h14", right: "M4 6h16M10 12h10M6 18h14", justify: "M4 6h16M4 12h16M4 18h16" }[a]} />
+          </svg>
+        </button>
+      ))}
+    </BubbleMenu>
+  );
+}
 
 function ImageButton({ editor }: { editor: Editor }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -187,6 +280,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
       <select
         aria-label="Tipo de letra"
+        value={String(editor.getAttributes("textStyle").fontFamily ?? "")}
         className="text-[15px] h-9 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const value = e.target.value;
@@ -201,8 +295,12 @@ function Toolbar({ editor }: { editor: Editor }) {
         ))}
       </select>
 
+      <FontSizeSelect editor={editor} className="text-[15px] h-9 rounded-full px-3 bg-panel" />
+
       <select
-        aria-label="Tamaño de texto"
+        aria-label="Estilo de párrafo"
+        title="Estilo del párrafo completo"
+        value={[1, 2, 3].find((level) => editor.isActive("heading", { level })) ?? 0}
         className="text-[15px] h-9 rounded-full px-3 bg-panel"
         onChange={(e) => {
           const level = Number(e.target.value);
@@ -304,6 +402,7 @@ export function RichTextEditor({
       Underline,
       TextStyle,
       FontFamily,
+      FontSize,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       PostImage,
     ],
@@ -323,6 +422,7 @@ export function RichTextEditor({
     <div className="bg-white">
       {editor && <Toolbar editor={editor} />}
       {editor && <ImageControls editor={editor} />}
+      {editor && <TextBubble editor={editor} />}
       <EditorContent editor={editor} />
       <HiddenSync name={name} editor={editor} fallback={html} />
     </div>

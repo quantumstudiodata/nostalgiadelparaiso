@@ -43,6 +43,17 @@ export const PIXEL_EMOJIS: Record<string, { label: string; rows: string[] }> = {
   },
 };
 
+/** The emoji as an SVG data URL, for the comment box where it is shown as an inline image. */
+export function pixelEmojiDataUrl(name: string) {
+  const emoji = PIXEL_EMOJIS[name];
+  if (!emoji) return "";
+  const rects = emoji.rows
+    .flatMap((row, y) => [...row].map((c, x) => (COLORS[c] ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${COLORS[c]}"/>` : "")))
+    .join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" shape-rendering="crispEdges">${rects}</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 export function PixelEmoji({ name, size = 18 }: { name: string; size?: number }) {
   const emoji = PIXEL_EMOJIS[name];
   if (!emoji) return null;

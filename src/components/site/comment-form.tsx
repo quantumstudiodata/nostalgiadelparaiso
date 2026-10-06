@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { FormState } from "@/app/actions/community";
-import { PIXEL_EMOJIS, PixelEmoji } from "@/components/site/pixel-emoji";
+import { PIXEL_EMOJIS, PixelEmoji, pixelEmojiDataUrl } from "@/components/site/pixel-emoji";
 
 const inputClass = "h-10 border border-mist px-3 text-[13.5px] bg-white w-full";
 
@@ -17,27 +17,70 @@ export function CommentForm({
 }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, {});
   const formRef = useRef<HTMLFormElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLInputElement>(null);
+  const savedRange = useRef<Range | null>(null);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
 
   useEffect(() => {
     if (!state.ok) return;
     formRef.current?.reset();
+    if (boxRef.current) boxRef.current.innerHTML = "";
     // Reset after a successful post; the form itself is uncontrolled.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRating(0);
   }, [state]);
 
+  // The comment box shows emojis as pictures; the text sent keeps them as :name: tokens.
+  function syncBody() {
+    const box = boxRef.current;
+    if (!box || !bodyRef.current) return;
+    const parts: string[] = [];
+    const walk = (node: Node) => {
+      node.childNodes.forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) parts.push(child.textContent ?? "");
+        else if (child instanceof HTMLImageElement && child.dataset.emoji) parts.push(`:${child.dataset.emoji}:`);
+        else if (child instanceof HTMLBRElement) parts.push("\n");
+        else if (child instanceof HTMLElement) {
+          if (child.tagName === "DIV" && parts.length) parts.push("\n");
+          walk(child);
+        }
+      });
+    };
+    walk(box);
+    bodyRef.current.value = parts.join("").replace(/\u00a0/g, " ");
+  }
+
+  function rememberCaret() {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount && boxRef.current?.contains(sel.anchorNode)) savedRange.current = sel.getRangeAt(0).cloneRange();
+  }
+
   function insertEmoji(name: string) {
-    const el = bodyRef.current;
-    if (!el) return;
-    const token = `:${name}:`;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? start;
-    el.value = el.value.slice(0, start) + token + el.value.slice(end);
-    el.focus();
-    el.setSelectionRange(start + token.length, start + token.length);
+    const box = boxRef.current;
+    if (!box) return;
+    box.focus();
+    const sel = window.getSelection();
+    let range = savedRange.current;
+    if (!range || !box.contains(range.startContainer)) {
+      range = document.createRange();
+      range.selectNodeContents(box);
+      range.collapse(false);
+    }
+    const img = document.createElement("img");
+    img.src = pixelEmojiDataUrl(name);
+    img.alt = PIXEL_EMOJIS[name].label;
+    img.dataset.emoji = name;
+    img.style.cssText = "display:inline-block;width:18px;height:18px;vertical-align:-3px;margin:0 1px;image-rendering:pixelated";
+    range.deleteContents();
+    range.insertNode(img);
+    range.setStartAfter(img);
+    range.collapse(true);
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    savedRange.current = range.cloneRange();
+    syncBody();
   }
 
   const shown = hover || rating;
@@ -87,11 +130,31 @@ export function CommentForm({
       </div>
 
       <div>
-        <label htmlFor="comment-body" className="sr-only">Comentario</label>
-        <textarea id="comment-body" ref={bodyRef} name="body" rows={4} maxLength={3000} placeholder="Escribe tu comentario…" className="w-full border border-mist px-3 py-2.5 text-[13.5px]" />
+        <span className="sr-only" id="comment-body-label">Comentario</span>
+        <div
+          id="comment-body"
+          ref={boxRef}
+          role="textbox"
+          aria-labelledby="comment-body-label"
+          aria-multiline="true"
+          contentEditable
+          suppressContentEditableWarning
+          data-placeholder="Escribe tu comentario…"
+          onInput={syncBody}
+          onKeyUp={rememberCaret}
+          onMouseUp={rememberCaret}
+          onBlur={rememberCaret}
+          onPaste={(e) => {
+            // Paste as plain text only.
+            e.preventDefault();
+            document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
+          }}
+          className="w-full min-h-[104px] border border-mist px-3 py-2.5 text-[13.5px] whitespace-pre-wrap break-words outline-none focus:border-ink empty:before:content-[attr(data-placeholder)] empty:before:text-neutral-400"
+        />
+        <input type="hidden" ref={bodyRef} name="body" />
         <div className="mt-1 flex flex-wrap items-center gap-1" aria-label="Emojis">
           {Object.entries(PIXEL_EMOJIS).map(([name, e]) => (
-            <button key={name} type="button" title={e.label} aria-label={`Agregar ${e.label}`} onClick={() => insertEmoji(name)} className="w-8 h-8 flex items-center justify-center hover:bg-panel">
+            <button key={name} type="button" title={e.label} aria-label={`Agregar ${e.label}`} onMouseDown={(e) => e.preventDefault()} onClick={() => insertEmoji(name)} className="w-8 h-8 flex items-center justify-center hover:bg-panel">
               <PixelEmoji name={name} size={20} />
             </button>
           ))}

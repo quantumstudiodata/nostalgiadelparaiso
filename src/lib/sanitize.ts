@@ -21,6 +21,7 @@ export function sanitizeHtml(html: string): string {
       "*": {
         "text-align": [/^(left|center|right|justify)$/],
         "font-family": [/^[\w\s,'"-]+$/],
+        "font-size": [/^\d{1,2}(\.\d+)?px$/],
       },
       img: {
         width: [/^\d{1,3}%$/],
