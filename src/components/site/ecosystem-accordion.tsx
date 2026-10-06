@@ -78,7 +78,6 @@ export function EcosystemAccordion({ items: initialItems, canEdit }: { items: Ec
   }
 
   function hide(item: EcosystemEntry) {
-    if (!confirm(`¿Quitar “${item.name}” del ecosistema? La categoría y sus entradas se conservan.`)) return;
     setItems((list) => list.filter((i) => i.id !== item.id));
     queueEdit(`eco:${item.id}:hide`, () => updateCategory(item.id, { inEcosystem: false }));
   }

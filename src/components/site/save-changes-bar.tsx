@@ -4,33 +4,29 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { pendingCount, saveAllEdits, usePendingEdits } from "@/components/site/edit-session";
 
-/** "Guardar cambios" in the edit bar: nothing is published until it is pressed. */
+/**
+ * "Guardar cambios" in the edit bar: nothing is published until it is pressed.
+ * No browser pop-ups: leaving with unsaved changes asks right here in the bar.
+ */
 export function SaveChangesBar() {
   const router = useRouter();
   const count = usePendingEdits();
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"saved" | "error" | null>(null);
+  const [leavingTo, setLeavingTo] = useState<string | null>(null);
 
-  // Warn before leaving the page with unsaved changes (reloads, links, back button).
+  // A link clicked with unsaved changes waits for an answer in the bar.
   useEffect(() => {
-    function beforeUnload(e: BeforeUnloadEvent) {
-      if (pendingCount() > 0) e.preventDefault();
-    }
     function onClick(e: MouseEvent) {
       if (pendingCount() === 0) return;
       const link = (e.target as HTMLElement).closest?.("a[href]") as HTMLAnchorElement | null;
       if (!link || link.target === "_blank" || link.getAttribute("href")?.startsWith("#")) return;
-      if (!confirm("Tienes cambios sin guardar. ¿Salir sin guardarlos?")) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      setLeavingTo(link.href);
     }
-    window.addEventListener("beforeunload", beforeUnload);
     document.addEventListener("click", onClick, true);
-    return () => {
-      window.removeEventListener("beforeunload", beforeUnload);
-      document.removeEventListener("click", onClick, true);
-    };
+    return () => document.removeEventListener("click", onClick, true);
   }, []);
 
   useEffect(() => {
@@ -44,7 +40,33 @@ export function SaveChangesBar() {
     const failed = await saveAllEdits();
     setSaving(false);
     setStatus(failed ? "error" : "saved");
-    router.refresh();
+    return failed === 0;
+  }
+
+  const button = "whitespace-nowrap rounded-full px-4 py-1.5 font-bold";
+
+  if (leavingTo && count > 0) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="whitespace-nowrap text-lilac">Tienes cambios sin guardar.</span>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={async () => {
+            if (await save()) location.href = leavingTo;
+          }}
+          className={`${button} bg-white text-ink`}
+        >
+          {saving ? "Guardando..." : "Guardar y salir"}
+        </button>
+        <button type="button" onClick={() => (location.href = leavingTo)} className={`${button} border border-white/50`}>
+          Salir sin guardar
+        </button>
+        <button type="button" onClick={() => setLeavingTo(null)} className="whitespace-nowrap underline underline-offset-4 text-lilac">
+          Seguir editando
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -52,22 +74,18 @@ export function SaveChangesBar() {
       {status === "saved" && count === 0 && <span className="text-lilac whitespace-nowrap">✓ Guardado</span>}
       {status === "error" && <span className="text-[#ffd2c2] whitespace-nowrap">No se pudo guardar todo. Intenta de nuevo.</span>}
       {count > 0 && (
-        <button
-          type="button"
-          onClick={() => {
-            if (confirm("¿Descartar los cambios sin guardar?")) location.reload();
-          }}
-          disabled={saving}
-          className="whitespace-nowrap underline underline-offset-4 text-lilac"
-        >
+        <button type="button" onClick={() => location.reload()} disabled={saving} className="whitespace-nowrap underline underline-offset-4 text-lilac">
           Descartar
         </button>
       )}
       <button
         type="button"
-        onClick={save}
+        onClick={async () => {
+          await save();
+          router.refresh();
+        }}
         disabled={count === 0 || saving}
-        className="whitespace-nowrap rounded-full px-4 py-1.5 font-bold bg-white text-ink disabled:bg-white/20 disabled:text-white/60"
+        className={`${button} bg-white text-ink disabled:bg-white/20 disabled:text-white/60`}
       >
         {saving ? "Guardando..." : count > 0 ? `Guardar cambios (${count})` : "Guardar cambios"}
       </button>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createCategory, updateCategory, deleteCategory, reorderCategories } from "@/app/actions/categories";
 import { ImageUploadField } from "./image-upload-field";
+import { InlineConfirm } from "./inline-confirm";
 
 export type CategoryRow = {
   id: string;
@@ -99,7 +100,6 @@ export function CategoriesManager({ categories: initial }: { categories: Categor
   }
 
   function remove(c: CategoryRow) {
-    if (!confirm(`¿Borrar la categoría “${c.name}”?`)) return;
     setError(null);
     startTransition(async () => {
       try {
@@ -158,15 +158,13 @@ export function CategoriesManager({ categories: initial }: { categories: Categor
               <button type="button" onClick={() => setEditing(editing === c.id ? null : c.id)} className="border border-ink rounded-full px-3 py-1.5 text-[13px]">
                 {editing === c.id ? "Cerrar" : "Editar"}
               </button>
-              <button
-                type="button"
-                onClick={() => remove(c)}
+              <InlineConfirm
+                label="Borrar"
+                question={`¿Borrar “${c.name}”?`}
+                onConfirm={() => remove(c)}
                 disabled={c.posts > 0}
                 title={c.posts > 0 ? "Tiene entradas: muévelas antes de borrarla" : undefined}
-                className="text-[13px] text-accent-dark hover:underline disabled:opacity-40 disabled:no-underline"
-              >
-                Borrar
-              </button>
+              />
             </div>
             {editing === c.id && (
               <div className="mt-3">

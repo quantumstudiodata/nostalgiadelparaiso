@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { createWriter, updateWriter, deleteWriter, type WriterFormState } from "@/app/admin/(dashboard)/escritores/actions";
 import { ImageUploadField } from "./image-upload-field";
+import { InlineConfirm } from "./inline-confirm";
 
 export type WriterRow = {
   id: string;
@@ -87,7 +88,6 @@ export function WritersManager({ writers }: { writers: WriterRow[] }) {
   }
 
   function remove(w: WriterRow) {
-    if (!confirm(`¿Borrar el perfil de ${w.name}?`)) return;
     setError(null);
     startTransition(async () => {
       try {
@@ -137,15 +137,13 @@ export function WritersManager({ writers }: { writers: WriterRow[] }) {
               <button type="button" onClick={() => setEditing(editing === w.id ? null : w.id)} className="border border-ink rounded-full px-3 py-1.5 text-[13px]">
                 {editing === w.id ? "Cerrar" : "Editar perfil"}
               </button>
-              <button
-                type="button"
-                onClick={() => remove(w)}
+              <InlineConfirm
+                label="Borrar"
+                question={`¿Borrar a ${w.name}?`}
+                onConfirm={() => remove(w)}
                 disabled={w.postCount > 0}
                 title={w.postCount > 0 ? "Tiene entradas: cámbialas a otro escritor antes de borrarlo" : undefined}
-                className="text-[13px] text-accent-dark hover:underline disabled:opacity-40 disabled:no-underline"
-              >
-                Borrar
-              </button>
+              />
             </div>
             {editing === w.id && (
               <div className="mt-3">
