@@ -1,7 +1,7 @@
 import { AuthShell } from "@/components/site/auth-shell";
 import { ResetForm } from "@/components/site/auth-forms";
 
-export const metadata = { title: "Nueva contraseña · Nostalgia del paraíso" };
+export const metadata = { title: "Nueva contraseña" };
 
 export default async function ResetPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
   const { email = "" } = await searchParams;

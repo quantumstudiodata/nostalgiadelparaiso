@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AuthShell } from "@/components/site/auth-shell";
 import { ForgotForm } from "@/components/site/auth-forms";
 
-export const metadata = { title: "Recuperar contraseña · Nostalgia del paraíso" };
+export const metadata = { title: "Recuperar contraseña" };
 
 export default function ForgotPage() {
   return (

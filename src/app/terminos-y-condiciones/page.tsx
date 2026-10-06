@@ -1,6 +1,6 @@
 import { LegalPage } from "@/components/site/legal-page";
 
-export const metadata = { title: "Términos y Condiciones · Nostalgia del paraíso" };
+export const metadata = { title: "Términos y Condiciones" };
 
 export default function TermsPage() {
   return (

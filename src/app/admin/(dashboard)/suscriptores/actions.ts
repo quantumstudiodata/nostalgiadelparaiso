@@ -29,3 +29,19 @@ export async function updateUserRole(userId: string, role: string) {
   await prisma.user.update({ where: { id: userId }, data: { role } });
   revalidateAll();
 }
+
+/** Removes a subscriber: the newsletter signup and, for people with an account, the account itself. */
+export async function deleteSubscriber(email: string, userId?: string) {
+  const manager = await requireManager();
+  if (userId) {
+    if (userId === manager.id) throw new Error("No puedes borrar tu propia cuenta.");
+    const user = await prisma.user.findUnique({ where: { id: userId }, include: { _count: { select: { posts: true } } } });
+    if (user) {
+      if (user.role === "ADMIN" && manager.role !== "ADMIN") throw new Error("No puedes borrar a una administradora.");
+      if (user._count.posts > 0) throw new Error("Esta cuenta subió entradas; no se puede borrar.");
+      await prisma.user.delete({ where: { id: userId } });
+    }
+  }
+  await prisma.subscriber.deleteMany({ where: { email } });
+  revalidateAll();
+}

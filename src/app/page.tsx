@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
@@ -14,6 +15,8 @@ import { AddWorkshopButton } from "@/components/site/add-workshop";
 import { AnimatedTitle } from "@/components/site/animated-title";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const HERO_SUBTITLE_DEFAULT =
   "Una red viva de actividades, personas, textos e ideas que se conectan entre sí para formar comunidad.";

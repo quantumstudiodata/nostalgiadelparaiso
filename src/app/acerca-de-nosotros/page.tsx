@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canEditSite } from "@/lib/edit-mode";
@@ -9,6 +10,13 @@ import { EditableText, EditableImage } from "@/components/site/editable";
 import { updateSiteBlockField } from "@/app/actions/site-content";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Ángeles Nava · Acerca de",
+  description: "Conoce a Ángeles Nava, escritora, tallerista y fundadora de Nostalgia del Paraíso, un ecosistema cultural de poesía y cultura de paz.",
+  alternates: { canonical: "/acerca-de-nosotros" },
+  openGraph: { images: [{ url: "/images/angeles-nava.jpeg", alt: "Ángeles Nava" }] },
+};
 
 const saveBio = updateSiteBlockField.bind(null, "about.page", "bio");
 const saveMainImage = updateSiteBlockField.bind(null, "about.page", "mainImageUrl");

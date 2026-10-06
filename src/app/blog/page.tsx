@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -10,6 +11,12 @@ import { WixCategories, WixBlackColumn, PostRow } from "@/components/site/wix-bl
 import { SearchPill } from "@/components/site/search-pill";
 
 const PAGE_SIZE = 10;
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description: "Poemas, textos y reflexiones de Ángeles Nava y las voces de la comunidad de Nostalgia del Paraíso.",
+  alternates: { canonical: "/blog" },
+};
 
 export default async function BlogPage({
   searchParams,

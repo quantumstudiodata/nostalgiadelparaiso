@@ -1,6 +1,6 @@
 import { LegalPage } from "@/components/site/legal-page";
 
-export const metadata = { title: "Política de Privacidad · Nostalgia del paraíso" };
+export const metadata = { title: "Política de Privacidad" };
 
 export default function PrivacyPage() {
   return (

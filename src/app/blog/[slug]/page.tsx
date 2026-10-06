@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+import { postSummary } from "@/lib/email-templates";
+import { siteUrl } from "@/lib/email";
 import { notFound, permanentRedirect } from "next/navigation";
 import { slugify } from "@/lib/slug";
 import Link from "next/link";
@@ -16,6 +19,31 @@ import { readingMinutes, shortDate } from "@/lib/reading-time";
 import { CommentForm } from "@/components/site/comment-form";
 import { Stars, WithPixelEmojis } from "@/components/site/pixel-emoji";
 import { addComment, deleteComment } from "@/app/actions/community";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await prisma.post.findFirst({
+    where: { slug, status: "PUBLISHED" },
+    select: { title: true, excerpt: true, content: true, coverImage: true, slug: true, publishedAt: true, updatedAt: true, writer: { select: { name: true } } },
+  });
+  if (!post) return {};
+  const description = (post.excerpt || postSummary(post.content, 35)).slice(0, 200);
+  return {
+    title: post.title,
+    description,
+    authors: [{ name: post.writer.name }],
+    alternates: { canonical: `/blog/${post.slug}` },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description,
+      publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt.toISOString(),
+      authors: [post.writer.name],
+      ...(post.coverImage ? { images: [{ url: post.coverImage }] } : {}),
+    },
+  };
+}
 
 export default async function PostPage({
   params,
@@ -72,6 +100,22 @@ export default async function PostPage({
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: post.title,
+            datePublished: post.publishedAt?.toISOString(),
+            dateModified: post.updatedAt.toISOString(),
+            author: { "@type": "Person", name: post.writer.name, url: `${siteUrl()}/autor/${post.writer.id}` },
+            publisher: { "@id": `${siteUrl()}/#organization` },
+            image: post.coverImage ? new URL(post.coverImage, siteUrl()).toString() : undefined,
+            mainEntityOfPage: `${siteUrl()}/blog/${post.slug}`,
+          }).replace(/</g, "\\u003c"),
+        }}
+      />
       <SiteHeader />
       {post.status !== "PUBLISHED" && (
         <div className="bg-[#fff4e5] text-[#6b3d00] text-center text-[14px] px-5 py-2.5">

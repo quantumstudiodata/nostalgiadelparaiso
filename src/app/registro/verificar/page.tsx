@@ -1,7 +1,7 @@
 import { AuthShell } from "@/components/site/auth-shell";
 import { VerifyForm } from "@/components/site/auth-forms";
 
-export const metadata = { title: "Confirma tu correo · Nostalgia del paraíso" };
+export const metadata = { title: "Confirma tu correo" };
 
 export default async function VerifyPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
   const { email = "" } = await searchParams;

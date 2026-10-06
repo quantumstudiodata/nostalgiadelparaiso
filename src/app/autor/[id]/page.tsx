@@ -11,7 +11,7 @@ async function getWriter(id: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const writer = await getWriter((await params).id);
-  return writer ? { title: `${writer.name} · Nostalgia del Paraíso`, description: writer.bio ?? undefined } : {};
+  return writer ? { title: writer.name, description: writer.bio ?? undefined } : {};
 }
 
 export default async function WriterPage({ params }: { params: Promise<{ id: string }> }) {
