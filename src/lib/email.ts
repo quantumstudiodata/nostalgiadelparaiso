@@ -4,7 +4,7 @@ const RESEND_URL = "https://api.resend.com/emails/batch";
 
 export function siteUrl() {
   const url =
-    process.env.SITE_URL ??
+    env("SITE_URL") ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
   return url.replace(/\/$/, "");
 }
@@ -13,9 +13,23 @@ export function escapeHtml(text: string) {
   return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
+/** Reads an env var, ignoring surrounding spaces or quotes pasted by mistake. */
+function env(name: string) {
+  return process.env[name]?.trim().replace(/^["']|["']$/g, "").trim() || undefined;
+}
+
 /** Whether new-post emails can be sent (needs RESEND_API_KEY and EMAIL_FROM in the environment). */
 export function emailConfigured() {
-  return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+  return Boolean(env("RESEND_API_KEY") && env("EMAIL_FROM"));
+}
+
+/** Which email variables are set in this deploy (values are never shown). */
+export function emailEnvStatus() {
+  return ["RESEND_API_KEY", "EMAIL_FROM", "EMAIL_REPLY_TO", "CONTACT_EMAIL", "SITE_URL"].map((name) => ({ name, set: Boolean(env(name)) }));
+}
+
+export function contactInbox() {
+  return env("CONTACT_EMAIL") ?? env("EMAIL_REPLY_TO");
 }
 
 /** Emails every subscriber about a newly published post. Silently skipped when email isn't configured. */
@@ -36,9 +50,9 @@ export async function notifySubscribersOfPost(postId: string) {
   const excerpt = post.excerpt ? `<p style="font-size:15px;line-height:1.6;color:#333">${escapeHtml(post.excerpt)}</p>` : "";
 
   const messages = subscribers.map((s) => ({
-    from: process.env.EMAIL_FROM!,
+    from: env("EMAIL_FROM")!,
     // The sending domain has no inbox, so replies go to a real address (e.g. the Gmail account).
-    ...(process.env.EMAIL_REPLY_TO ? { reply_to: process.env.EMAIL_REPLY_TO } : {}),
+    ...(env("EMAIL_REPLY_TO") ? { reply_to: env("EMAIL_REPLY_TO") } : {}),
     to: s.email,
     subject: `Nueva entrada: ${post.title}`,
     html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:24px;color:#111">
@@ -54,7 +68,7 @@ ${excerpt}
   for (let i = 0; i < messages.length; i += 100) {
     const res = await fetch(RESEND_URL, {
       method: "POST",
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
       body: JSON.stringify(messages.slice(i, i + 100)),
     });
     if (!res.ok) console.error("[email] Resend batch failed:", res.status, await res.text());
@@ -62,24 +76,34 @@ ${excerpt}
 }
 
 /** Sends one email through Resend. Returns false (and logs) when email isn't configured or the send fails. */
-export async function sendEmail({ to, subject, html, replyTo }: { to: string; subject: string; html: string; replyTo?: string }) {
+export async function sendEmail(message: { to: string; subject: string; html: string; replyTo?: string }) {
+  return (await sendEmailDetailed(message)).ok;
+}
+
+/** Sends one email and reports Resend's answer, for the panel's test button. */
+export async function sendEmailDetailed({ to, subject, html, replyTo }: { to: string; subject: string; html: string; replyTo?: string }) {
   if (!emailConfigured()) {
     console.warn(`[email] not configured; skipped "${subject}" to ${to}`);
-    return false;
+    return { ok: false, error: "Faltan RESEND_API_KEY o EMAIL_FROM en este deploy." };
   }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: process.env.EMAIL_FROM,
-      to,
-      subject,
-      html,
-      reply_to: replyTo ?? process.env.EMAIL_REPLY_TO ?? undefined,
-    }),
-  });
-  if (!res.ok) console.error("[email] Resend send failed:", res.status, await res.text());
-  return res.ok;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: env("EMAIL_FROM"), to, subject, html, reply_to: replyTo ?? env("EMAIL_REPLY_TO") }),
+    });
+    if (res.ok) return { ok: true, error: null };
+    const text = await res.text();
+    console.error("[email] Resend send failed:", res.status, text);
+    let detail = text;
+    try {
+      detail = (JSON.parse(text) as { message?: string }).message ?? text;
+    } catch {}
+    return { ok: false, error: `Resend respondió ${res.status}: ${detail}` };
+  } catch (error) {
+    console.error("[email] Resend request failed:", error);
+    return { ok: false, error: `No se pudo conectar con Resend: ${error instanceof Error ? error.message : String(error)}` };
+  }
 }
 
 /** Simple branded wrapper shared by every transactional email. */

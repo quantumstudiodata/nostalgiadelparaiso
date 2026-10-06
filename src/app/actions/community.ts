@@ -8,7 +8,7 @@ import { AuthError } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { auth, signIn } from "@/auth";
 import { isManager } from "@/lib/permissions";
-import { emailConfigured, sendEmail, emailLayout, escapeHtml, siteUrl } from "@/lib/email";
+import { emailConfigured, sendEmail, emailLayout, escapeHtml, siteUrl, contactInbox } from "@/lib/email";
 import { sendCode, checkCode } from "@/lib/codes";
 import { notify } from "@/lib/notify";
 
@@ -233,7 +233,7 @@ export async function sendContactMessage(_prev: FormState, formData: FormData): 
   await prisma.contactMessage.create({ data: { name, email, message } });
   await notify("message", `Mensaje de ${name}: “${message.slice(0, 60)}${message.length > 60 ? "…" : ""}”`, "/admin/notificaciones");
 
-  const inbox = process.env.CONTACT_EMAIL ?? process.env.EMAIL_REPLY_TO;
+  const inbox = contactInbox();
   if (inbox) {
     await sendEmail({
       to: inbox,
