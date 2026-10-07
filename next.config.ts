@@ -19,7 +19,16 @@ const wixRedirects = [
 
 const nextConfig: NextConfig = {
   async redirects() {
-    return wixRedirects;
+    return [
+      // One address for Google: www.nostalgiadelparaiso.com goes to nostalgiadelparaiso.com.
+      {
+        source: "/:path*",
+        has: [{ type: "host" as const, value: "www.nostalgiadelparaiso.com" }],
+        destination: "https://nostalgiadelparaiso.com/:path*",
+        permanent: true,
+      },
+      ...wixRedirects,
+    ];
   },
 };
 

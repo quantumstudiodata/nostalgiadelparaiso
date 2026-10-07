@@ -410,12 +410,15 @@ export function EditableImage({
   onSave,
   className = "",
   children,
+  alt = "",
 }: {
   canEdit: boolean;
   url: string;
   onSave: (url: string) => Promise<void>;
   className?: string;
   children?: ReactNode;
+  /** Description of the image, for Google Images and screen readers. */
+  alt?: string;
 }) {
   const [current, setCurrent] = useState(url);
   const [uploading, setUploading] = useState(false);
@@ -423,7 +426,7 @@ export function EditableImage({
 
   const image = current ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={current} alt="" className="w-full h-full object-cover" />
+    <img src={current} alt={alt} className="w-full h-full object-cover" />
   ) : (
     children
   );

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
+import { getSocialLinks } from "@/lib/social-links";
+import { jsonLdString, siteJsonLd } from "@/lib/seo";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { EditableText, EditableButton, EditableButtonList, EditableImage, type EditableButtonItem } from "@/components/site/editable";
@@ -45,7 +47,7 @@ export default async function HomePage() {
       imageUrl: string;
       buttons?: EditableButtonItem[];
     }>("home.about"),
-    getSiteBlock<{ name: string }>("sidebar.author"),
+    getSiteBlock<{ name: string; bio?: string }>("sidebar.author"),
     prisma.category.findMany({
       orderBy: { order: "asc" },
       include: { _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
@@ -67,6 +69,7 @@ export default async function HomePage() {
     getSiteBlock<Record<string, string | undefined>>("home.sections"),
   ]);
 
+  const socialLinks = await getSocialLinks();
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
   // Categories in the ecosystem feed the accordion and the workshop cards, in the panel's order.
   const workshops = categories.filter((c) => c.inEcosystem);
@@ -95,6 +98,10 @@ export default async function HomePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(siteJsonLd(Object.values(socialLinks), author.bio)) }}
+      />
       <SiteHeader />
 
       {/* Hero: full-width lilac banner, title left, gradient card with the communities right */}
@@ -151,7 +158,7 @@ export default async function HomePage() {
 
           <div className="lg:col-span-5 relative rounded-lg overflow-hidden lg:min-h-[480px] text-white">
             <div className="absolute inset-0">
-              <EditableImage canEdit={canEdit} url={hero.imageUrl ?? ""} onSave={saveHeroImage} className="w-full h-full">
+              <EditableImage canEdit={canEdit} url={hero.imageUrl ?? ""} onSave={saveHeroImage} alt="Nostalgia del Paraíso, ecosistema cultural" className="w-full h-full">
                 <div className="w-full h-full hero-gradient" />
               </EditableImage>
             </div>
@@ -200,6 +207,7 @@ export default async function HomePage() {
                   <EditableImage
                     canEdit={canEdit}
                     url={c.imageUrl ?? ""}
+                    alt={c.name}
                     onSave={saveCardImage}
                     className="w-[84px] h-[84px] lg:w-[104px] lg:h-[104px] shrink-0 rounded-md overflow-hidden bg-white/10"
                   />
@@ -229,6 +237,7 @@ export default async function HomePage() {
           <EditableImage
             canEdit={canEdit}
             url={about.imageUrl ?? ""}
+            alt="Ángeles Nava, fundadora de Nostalgia del Paraíso"
             onSave={saveAboutImage}
             className="w-[220px] h-[220px] lg:w-[400px] lg:h-[400px] rounded-full overflow-hidden outline-[12px] lg:outline-[16px] outline-solid outline-lilac"
           />

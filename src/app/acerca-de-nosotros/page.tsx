@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
+import { getSocialLinks } from "@/lib/social-links";
+import { jsonLdString, siteJsonLd } from "@/lib/seo";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { PostCard } from "@/components/site/post-card";
@@ -58,8 +60,14 @@ export default async function AboutPage() {
     }),
   ]);
 
+  const [socialLinks, founder] = await Promise.all([getSocialLinks(), getSiteBlock<{ bio?: string }>("sidebar.author")]);
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(siteJsonLd(Object.values(socialLinks), founder.bio)) }}
+      />
       <SiteHeader />
 
       <section className="wrap pt-12 lg:pt-20 pb-20 lg:pb-28">
@@ -83,18 +91,21 @@ export default async function AboutPage() {
           <EditableImage
             canEdit={canEdit}
             url={about.mainImageUrl ?? ""}
+            alt="Ángeles Nava"
             onSave={saveMainImage}
             className="aspect-[424/544] bg-neutral-200 overflow-hidden"
           />
           <EditableImage
             canEdit={canEdit}
             url={about.galleryImage1Url ?? ""}
+            alt="Ángeles Nava en un taller de Nostalgia del Paraíso"
             onSave={saveGallery1}
             className="aspect-[468/306] bg-neutral-200 overflow-hidden"
           />
           <EditableImage
             canEdit={canEdit}
             url={about.galleryImage2Url ?? ""}
+            alt="Taller de poesía Nostalgia del Paraíso con Ángeles Nava"
             onSave={saveGallery2}
             className="aspect-[424/299] bg-neutral-200 overflow-hidden"
           />
@@ -106,6 +117,7 @@ export default async function AboutPage() {
           <EditableImage
             canEdit={canEdit}
             url={nostalgia.imageUrl ?? NOSTALGIA_DEFAULTS.imageUrl}
+            alt="Nostalgia del Paraíso, taller de poesía"
             onSave={saveNostalgiaImage}
             className="min-h-[420px] bg-neutral-300 overflow-hidden"
           />

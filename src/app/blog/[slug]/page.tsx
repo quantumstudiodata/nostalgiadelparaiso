@@ -140,7 +140,7 @@ export default async function PostPage({
               <Link href={writerHref} aria-hidden="true" tabIndex={-1}>
                 {authorAvatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={authorAvatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                  <img src={authorAvatar} alt={post.writer.name} className="w-8 h-8 rounded-full object-cover" />
                 ) : (
                   <span className="block w-8 h-8 rounded-full bg-lilac" />
                 )}
@@ -162,7 +162,7 @@ export default async function PostPage({
             {post.coverImage && (
               <div className="mt-5 overflow-hidden bg-mist">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={post.coverImage} alt="" className="w-full max-h-[460px] object-cover" />
+                <img src={post.coverImage} alt={post.title} className="w-full max-h-[460px] object-cover" />
               </div>
             )}
 
@@ -193,7 +193,7 @@ export default async function PostPage({
                     <div className="h-[150px] bg-mist overflow-hidden">
                       {r.coverImage && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.coverImage} alt="" className="w-full h-full object-cover" />
+                        <img src={r.coverImage} alt={r.title} className="w-full h-full object-cover" />
                       )}
                     </div>
                     <h3 className="px-4 pt-3.5 pb-6 font-playfair font-bold text-[15px] leading-snug">{r.title}</h3>

@@ -75,7 +75,7 @@ export function WixBlackColumn({
             <EditableImage canEdit url={authorAvatarUrl ?? ""} onSave={saveAuthorAvatar} className="mt-4 w-[170px] h-[170px] rounded-full overflow-hidden mx-auto" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={authorAvatarUrl!} alt="" className="mt-4 w-[170px] h-[170px] rounded-full object-cover mx-auto" />
+            <img src={authorAvatarUrl!} alt={authorName} className="mt-4 w-[170px] h-[170px] rounded-full object-cover mx-auto" />
           ))}
         {edit ? (
           <EditableText as="p" canEdit multiline value={authorBio} onSave={saveAuthorBio} className="mt-4 text-[13px] leading-[1.55]" />
@@ -112,14 +112,14 @@ export function PostRow({ post }: { post: PostRowPost }) {
       <Link href={href} className="block h-[220px] sm:h-[230px] bg-mist overflow-hidden" tabIndex={-1} aria-hidden="true">
         {post.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverImage} alt="" className="w-full h-full object-cover" />
+          <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
         )}
       </Link>
       <div className="px-6 sm:px-[34px] pt-6 pb-4 flex flex-col min-w-0">
         <div className="flex items-center gap-2.5">
           {post.writer.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.writer.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+            <img src={post.writer.avatarUrl} alt={post.writer.name} className="w-8 h-8 rounded-full object-cover" />
           ) : (
             <span className="w-8 h-8 rounded-full bg-lilac" />
           )}

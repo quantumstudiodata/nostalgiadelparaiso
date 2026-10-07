@@ -16,7 +16,7 @@ export function PostCard({ post, showAuthor = true, compact = false }: { post: P
       <div className={`${compact ? "h-[150px]" : "h-[220px] lg:h-[260px]"} rounded-lg bg-mist overflow-hidden`}>
         {post.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverImage} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+          <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         )}
       </div>
       <div className="mt-[18px] lg:mt-[22px] text-[13px] font-bold tracking-[0.12em] uppercase text-accent-dark">{post.category.name}</div>
@@ -26,7 +26,7 @@ export function PostCard({ post, showAuthor = true, compact = false }: { post: P
         <div className="mt-3.5 lg:mt-[18px] flex items-center gap-2.5 text-[15px] font-medium">
           {post.writer.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.writer.avatarUrl} alt="" className="w-8 h-8 lg:w-[34px] lg:h-[34px] rounded-full object-cover" />
+            <img src={post.writer.avatarUrl} alt={post.writer.name} className="w-8 h-8 lg:w-[34px] lg:h-[34px] rounded-full object-cover" />
           ) : (
             <span className="w-8 h-8 lg:w-[34px] lg:h-[34px] rounded-full bg-mist" />
           )}
