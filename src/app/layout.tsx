@@ -3,7 +3,7 @@ import { DM_Sans, Fraunces, Playfair_Display, Cormorant_Garamond } from "next/fo
 import "./globals.css";
 import { PageTracker } from "@/components/site/page-tracker";
 import { siteUrl } from "@/lib/email";
-import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TITLE } from "@/lib/seo";
+import { ADSENSE_CLIENT, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TITLE } from "@/lib/seo";
 
 const sansBody = DM_Sans({
   variable: "--font-sans-body",
@@ -48,6 +48,8 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [{ url: "/images/hero-portada.jpg", alt: SITE_NAME }],
   },
+  // Lets AdSense confirm the site belongs to the account.
+  other: { "google-adsense-account": ADSENSE_CLIENT },
   twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION, images: ["/images/hero-portada.jpg"] },
 };
 

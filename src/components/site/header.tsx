@@ -11,6 +11,7 @@ import { navWithLabels } from "@/components/site/nav-links";
 import { SocialLinksEditor } from "@/components/site/social-links-editor";
 import { EditableText } from "@/components/site/editable";
 import { SaveChangesBar } from "@/components/site/save-changes-bar";
+import { ADSENSE_CLIENT } from "@/lib/seo";
 import { InstagramIcon, TikTokIcon, FacebookIcon, SearchIcon, UserIcon, PencilIcon } from "@/components/site/icons";
 
 function LogoutIcon() {
@@ -51,6 +52,10 @@ export async function SiteHeader() {
 
   return (
     <>
+      {/* AdSense (automatic ads) on the public site only: never in the panel or while editing. */}
+      {!editing && (
+        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
+      )}
       {editing && (
         <div className="sticky top-0 z-50 h-[52px] bg-slate text-white">
           <div className="wrap h-full flex items-center gap-x-4 text-sm overflow-x-auto">

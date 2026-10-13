@@ -33,6 +33,21 @@ export default function PrivacyPage() {
         Este sitio puede utilizar cookies para recopilar datos anónimos de navegación. Puedes configurar tu navegador para rechazarlas, aunque
         esto podría afectar la funcionalidad del sitio.
       </p>
+      <p>
+        Este sitio muestra anuncios de Google AdSense. Google y otros proveedores externos usan cookies para mostrar anuncios basados en
+        visitas anteriores a este y a otros sitios web. Las cookies de publicidad permiten a Google y a sus socios mostrar anuncios según
+        tus visitas a este sitio u otros sitios de Internet.
+      </p>
+      <p>
+        Puedes desactivar la publicidad personalizada en{" "}
+        <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer">Configuración de anuncios de Google</a> o, para
+        otros proveedores, en <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener noreferrer">aboutads.info</a>. Más
+        información en{" "}
+        <a href="https://policies.google.com/technologies/ads?hl=es" target="_blank" rel="noopener noreferrer">
+          Cómo usa Google la información de los sitios que usan sus servicios
+        </a>
+        .
+      </p>
 
       <h2>4. Protección de datos</h2>
       <p>

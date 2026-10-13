@@ -71,3 +71,6 @@ export function siteJsonLd(socialLinks: string[] = [], bio?: string) {
 export function jsonLdString(data: unknown) {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
+
+/** Google AdSense publisher (also in public/ads.txt). */
+export const ADSENSE_CLIENT = "ca-pub-6933301376005759";
