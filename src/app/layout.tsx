@@ -46,7 +46,8 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [{ url: "/images/hero-portada.jpg", alt: SITE_NAME }],
+    url: "/",
+    images: [{ url: "/images/hero-portada.jpg", width: 1920, height: 1282, type: "image/jpeg", alt: SITE_NAME }],
   },
   // Lets AdSense confirm the site belongs to the account.
   other: { "google-adsense-account": ADSENSE_CLIENT },
