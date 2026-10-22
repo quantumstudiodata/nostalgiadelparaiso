@@ -31,7 +31,7 @@ function readForm(formData: FormData) {
     excerpt: String(formData.get("excerpt") ?? ""),
     content: String(formData.get("content") ?? ""),
     coverImage: String(formData.get("coverImage") ?? ""),
-    coverPlacement: ["top", "body"].includes(String(formData.get("coverPlacement"))) ? String(formData.get("coverPlacement")) : "both",
+    coverPlacement: ["top", "below"].includes(String(formData.get("coverPlacement"))) ? String(formData.get("coverPlacement")) : "both",
     writerId: String(formData.get("writerId") ?? ""),
     status: formData.get("status") === "PUBLISHED" ? ("PUBLISHED" as const) : ("DRAFT" as const),
     publishedDay: String(formData.get("publishedAt") ?? "").trim(),

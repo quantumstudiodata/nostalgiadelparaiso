@@ -182,14 +182,14 @@ export function PostForm({
           <div className="bg-white rounded-[10px] p-4">
             <ImageUploadField name="coverImage" label="Imagen destacada" defaultValue={post?.coverImage ?? ""} />
             <fieldset className="mt-4 flex flex-col gap-2 text-[15px]">
-              <legend className="font-bold mb-1.5">¿Dónde se muestra la foto?</legend>
+              <legend className="font-bold mb-1.5">La foto en el cuerpo de la entrada</legend>
               {[
-                { value: "both", label: "En la portada y al inicio del texto" },
-                { value: "top", label: "Solo en la portada (arriba)" },
-                { value: "body", label: "Solo en el cuerpo del texto" },
+                { value: "both", label: "Arriba del texto" },
+                { value: "below", label: "Abajo del texto" },
+                { value: "top", label: "No repetirla (solo en la portada)" },
               ].map((o) => (
                 <label key={o.value} className="flex items-center gap-2.5">
-                  <input type="radio" name="coverPlacement" value={o.value} defaultChecked={(post?.coverPlacement ?? "both") === o.value} className="accent-accent w-4 h-4" />
+                  <input type="radio" name="coverPlacement" value={o.value} defaultChecked={(post?.coverPlacement === "below" || post?.coverPlacement === "top" ? post.coverPlacement : "both") === o.value} className="accent-accent w-4 h-4" />
                   {o.label}
                 </label>
               ))}
