@@ -119,7 +119,8 @@ html { scroll-padding-top: 140px; }
 .post-body aside.ficha p { margin: 0 0 0.6em; }
 .post-body aside.ficha > :last-child { margin-bottom: 0; }
 .post-body aside.ficha strong { color: #ffffff; }
-/* Post page only: big first letter in the accent color. */
+/* Post page only: big first letter in the accent color (dropped, or inline on the first line for poems). */
+.big-initial > p:first-of-type::first-letter { font-family: var(--font-serif-display); font-weight: 800; font-size: 2.4em; line-height: 1; color: var(--accent); }
 .drop-cap > p:first-of-type::first-letter { float: left; font-family: var(--font-serif-display); font-weight: 800; font-size: 3.4em; line-height: 0.8; padding: 0.12em 0.12em 0 0; color: var(--accent); }
 
 /* Blog motion: cover zoom, rising titles, like pop, "Escuchar" equalizer, card hover. */

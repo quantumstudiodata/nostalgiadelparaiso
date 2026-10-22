@@ -116,7 +116,7 @@ export default async function PostPage({
   const coverAbove = post.coverImage && !["top", "below"].includes(post.coverPlacement);
   const coverBelow = post.coverImage && post.coverPlacement === "below";
   const html = sanitizeHtml(post.content);
-  // The big first letter only suits a left-aligned opening paragraph of a few lines; short or centered lines (poems) skip it.
+  // Editorial first letter: dropped over several lines for a long left-aligned paragraph; for short or centered lines (poems) it stays big on the first line.
   const firstParagraph = html.match(/<p([^>]*)>([\s\S]*?)<\/p>/);
   const dropCap =
     !!firstParagraph &&
@@ -209,7 +209,7 @@ export default async function PostPage({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={post.coverImage!} alt={post.title} className="mb-6 md:mb-8 w-full max-h-[460px] object-cover rounded-[18px] md:rounded-[24px]" />
           )}
-          <div className={`post-content post-body ${dropCap ? "drop-cap" : ""}`} dangerouslySetInnerHTML={{ __html: html }} />
+          <div className={`post-content post-body ${dropCap ? "drop-cap" : "big-initial"}`} dangerouslySetInnerHTML={{ __html: html }} />
           {coverBelow && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={post.coverImage!} alt={post.title} className="mt-8 w-full max-h-[460px] object-cover rounded-[18px] md:rounded-[24px]" />
