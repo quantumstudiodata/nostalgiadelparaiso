@@ -10,7 +10,7 @@ import { readingMinutes, shortDate } from "@/lib/reading-time";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { PostCard } from "@/components/site/blog-cards";
-import { HeroCarousel, ListenButton, LoadMoreLink, SubscribeCard, WeeklyPicker } from "@/components/site/blog-modern";
+import { CategoryChips, HeroCarousel, ListenButton, LoadMoreLink, SubscribeCard, WeeklyPicker } from "@/components/site/blog-modern";
 
 const PAGE_SIZE = 10;
 // Posts shown beside "Lo más leído" before the "Texto de la semana" band.
@@ -52,7 +52,6 @@ export default async function BlogPage({
   const session = await auth();
   const canEdit = await canEditSite(session);
   const query = q?.trim();
-  const filtered = Boolean(categoria || query);
 
   const where: Prisma.PostWhereInput = {
     status: "PUBLISHED",
@@ -99,6 +98,16 @@ export default async function BlogPage({
     ? await prisma.post.findMany({ where: { status: "PUBLISHED" }, orderBy: { publishedAt: "desc" }, take: 60, select: { slug: true, title: true } })
     : [];
 
+  // A category without photos keeps the cover with the latest posts, so the page does not jump when switching.
+  const slides =
+    featured.length > 0 || query
+      ? featured
+      : await prisma.post.findMany({
+          where: { status: "PUBLISHED", coverImage: { not: null } },
+          orderBy: { publishedAt: "desc" },
+          take: 3,
+          include: cardInclude,
+        });
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
   const activeCategory = categories.find((c) => c.slug === categoria);
   const heading = query ? `Resultados para “${query}”` : (activeCategory?.name ?? "Entradas");
@@ -138,10 +147,10 @@ export default async function BlogPage({
     <>
       <SiteHeader />
 
-      {featured.length > 0 && (
+      {slides.length > 0 && (
         <div className="pt-3 md:pt-6">
           <HeroCarousel
-            slides={featured.map((p) => ({
+            slides={slides.map((p) => ({
               slug: p.slug,
               title: p.title,
               category: p.category.name,
@@ -155,7 +164,7 @@ export default async function BlogPage({
 
       <div className="wrap xl:px-20">
         {/* Phones: the text of the week and the most read right below the cover. */}
-        {!filtered && (
+        {!query && (
           <div className="lg:hidden mt-4 flex flex-col gap-4">
             {weekly && (
               <section aria-label="Texto de la semana" className="relative overflow-hidden flex flex-col gap-3 p-6 rounded-[22px] bg-navy text-[#f3eee6]">
@@ -197,23 +206,14 @@ export default async function BlogPage({
               {categoria && <input type="hidden" name="categoria" value={categoria} />}
             </form>
           </div>
-          <nav aria-label="Categorías" className="no-scrollbar flex md:flex-wrap gap-2 md:gap-2.5 overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0 py-1.5">
-            {chips.map((c) => {
-              const active = (c.slug || undefined) === categoria;
-              return (
-                <Link
-                  key={c.slug || "todas"}
-                  href={listHref({ categoria: c.slug || undefined, q: query })}
-                  aria-current={active ? "page" : undefined}
-                  className={`shrink-0 h-9 md:h-11 flex items-center rounded-full px-4 md:px-5 text-[13px] md:text-sm font-medium border-[1.5px] transition hover:-translate-y-0.5 ${
-                    active ? "bg-ink text-white border-ink" : "bg-white border-[#e4e1ea] hover:border-ink"
-                  }`}
-                >
-                  {c.name}
-                </Link>
-              );
-            })}
-          </nav>
+          <CategoryChips
+            chips={chips.map((c) => ({
+              key: c.slug || "todas",
+              name: c.name,
+              href: listHref({ categoria: c.slug || undefined, q: query }),
+              active: (c.slug || undefined) === categoria,
+            }))}
+          />
         </div>
 
         <div className="pt-6 md:pt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 lg:gap-10 items-start">
@@ -236,7 +236,7 @@ export default async function BlogPage({
       </div>
 
       {/* Large screens: the text of the week as a dark band between the posts. */}
-      {!filtered && weekly && (
+      {!query && weekly && (
         <section aria-label="Texto de la semana" className="hidden lg:grid relative overflow-hidden mx-6 mt-20 p-16 xl:p-20 rounded-[34px] bg-navy text-[#f3eee6] grid-cols-[minmax(0,1fr)_340px] gap-14 items-center">
           <span aria-hidden="true" className="absolute left-10 -top-16 font-serif font-extrabold text-[340px] leading-none text-[#2a2940]">
             “

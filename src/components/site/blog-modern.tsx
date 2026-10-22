@@ -415,3 +415,39 @@ export function WeeklyPicker({ current, options }: { current: string; options: {
     </label>
   );
 }
+
+/**
+ * Category buttons of the blog list. Changing category swaps the posts in place: the page keeps its
+ * scroll position and the row slides to show the chosen button.
+ */
+export function CategoryChips({ chips }: { chips: { key: string; name: string; href: string; active: boolean }[] }) {
+  const row = useRef<HTMLElement>(null);
+  const activeKey = chips.find((c) => c.active)?.key;
+
+  useEffect(() => {
+    const el = row.current;
+    const chip = el?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!el || !chip) return;
+    // Scroll the row only (never the page), centering the chosen button when it does not fit.
+    el.scrollTo({ left: chip.offsetLeft - (el.clientWidth - chip.offsetWidth) / 2, behavior: "smooth" });
+  }, [activeKey]);
+
+  return (
+    <nav ref={row} aria-label="Categorías" className="no-scrollbar relative flex md:flex-wrap gap-2 md:gap-2.5 overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0 py-1.5">
+      {chips.map((c) => (
+        <Link
+          key={c.key}
+          href={c.href}
+          scroll={false}
+          replace
+          aria-current={c.active ? "page" : undefined}
+          className={`shrink-0 h-9 md:h-11 flex items-center rounded-full px-4 md:px-5 text-[13px] md:text-sm font-medium border-[1.5px] transition hover:-translate-y-0.5 ${
+            c.active ? "bg-ink text-white border-ink" : "bg-white border-[#e4e1ea] hover:border-ink"
+          }`}
+        >
+          {c.name}
+        </Link>
+      ))}
+    </nav>
+  );
+}
