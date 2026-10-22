@@ -115,6 +115,13 @@ export default async function PostPage({
   // The cover photo always heads the page; in the body it repeats above the text, below it, or not at all.
   const coverAbove = post.coverImage && !["top", "below"].includes(post.coverPlacement);
   const coverBelow = post.coverImage && post.coverPlacement === "below";
+  const html = sanitizeHtml(post.content);
+  // The big first letter only suits a left-aligned opening paragraph of a few lines; short or centered lines (poems) skip it.
+  const firstParagraph = html.match(/<p([^>]*)>([\s\S]*?)<\/p>/);
+  const dropCap =
+    !!firstParagraph &&
+    !/text-align:\s*(center|right)/.test(firstParagraph[1]) &&
+    firstParagraph[2].replace(/<[^>]+>/g, "").trim().length >= 160;
   const listenText = `${post.title}. ${postSummary(post.content, Infinity)}`;
 
   return (
@@ -202,7 +209,7 @@ export default async function PostPage({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={post.coverImage!} alt={post.title} className="mb-6 md:mb-8 w-full max-h-[460px] object-cover rounded-[18px] md:rounded-[24px]" />
           )}
-          <div className="post-content post-body drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
+          <div className={`post-content post-body ${dropCap ? "drop-cap" : ""}`} dangerouslySetInnerHTML={{ __html: html }} />
           {coverBelow && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={post.coverImage!} alt={post.title} className="mt-8 w-full max-h-[460px] object-cover rounded-[18px] md:rounded-[24px]" />
