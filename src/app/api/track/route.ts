@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { classifySource } from "@/lib/traffic";
+import { auth } from "@/auth";
+import { canWritePosts } from "@/lib/permissions";
 
 const BOT_RE = /bot|crawl|spider|slurp|preview|headless|lighthouse/i;
 
@@ -12,6 +14,10 @@ export async function POST(request: Request) {
   const visitorId = typeof data?.visitorId === "string" ? data.visitorId.slice(0, 64) : "";
   const sessionId = typeof data?.sessionId === "string" ? data.sessionId.slice(0, 64) : "";
   if (!path.startsWith("/") || path.startsWith("/admin") || !visitorId || !sessionId) return new NextResponse(null, { status: 204 });
+
+  // The team's own browsing (signed in as writer or manager) is not counted.
+  const session = await auth();
+  if (canWritePosts(session?.user?.role)) return new NextResponse(null, { status: 204 });
 
   let entry: { referrer?: string; search?: string } = {};
   try {

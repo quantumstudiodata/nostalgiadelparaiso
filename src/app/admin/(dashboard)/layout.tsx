@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { canWritePosts, isManager } from "@/lib/permissions";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { ExcludeDevice } from "@/components/admin/exclude-device";
 
 export default async function DashboardLayout({
   children,
@@ -23,6 +24,7 @@ export default async function DashboardLayout({
         writer={canWritePosts(user.role)}
         unread={unread}
       />
+      {canWritePosts(user.role) && <ExcludeDevice />}
       <div className="flex-1 min-w-0">
         <div className="max-w-[1180px] mx-auto">{children}</div>
       </div>

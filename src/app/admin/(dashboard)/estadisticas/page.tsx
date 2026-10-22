@@ -82,7 +82,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-bold text-[28px]">Estadísticas</h1>
-          <p className="mt-1 text-[15px] text-neutral-600">Visitas al sitio público (sin contar el panel).</p>
+          <p className="mt-1 text-[15px] text-neutral-600">Visitas al sitio público (sin contar el panel ni al equipo).</p>
         </div>
         <nav className="flex bg-white rounded-full p-1 text-[14px]" aria-label="Periodo">
           {RANGES.map((r) => (
@@ -97,6 +97,10 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
           ))}
         </nav>
       </div>
+      <p className="text-[14px] text-neutral-600 bg-white rounded-[10px] px-4 py-3">
+        Tus visitas no se cuentan: el sitio no registra a quien tiene la sesión iniciada como escritora o administradora, ni los
+        dispositivos donde se abrió este panel. Abre el panel una vez en cada celular o computadora que uses.
+      </p>
 
       <div className="grid grid-cols-3 gap-3">
         {tiles.map((t) => (

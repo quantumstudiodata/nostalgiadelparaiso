@@ -17,6 +17,10 @@ function stored(storage: () => Storage, key: string, make: () => string) {
   }
 }
 
+export const VISITOR_KEY = "ndp_vid";
+/** Set on the team's devices (see ExcludeDevice): their visits are not counted. */
+export const NO_TRACK_KEY = "ndp_no_track";
+
 const randomId = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 /** Counts page views for the panel's statistics. Skips the panel itself. */
@@ -25,7 +29,10 @@ export function PageTracker() {
 
   useEffect(() => {
     if (!pathname || pathname.startsWith("/admin") || navigator.webdriver) return;
-    const visitorId = stored(() => localStorage, "ndp_vid", randomId);
+    try {
+      if (localStorage.getItem(NO_TRACK_KEY)) return;
+    } catch {}
+    const visitorId = stored(() => localStorage, VISITOR_KEY, randomId);
     const sessionId = stored(() => sessionStorage, "ndp_sid", randomId);
     // Where the visit came from is decided by the first page of the session.
     const entry = stored(() => sessionStorage, "ndp_entry", () => JSON.stringify({ referrer: document.referrer, search: location.search }));
