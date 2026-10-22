@@ -135,10 +135,10 @@ export default async function PostPage({
       <SiteHeader overlay />
 
       {/* Cover photo across the whole top of the page, under the menu and the logo. */}
-      <section className="relative h-[62vh] min-h-[420px] md:h-[760px] overflow-hidden bg-navy">
+      <section className="relative h-[50vh] min-h-[360px] max-h-[460px] md:max-h-none md:h-[600px] overflow-hidden bg-navy">
         {post.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverImage} alt={post.title} className="ken-burns absolute inset-0 w-full h-full object-cover" />
+          <img src={post.coverImage} alt="" className="ken-burns absolute inset-0 w-full h-full object-cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/30" />
         <Link
@@ -151,7 +151,7 @@ export default async function PostPage({
 
       {/* Title card floating over the bottom of the cover. */}
       <div className="wrap xl:px-20">
-        <div className="rise-in relative -mt-28 md:-mt-56 max-w-[780px] flex flex-col gap-3 md:gap-5 p-5 md:p-11 bg-white rounded-[22px] md:rounded-[30px] shadow-[0_30px_70px_rgba(17,17,30,0.16)]">
+        <div className="rise-in relative -mt-24 md:-mt-44 max-w-[780px] flex flex-col gap-3 md:gap-5 p-5 md:p-11 bg-white rounded-[22px] md:rounded-[30px] shadow-[0_30px_70px_rgba(17,17,30,0.16)]">
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
               href={`/blog?categoria=${post.category.slug}`}
@@ -163,7 +163,7 @@ export default async function PostPage({
               {date} · {minutes} min
             </span>
           </div>
-          <h1 className="rise-in rise-in-1 font-serif font-extrabold text-[26px] md:text-[60px] leading-[1.05] tracking-[-0.02em]">{post.title}</h1>
+          <h1 className="rise-in rise-in-1 font-serif font-extrabold text-[22px] md:text-[44px] leading-[1.1] tracking-[-0.02em]">{post.title}</h1>
           <div className="rise-in rise-in-2 flex flex-wrap items-center gap-3 md:gap-4 pt-1">
             <Link href={writerHref} aria-hidden="true" tabIndex={-1}>
               {authorAvatar ? (
@@ -195,6 +195,10 @@ export default async function PostPage({
         </div>
 
         <article className="min-w-0 max-w-[680px]">
+          {post.coverImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={post.coverImage} alt={post.title} className="mb-6 md:mb-8 w-full max-h-[460px] object-cover rounded-[18px] md:rounded-[24px]" />
+          )}
           <div className="post-content post-body drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
           <div className="mt-8 flex flex-wrap gap-2">
             <Link href={`/blog?categoria=${post.category.slug}`} className="bg-panel rounded-full px-4 py-2 text-[13px] transition hover:-translate-y-0.5 hover:bg-lilac">

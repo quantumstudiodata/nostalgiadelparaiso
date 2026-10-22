@@ -243,7 +243,7 @@ export function ScrollCarousel({ title, children }: { title: string; children: R
   );
 }
 
-export type HeroSlide = { slug: string; title: string; category: string; meta: string; image: string | null };
+export type HeroSlide = { slug: string; title: string; category: string; excerpt: string; meta: string; image: string | null };
 
 /** Featured posts at the top of the list: one at a time, with dots and arrows; changes on its own every few seconds. */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
@@ -266,7 +266,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       aria-roledescription="carrusel"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      className="relative mx-3 md:mx-6 h-[420px] md:h-[600px] rounded-[26px] md:rounded-[34px] overflow-hidden bg-navy text-white"
+      className="relative mx-3 md:mx-6 h-[440px] md:h-[540px] rounded-[26px] md:rounded-[34px] overflow-hidden bg-navy text-white"
     >
       {slides.map((s, i) =>
         i === index ? (
@@ -278,9 +278,10 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[rgba(14,13,26,0.85)] via-[rgba(14,13,26,0.35)] to-transparent" />
             <div className="absolute left-5 right-5 bottom-20 md:left-16 md:right-auto md:bottom-16 md:w-[620px] flex flex-col gap-3 md:gap-5">
               <span className="rise-in self-start bg-lilac text-ink rounded-full px-3 py-1.5 text-[10px] md:text-xs font-bold tracking-[0.12em] uppercase">{s.category}</span>
-              <Link href={`/blog/${s.slug}`} className="rise-in rise-in-1 font-serif font-extrabold text-[24px] md:text-[52px] leading-[1.08] tracking-[-0.02em] hover:underline decoration-2 underline-offset-8">
+              <Link href={`/blog/${s.slug}`} className="rise-in rise-in-1 font-serif font-extrabold text-[22px] md:text-[42px] leading-[1.08] tracking-[-0.02em] hover:underline decoration-2 underline-offset-8">
                 {s.title}
               </Link>
+              {s.excerpt && <p className="rise-in rise-in-1 text-[13px] md:text-[16px] leading-relaxed text-[#ece9f2] line-clamp-2 md:line-clamp-3 max-w-[540px]">{s.excerpt}</p>}
               <span className="rise-in rise-in-2 flex items-center gap-4">
                 <Link href={`/blog/${s.slug}`} className="hidden md:inline-block bg-white text-ink rounded-full px-6 py-3.5 text-[15px] font-bold transition hover:-translate-y-0.5">
                   Leer entrada →
@@ -387,7 +388,7 @@ export function LoadMoreLink({ href }: { href: string }) {
   );
 }
 
-/** Edit mode: choose which post is the "Poema de la semana" (empty = automatic, the most read this week). */
+/** Edit mode: choose which post is the "Texto de la semana" (empty = automatic, the most read this week). */
 export function WeeklyPicker({ current, options }: { current: string; options: { slug: string; title: string }[] }) {
   const [value, setValue] = useState(current);
   const [pending, startTransition] = useTransition();

@@ -13,7 +13,7 @@ import { PostCard } from "@/components/site/blog-cards";
 import { HeroCarousel, ListenButton, LoadMoreLink, SubscribeCard, WeeklyPicker } from "@/components/site/blog-modern";
 
 const PAGE_SIZE = 10;
-// Posts shown beside "Lo más leído" before the "Poema de la semana" band.
+// Posts shown beside "Lo más leído" before the "Texto de la semana" band.
 const FIRST_ROW = 4;
 
 export const metadata: Metadata = {
@@ -78,10 +78,10 @@ export default async function BlogPage({
     }),
     prisma.post.count({ where }),
     prisma.post.findMany({ where, orderBy: { publishedAt: "desc" }, take: shown, include: cardInclude }),
-    filtered
+    query
       ? Promise.resolve([])
       : prisma.post.findMany({
-          where: { status: "PUBLISHED", coverImage: { not: null } },
+          where: { status: "PUBLISHED", coverImage: { not: null }, ...(categoria ? { category: { slug: categoria } } : {}) },
           orderBy: { publishedAt: "desc" },
           take: 3,
           include: cardInclude,
@@ -90,7 +90,7 @@ export default async function BlogPage({
     getSiteBlock<{ slug?: string }>("blog.weekly"),
   ]);
 
-  // "Poema de la semana": the one chosen in edit mode, else this week's most read, else the latest.
+  // "Texto de la semana": the one chosen in edit mode, else this week's most read, else the latest.
   const weekly =
     (weeklyBlock.slug && (await prisma.post.findFirst({ where: { slug: weeklyBlock.slug, status: "PUBLISHED" }, include: cardInclude }))) ||
     (await mostViewed(daysAgo(7), 1))[0]?.post ||
@@ -117,7 +117,7 @@ export default async function BlogPage({
   const topList = topRead.length > 0 && (
     <div className="flex flex-col gap-1 p-5 md:p-6 rounded-[22px] md:rounded-[26px] bg-panel">
       <h2 className="font-serif font-extrabold text-[19px] md:text-[24px] pb-2">Lo más leído</h2>
-      {topRead.map(({ post, views }, i) => (
+      {topRead.map(({ post }, i) => (
         <Link key={post.id} href={`/blog/${post.slug}`} className="group flex items-center gap-3 p-2 -mx-2 rounded-2xl transition hover:bg-white">
           <span
             className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-serif font-extrabold text-sm md:text-lg shrink-0 ${i === 0 ? "bg-accent text-white" : "bg-white"}`}
@@ -126,7 +126,6 @@ export default async function BlogPage({
           </span>
           <span className="flex flex-col min-w-0">
             <span className="font-serif font-semibold text-[14px] md:text-[15px] leading-snug group-hover:text-accent transition-colors">{post.title}</span>
-            <span className="text-[11px] text-neutral-500">{views} lecturas</span>
           </span>
         </Link>
       ))}
@@ -146,6 +145,7 @@ export default async function BlogPage({
               slug: p.slug,
               title: p.title,
               category: p.category.name,
+              excerpt: p.excerpt || postSummary(p.content, 26),
               meta: `${p.writer.name} · ${readingMinutes(p.content)} min de lectura`,
               image: p.coverImage,
             }))}
@@ -154,15 +154,15 @@ export default async function BlogPage({
       )}
 
       <div className="wrap xl:px-20">
-        {/* Phones: the poem of the week and the most read right below the cover. */}
+        {/* Phones: the text of the week and the most read right below the cover. */}
         {!filtered && (
           <div className="lg:hidden mt-4 flex flex-col gap-4">
             {weekly && (
-              <section aria-label="Poema de la semana" className="relative overflow-hidden flex flex-col gap-3 p-6 rounded-[22px] bg-navy text-[#f3eee6]">
+              <section aria-label="Texto de la semana" className="relative overflow-hidden flex flex-col gap-3 p-6 rounded-[22px] bg-navy text-[#f3eee6]">
                 <span aria-hidden="true" className="absolute -right-2 -top-14 font-serif font-extrabold text-[200px] leading-none text-[#2a2940]">
                   “
                 </span>
-                <span className="relative text-[10px] font-bold tracking-[0.2em] uppercase text-lilac">Poema de la semana</span>
+                <span className="relative text-[10px] font-bold tracking-[0.2em] uppercase text-lilac">Texto de la semana</span>
                 <blockquote className="relative font-cormorant italic text-[22px] leading-snug">{weeklyQuote}</blockquote>
                 <span className="relative text-xs text-[#d3cde0]">
                   <strong className="text-[#f3eee6]">{weekly.title}</strong> · {weekly.writer.name}
@@ -197,7 +197,7 @@ export default async function BlogPage({
               {categoria && <input type="hidden" name="categoria" value={categoria} />}
             </form>
           </div>
-          <nav aria-label="Categorías" className="no-scrollbar flex md:flex-wrap gap-2 md:gap-2.5 overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0 pb-1">
+          <nav aria-label="Categorías" className="no-scrollbar flex md:flex-wrap gap-2 md:gap-2.5 overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0 py-1.5">
             {chips.map((c) => {
               const active = (c.slug || undefined) === categoria;
               return (
@@ -235,14 +235,14 @@ export default async function BlogPage({
         </div>
       </div>
 
-      {/* Large screens: the poem of the week as a dark band between the posts. */}
+      {/* Large screens: the text of the week as a dark band between the posts. */}
       {!filtered && weekly && (
-        <section aria-label="Poema de la semana" className="hidden lg:grid relative overflow-hidden mx-6 mt-20 p-16 xl:p-20 rounded-[34px] bg-navy text-[#f3eee6] grid-cols-[minmax(0,1fr)_340px] gap-14 items-center">
+        <section aria-label="Texto de la semana" className="hidden lg:grid relative overflow-hidden mx-6 mt-20 p-16 xl:p-20 rounded-[34px] bg-navy text-[#f3eee6] grid-cols-[minmax(0,1fr)_340px] gap-14 items-center">
           <span aria-hidden="true" className="absolute left-10 -top-16 font-serif font-extrabold text-[340px] leading-none text-[#2a2940]">
             “
           </span>
           <div className="relative flex flex-col gap-5">
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-lilac">Poema de la semana</span>
+            <span className="text-xs font-bold tracking-[0.2em] uppercase text-lilac">Texto de la semana</span>
             <blockquote className="font-cormorant italic text-[40px] xl:text-[46px] leading-[1.2]">{weeklyQuote}</blockquote>
             <div className="flex items-center gap-3 text-[15px] text-[#d3cde0]">
               {weekly.writer.avatarUrl && (
