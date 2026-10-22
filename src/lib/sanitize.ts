@@ -4,7 +4,7 @@ export function sanitizeHtml(html: string): string {
   return sanitizeHtmlLib(html, {
     allowedTags: [
       "p", "br", "strong", "em", "u", "s", "a", "ul", "ol", "li",
-      "h1", "h2", "h3", "blockquote", "span", "img",
+      "h1", "h2", "h3", "blockquote", "span", "img", "aside",
     ],
     allowedAttributes: {
       a: ["href", "target", "rel"],
@@ -15,6 +15,7 @@ export function sanitizeHtml(html: string): string {
       h3: ["style"],
       img: ["src", "alt", "style", "data-align"],
     },
+    allowedClasses: { aside: ["ficha"] },
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedSchemesByTag: { img: ["https", "http"] },
     allowedStyles: {

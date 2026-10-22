@@ -9,6 +9,7 @@ import { TextStyle, FontSize } from "@tiptap/extension-text-style";
 import { FontFamily } from "@tiptap/extension-font-family";
 import { useEffect, useRef, useState } from "react";
 import { PostImage, type ImageAlign } from "./post-image";
+import { Ficha } from "./ficha-node";
 import { uploadImage } from "@/lib/upload-image";
 
 const FONT_OPTIONS = [
@@ -377,6 +378,19 @@ function Toolbar({ editor }: { editor: Editor }) {
       >
         &ldquo;&rdquo;
       </ToolbarButton>
+      <button
+        type="button"
+        title="Ficha: recuadro destacado (escribe el título en negritas)"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() =>
+          editor.isActive("ficha")
+            ? editor.chain().focus().lift("ficha").run()
+            : editor.chain().focus().wrapIn("ficha").run()
+        }
+        className={`h-9 rounded-full px-3 text-[13px] font-medium ${editor.isActive("ficha") ? "bg-ink text-white" : "hover:bg-panel text-neutral-800"}`}
+      >
+        Ficha
+      </button>
 
       <div className="w-px h-[22px] bg-mist mx-1" />
 
@@ -405,6 +419,7 @@ export function RichTextEditor({
       FontSize,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       PostImage,
+      Ficha,
     ],
     content: defaultValue || "<p></p>",
     editorProps: {

@@ -12,9 +12,9 @@ import { getSiteBlock } from "@/lib/site-blocks";
 import { canEditSite } from "@/lib/edit-mode";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { WixCategories, WixBlackColumn } from "@/components/site/wix-blog";
-import { SearchPill } from "@/components/site/search-pill";
-import { LikeButton, PostMenu } from "@/components/site/post-actions";
+import { FounderCard, PostCard } from "@/components/site/blog-cards";
+import { ListenButton, PostActions, ScrollCarousel, SubscribeCard } from "@/components/site/blog-modern";
+import { getSocialLinks } from "@/lib/social-links";
 import { readingMinutes, shortDate } from "@/lib/reading-time";
 import { CommentForm } from "@/components/site/comment-form";
 import { Stars, WithPixelEmojis } from "@/components/site/pixel-emoji";
@@ -83,27 +83,36 @@ export default async function PostPage({
   }
 
   const session = viewerSession;
-  const [categories, related, founder] = await Promise.all([
-    prisma.category.findMany({
-      orderBy: { order: "asc" },
-      include: { _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
-    }),
+  const [sameCategory, founder, social] = await Promise.all([
     prisma.post.findMany({
       where: { status: "PUBLISHED", categoryId: post.categoryId, id: { not: post.id } },
       orderBy: { publishedAt: "desc" },
-      take: 3,
+      take: 8,
       include: { category: true, writer: true },
     }),
     getSiteBlock<{ name?: string; bio?: string; avatarUrl?: string }>("sidebar.author"),
+    getSocialLinks(),
   ]);
-  // The writer's photo next to the title; the left column always shows the founder's card, as on the blog list.
+  // "Seguir leyendo": the same category first, then the latest from the rest of the blog.
+  const others =
+    sameCategory.length < 8
+      ? await prisma.post.findMany({
+          where: { status: "PUBLISHED", categoryId: { not: post.categoryId } },
+          orderBy: { publishedAt: "desc" },
+          take: 8 - sameCategory.length,
+          include: { category: true, writer: true },
+        })
+      : [];
+  const related = [...sameCategory, ...others];
+  // The writer's photo next to the title; the side column always shows the founder's card.
   const isFounder = founder.name?.trim().toLowerCase() === post.writer.name.trim().toLowerCase();
   const authorAvatar = post.writer.avatarUrl || (isFounder ? founder.avatarUrl : null);
   const writerHref = `/autor/${post.writer.id}`;
   const viewer = session?.user;
   const canEdit = await canEditSite(session);
-  const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
-  const date = shortDate(post.publishedAt);
+  const date = post.publishedAt?.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }).replace(".", "") ?? "";
+  const minutes = readingMinutes(post.content);
+  const listenText = `${post.title}. ${postSummary(post.content, Infinity)}`;
 
   return (
     <>
@@ -123,146 +132,150 @@ export default async function PostPage({
           }).replace(/</g, "\\u003c"),
         }}
       />
-      <SiteHeader />
-      {post.status !== "PUBLISHED" && (
-        <div className="bg-[#fff4e5] text-[#6b3d00] text-center text-[14px] px-5 py-2.5">
-          Vista previa: esta entrada es un borrador y todavía no la ve nadie más.
+      <SiteHeader overlay />
+
+      {/* Cover photo across the whole top of the page, under the menu and the logo. */}
+      <section className="relative h-[62vh] min-h-[420px] md:h-[760px] overflow-hidden bg-navy">
+        {post.coverImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={post.coverImage} alt={post.title} className="ken-burns absolute inset-0 w-full h-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/30" />
+        <Link
+          href="/blog"
+          className="absolute left-5 md:left-10 xl:left-20 top-[132px] md:top-[156px] rounded-full bg-white/20 backdrop-blur px-3.5 py-2 text-[12px] md:text-[13px] font-bold text-white transition hover:-translate-y-0.5"
+        >
+          ← Todas las entradas
+        </Link>
+      </section>
+
+      {/* Title card floating over the bottom of the cover. */}
+      <div className="wrap xl:px-20">
+        <div className="rise-in relative -mt-28 md:-mt-56 max-w-[780px] flex flex-col gap-3 md:gap-5 p-5 md:p-11 bg-white rounded-[22px] md:rounded-[30px] shadow-[0_30px_70px_rgba(17,17,30,0.16)]">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href={`/blog?categoria=${post.category.slug}`}
+              className="bg-lilac text-slate rounded-full px-3 py-1.5 text-[10px] md:text-xs font-bold tracking-[0.12em] uppercase hover:bg-accent hover:text-white transition-colors"
+            >
+              {post.category.name}
+            </Link>
+            <span className="text-[11px] md:text-[13px] text-neutral-500">
+              {date} · {minutes} min
+            </span>
+          </div>
+          <h1 className="rise-in rise-in-1 font-serif font-extrabold text-[26px] md:text-[60px] leading-[1.05] tracking-[-0.02em]">{post.title}</h1>
+          <div className="rise-in rise-in-2 flex flex-wrap items-center gap-3 md:gap-4 pt-1">
+            <Link href={writerHref} aria-hidden="true" tabIndex={-1}>
+              {authorAvatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={authorAvatar} alt="" className="w-9 h-9 md:w-12 md:h-12 rounded-full object-cover" />
+              ) : (
+                <span className="block w-9 h-9 md:w-12 md:h-12 rounded-full bg-lilac" />
+              )}
+            </Link>
+            <span className="flex flex-col text-[12px] md:text-sm leading-snug">
+              <span className="text-neutral-500">Escrito por</span>
+              <Link href={writerHref} className="font-bold hover:text-accent">
+                {post.writer.name}
+              </Link>
+            </span>
+            <ListenButton text={listenText} className="ml-auto h-10 md:h-12 px-4 md:px-6 text-[13px] md:text-[15px] bg-ink text-white aria-pressed:bg-accent" />
+          </div>
         </div>
-      )}
+        {post.status !== "PUBLISHED" && (
+          <p className="mt-4 max-w-[780px] rounded-2xl bg-[#fff4e5] text-[#6b3d00] text-[13px] px-5 py-3">
+            Vista previa: esta entrada es un borrador y todavía no la ve nadie más.
+          </p>
+        )}
+      </div>
 
-      <div className="max-w-[1120px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)_180px] gap-12 lg:gap-16 items-start">
-        <aside className="order-3 lg:order-1">
-          {/* Phone order: categories, post, related, comments, then this column. */}
-          <WixBlackColumn
-            authorName={founder.name || "Ángeles Nava"}
-            authorBio={founder.bio ?? ""}
-            authorAvatarUrl={founder.avatarUrl}
+      <div className="wrap xl:px-20 pt-8 md:pt-16 grid grid-cols-1 lg:grid-cols-[64px_minmax(0,1fr)_320px] gap-x-8 xl:gap-x-14 gap-y-10 items-start">
+        <div className="lg:self-stretch">
+          <PostActions postId={post.id} initialLikes={post.likes} url={`/blog/${post.slug}`} title={post.title} />
+        </div>
+
+        <article className="min-w-0 max-w-[680px]">
+          <div className="post-content post-body drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
+          <div className="mt-8 flex flex-wrap gap-2">
+            <Link href={`/blog?categoria=${post.category.slug}`} className="bg-panel rounded-full px-4 py-2 text-[13px] transition hover:-translate-y-0.5 hover:bg-lilac">
+              # {post.category.name}
+            </Link>
+            <Link href={writerHref} className="bg-panel rounded-full px-4 py-2 text-[13px] transition hover:-translate-y-0.5 hover:bg-lilac">
+              Más de {post.writer.name}
+            </Link>
+          </div>
+        </article>
+
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-32">
+          <FounderCard
+            name={founder.name || "Ángeles Nava"}
+            bio={founder.bio ?? ""}
+            avatarUrl={founder.avatarUrl}
             canEdit={canEdit}
+            instagram={social.instagram}
           />
-        </aside>
-
-        <main className="order-2 min-w-0">
-          <article>
-            <div className="flex items-center gap-2.5">
-              <Link href={writerHref} aria-hidden="true" tabIndex={-1}>
-                {authorAvatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={authorAvatar} alt={post.writer.name} className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <span className="block w-8 h-8 rounded-full bg-lilac" />
-                )}
-              </Link>
-              <div className="text-[13px] leading-snug">
-                <Link href={writerHref} className="hover:text-accent">
-                  {post.writer.name}
-                </Link>
-                <div className="text-xs text-neutral-600">
-                  {date} · {readingMinutes(post.content)} min de lectura
-                </div>
-              </div>
-              <div className="ml-auto">
-                <PostMenu url={`/blog/${post.slug}`} title={post.title} />
-              </div>
-            </div>
-            <h1 className="mt-5 font-playfair font-bold text-[24px] leading-snug">{post.title}</h1>
-
-            {post.coverImage && (
-              <div className="mt-5 overflow-hidden bg-mist">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={post.coverImage} alt={post.title} className="w-full max-h-[460px] object-cover" />
-              </div>
-            )}
-
-            <div
-              className="post-content post-body mt-5"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
-            />
-
-            <div className="mt-8 pt-3 border-t border-mist flex items-center justify-between text-xs">
-              <Link href={`/blog?categoria=${post.category.slug}`} className="text-accent">
-                {post.category.name}
-              </Link>
-              <LikeButton postId={post.id} initialLikes={post.likes} />
-            </div>
-          </article>
-
-          {related.length > 0 && (
-            <section className="mt-14">
-              <div className="flex items-baseline justify-between">
-                <h2 className="text-[15px]">Entradas relacionadas</h2>
-                <Link href={`/blog?categoria=${post.category.slug}`} className="text-[13px]">
-                  Ver todo
-                </Link>
-              </div>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {related.slice(0, 2).map((r) => (
-                  <Link key={r.id} href={`/blog/${r.slug}`} className="border border-mist hover:text-accent">
-                    <div className="h-[150px] bg-mist overflow-hidden">
-                      {r.coverImage && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.coverImage} alt={r.title} className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <h3 className="px-4 pt-3.5 pb-6 font-playfair font-bold text-[15px] leading-snug">{r.title}</h3>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section id="comentarios" className="mt-14">
-            <h2 className="text-[15px] pb-3 border-b border-mist">
-              Comentarios {post.comments.length > 0 && <span className="text-neutral-500">({post.comments.length})</span>}
-            </h2>
-
-            {post.comments.length === 0 && <p className="mt-4 text-[13px] text-neutral-600">Aún no hay comentarios. ¡Sé la primera persona en comentar!</p>}
-
-            <ul className="mt-5 flex flex-col gap-5">
-              {post.comments.map((c) => {
-                const name = c.user?.name ?? c.authorName ?? "Anónimo";
-                return (
-                  <li key={c.id} className="flex gap-3">
-                    {c.user?.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
-                    ) : (
-                      <span className="w-8 h-8 rounded-full bg-lilac shrink-0 flex items-center justify-center text-xs font-medium">
-                        {name.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px]">
-                        <span className="font-medium">{name}</span>
-                        {c.rating ? <Stars value={c.rating} /> : null}
-                        <span className="text-neutral-500 text-xs">{shortDate(c.createdAt)}</span>
-                        {viewer && ((c.user && viewer.id === c.user.id) || isManager(viewer.role)) && (
-                          <form action={deleteComment.bind(null, c.id)} className="ml-auto">
-                            <button className="text-xs text-accent-dark hover:underline">Borrar</button>
-                          </form>
-                        )}
-                      </div>
-                      {c.body && (
-                        <p className="mt-1 text-[13.5px] leading-relaxed whitespace-pre-line">
-                          <WithPixelEmojis text={c.body} />
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="mt-7">
-              <CommentForm action={addComment.bind(null, post.id)} signedInAs={viewer?.name} />
-            </div>
-          </section>
-        </main>
-
-        <aside className="order-1 lg:order-3 flex flex-col gap-3">
-          <WixCategories categories={categories} totalPosts={totalPosts} activeSlug={post.category.slug} />
-          <SearchPill variant="outline" />
+          <SubscribeCard id="suscribirse" />
         </aside>
       </div>
+
+      {related.length > 0 && (
+        <section className="mt-16 md:mt-24 py-12 md:py-18 bg-panel">
+          <div className="wrap xl:px-20">
+            <ScrollCarousel title="Seguir leyendo">
+              {related.map((r) => (
+                <PostCard key={r.id} post={r} compact className="snap-start shrink-0 w-[240px] md:w-[320px]" />
+              ))}
+            </ScrollCarousel>
+          </div>
+        </section>
+      )}
+
+      <section id="comentarios" className="wrap xl:px-20 pt-12 md:pt-20 pb-28 md:pb-24">
+        <div className="max-w-[680px] lg:ml-[96px] xl:ml-[120px]">
+          <h2 className="font-serif font-extrabold text-[22px] md:text-[30px]">
+            Comentarios {post.comments.length > 0 && <span className="font-normal text-neutral-400">{post.comments.length}</span>}
+          </h2>
+
+          {post.comments.length === 0 && <p className="mt-3 text-[13px] text-neutral-600">Aún no hay comentarios. ¡Sé la primera persona en comentar!</p>}
+
+          <ul className="mt-5 flex flex-col gap-4">
+            {post.comments.map((c) => {
+              const name = c.user?.name ?? c.authorName ?? "Anónimo";
+              return (
+                <li key={c.id} className="flex gap-3">
+                  {c.user?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.user.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <span className="w-9 h-9 rounded-full bg-lilac shrink-0 flex items-center justify-center text-xs font-bold">{name.slice(0, 1).toUpperCase()}</span>
+                  )}
+                  <div className="flex-1 min-w-0 bg-panel rounded-[4px_18px_18px_18px] px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px]">
+                      <span className="font-bold">{name}</span>
+                      {c.rating ? <Stars value={c.rating} /> : null}
+                      <span className="text-neutral-500 text-xs">{shortDate(c.createdAt)}</span>
+                      {viewer && ((c.user && viewer.id === c.user.id) || isManager(viewer.role)) && (
+                        <form action={deleteComment.bind(null, c.id)} className="ml-auto">
+                          <button className="text-xs text-accent hover:underline">Borrar</button>
+                        </form>
+                      )}
+                    </div>
+                    {c.body && (
+                      <p className="mt-1 text-[13.5px] leading-relaxed whitespace-pre-line">
+                        <WithPixelEmojis text={c.body} />
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="mt-7 rounded-[20px] p-4 md:p-5 shadow-[0_10px_30px_rgba(17,17,30,0.08)] ring-1 ring-black/5">
+            <CommentForm action={addComment.bind(null, post.id)} signedInAs={viewer?.name} />
+          </div>
+        </div>
+      </section>
 
       <SiteFooter />
     </>

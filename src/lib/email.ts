@@ -115,7 +115,7 @@ export async function sendWelcomeEmail(email: string, unsubscribeToken: string) 
 /** Simple branded wrapper shared by every transactional email. */
 export function emailLayout(title: string, body: string) {
   return `<div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:24px;color:#111">
-<p style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#a24c2f">Nostalgia del paraíso</p>
+<p style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#4b2d6b">Nostalgia del paraíso</p>
 <h1 style="font-size:24px;margin:8px 0 16px">${escapeHtml(title)}</h1>
 <div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#333">${body}</div>
 </div>`;

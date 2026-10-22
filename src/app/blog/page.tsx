@@ -5,18 +5,43 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
+import { postSummary } from "@/lib/email-templates";
+import { readingMinutes, shortDate } from "@/lib/reading-time";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
-import { WixCategories, WixBlackColumn, PostRow } from "@/components/site/wix-blog";
-import { SearchPill } from "@/components/site/search-pill";
+import { PostCard } from "@/components/site/blog-cards";
+import { HeroCarousel, ListenButton, LoadMoreLink, SubscribeCard, WeeklyPicker } from "@/components/site/blog-modern";
 
 const PAGE_SIZE = 10;
+// Posts shown beside "Lo más leído" before the "Poema de la semana" band.
+const FIRST_ROW = 4;
 
 export const metadata: Metadata = {
   title: "Blog",
   description: "Poemas, textos y reflexiones de Ángeles Nava y las voces de la comunidad de Nostalgia del Paraíso.",
   alternates: { canonical: "/blog" },
 };
+
+const cardInclude = { category: true, writer: true } as const;
+const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+
+/** Published posts ordered by page views since `since` (posts without views are left out). */
+async function mostViewed(since: Date, take: number) {
+  const rows = await prisma.pageView.groupBy({
+    by: ["postId"],
+    where: { createdAt: { gte: since }, postId: { not: null } },
+    _count: { postId: true },
+    orderBy: { _count: { postId: "desc" } },
+    take: take * 2,
+  });
+  const ids = rows.map((r) => r.postId!).filter(Boolean);
+  const posts = await prisma.post.findMany({ where: { id: { in: ids }, status: "PUBLISHED" }, include: cardInclude });
+  const views = new Map(rows.map((r) => [r.postId, r._count.postId]));
+  return posts
+    .map((p) => ({ post: p, views: views.get(p.id) ?? 0 }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, take);
+}
 
 export default async function BlogPage({
   searchParams,
@@ -27,6 +52,7 @@ export default async function BlogPage({
   const session = await auth();
   const canEdit = await canEditSite(session);
   const query = q?.trim();
+  const filtered = Boolean(categoria || query);
 
   const where: Prisma.PostWhereInput = {
     status: "PUBLISHED",
@@ -43,101 +69,219 @@ export default async function BlogPage({
       : {}),
   };
 
-  const [categories, total, author] = await Promise.all([
+  // "Cargar más" grows the list: page n shows the first n × PAGE_SIZE posts.
+  const shown = Math.max(1, Number(pagina) || 1) * PAGE_SIZE;
+  const [categories, total, posts, featured, topRead, weeklyBlock] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
       include: { _count: { select: { posts: { where: { status: "PUBLISHED" } } } } },
     }),
     prisma.post.count({ where }),
-    getSiteBlock<{ name: string; bio: string; avatarUrl: string }>("sidebar.author"),
+    prisma.post.findMany({ where, orderBy: { publishedAt: "desc" }, take: shown, include: cardInclude }),
+    filtered
+      ? Promise.resolve([])
+      : prisma.post.findMany({
+          where: { status: "PUBLISHED", coverImage: { not: null } },
+          orderBy: { publishedAt: "desc" },
+          take: 3,
+          include: cardInclude,
+        }),
+    mostViewed(daysAgo(30), 5),
+    getSiteBlock<{ slug?: string }>("blog.weekly"),
   ]);
 
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const page = Math.min(pageCount, Math.max(1, Number(pagina) || 1));
-  const posts = await prisma.post.findMany({
-    where,
-    orderBy: { publishedAt: "desc" },
-    skip: (page - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
-    include: { category: true, writer: true, _count: { select: { comments: true } } },
-  });
+  // "Poema de la semana": the one chosen in edit mode, else this week's most read, else the latest.
+  const weekly =
+    (weeklyBlock.slug && (await prisma.post.findFirst({ where: { slug: weeklyBlock.slug, status: "PUBLISHED" }, include: cardInclude }))) ||
+    (await mostViewed(daysAgo(7), 1))[0]?.post ||
+    posts[0];
+  const weeklyOptions = canEdit
+    ? await prisma.post.findMany({ where: { status: "PUBLISHED" }, orderBy: { publishedAt: "desc" }, take: 60, select: { slug: true, title: true } })
+    : [];
 
   const totalPosts = categories.reduce((sum, c) => sum + c._count.posts, 0);
   const activeCategory = categories.find((c) => c.slug === categoria);
-  const heading = query
-    ? `Resultados para “${query}”`
-    : activeCategory
-      ? `Lista de entradas de ${activeCategory.name}`
-      : "Lista de todos los textos";
-  const pageHref = (n: number) => {
-    const params = new URLSearchParams();
-    if (categoria) params.set("categoria", categoria);
-    if (query) params.set("q", query);
-    if (n > 1) params.set("pagina", String(n));
-    const qs = params.toString();
+  const heading = query ? `Resultados para “${query}”` : (activeCategory?.name ?? "Entradas");
+  const listHref = (params: { categoria?: string; q?: string; pagina?: number }) => {
+    const sp = new URLSearchParams();
+    if (params.categoria) sp.set("categoria", params.categoria);
+    if (params.q) sp.set("q", params.q);
+    if (params.pagina && params.pagina > 1) sp.set("pagina", String(params.pagina));
+    const qs = sp.toString();
     return qs ? `/blog?${qs}` : "/blog";
   };
+  const chips = [{ slug: "", name: "Todas", count: totalPosts }, ...categories.map((c) => ({ slug: c.slug, name: c.name, count: c._count.posts }))];
+  const firstRow = posts.slice(0, FIRST_ROW);
+  const rest = posts.slice(FIRST_ROW);
+
+  const topList = topRead.length > 0 && (
+    <div className="flex flex-col gap-1 p-5 md:p-6 rounded-[22px] md:rounded-[26px] bg-panel">
+      <h2 className="font-serif font-extrabold text-[19px] md:text-[24px] pb-2">Lo más leído</h2>
+      {topRead.map(({ post, views }, i) => (
+        <Link key={post.id} href={`/blog/${post.slug}`} className="group flex items-center gap-3 p-2 -mx-2 rounded-2xl transition hover:bg-white">
+          <span
+            className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-serif font-extrabold text-sm md:text-lg shrink-0 ${i === 0 ? "bg-accent text-white" : "bg-white"}`}
+          >
+            {i + 1}
+          </span>
+          <span className="flex flex-col min-w-0">
+            <span className="font-serif font-semibold text-[14px] md:text-[15px] leading-snug group-hover:text-accent transition-colors">{post.title}</span>
+            <span className="text-[11px] text-neutral-500">{views} lecturas</span>
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+
+  const weeklyQuote = weekly ? postSummary(weekly.content, 22) : "";
 
   return (
     <>
       <SiteHeader />
 
-      {/* Phone order: categories, posts, then the subscribe/author column. */}
-      <div className="max-w-[1040px] mx-auto w-full px-5 md:px-10 pt-14 lg:pt-20 pb-24 grid grid-cols-1 lg:grid-cols-[256px_minmax(0,1fr)] lg:grid-rows-[auto_1fr] gap-x-[72px] gap-y-10 items-start">
-        <aside className="lg:col-start-1 lg:row-start-1 flex flex-col gap-3">
-          <WixCategories categories={categories} totalPosts={totalPosts} activeSlug={categoria} />
-          <SearchPill variant="filled" defaultValue={query} />
-        </aside>
-
-        <div className="lg:col-start-1 lg:row-start-2">
-          <WixBlackColumn
-            authorName={author.name || "Ángeles Nava"}
-            authorBio={author.bio}
-            authorAvatarUrl={author.avatarUrl}
-            canEdit={canEdit}
+      {featured.length > 0 && (
+        <div className="pt-3 md:pt-6">
+          <HeroCarousel
+            slides={featured.map((p) => ({
+              slug: p.slug,
+              title: p.title,
+              category: p.category.name,
+              meta: `${p.writer.name} · ${readingMinutes(p.content)} min de lectura`,
+              image: p.coverImage,
+            }))}
           />
         </div>
+      )}
 
-        <main className="row-start-2 lg:col-start-2 lg:row-start-1 lg:row-span-2 min-w-0">
-          <h1 className="font-cormorant font-semibold text-[21px] tracking-[0.04em] mb-3">{heading}</h1>
+      <div className="wrap xl:px-20">
+        {/* Phones: the poem of the week and the most read right below the cover. */}
+        {!filtered && (
+          <div className="lg:hidden mt-4 flex flex-col gap-4">
+            {weekly && (
+              <section aria-label="Poema de la semana" className="relative overflow-hidden flex flex-col gap-3 p-6 rounded-[22px] bg-navy text-[#f3eee6]">
+                <span aria-hidden="true" className="absolute -right-2 -top-14 font-serif font-extrabold text-[200px] leading-none text-[#2a2940]">
+                  “
+                </span>
+                <span className="relative text-[10px] font-bold tracking-[0.2em] uppercase text-lilac">Poema de la semana</span>
+                <blockquote className="relative font-cormorant italic text-[22px] leading-snug">{weeklyQuote}</blockquote>
+                <span className="relative text-xs text-[#d3cde0]">
+                  <strong className="text-[#f3eee6]">{weekly.title}</strong> · {weekly.writer.name}
+                </span>
+                <div className="relative flex gap-2">
+                  <Link href={`/blog/${weekly.slug}`} className="h-10 px-5 flex items-center rounded-full bg-[#f3eee6] text-ink text-[13px] font-bold">
+                    Leer completo
+                  </Link>
+                  <ListenButton text={`${weekly.title}. ${postSummary(weekly.content, Infinity)}`} className="h-10 px-4 text-[13px] border-[1.5px] border-[#f3eee6]/70 text-[#f3eee6]" />
+                </div>
+                {canEdit && <WeeklyPicker current={weeklyBlock.slug ?? ""} options={weeklyOptions} />}
+              </section>
+            )}
+            {topList}
+          </div>
+        )}
 
+        <div className="pt-8 md:pt-16 flex flex-col gap-4 md:gap-5">
+          <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-8">
+            <h1 className="flex-1 font-serif font-extrabold text-[28px] md:text-[52px] leading-tight tracking-[-0.02em]">
+              {heading} <span className="font-normal text-base md:text-2xl text-neutral-400">{total}</span>
+            </h1>
+            <form action="/blog" role="search" className="flex items-center gap-2.5 h-11 md:h-12 w-full md:w-[340px] px-5 rounded-full bg-panel focus-within:ring-2 focus-within:ring-accent">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="7" />
+                <path d="M21 21l-5.5-5.5" />
+              </svg>
+              <label htmlFor="buscar-entradas" className="sr-only">
+                Buscar entradas
+              </label>
+              <input id="buscar-entradas" name="q" type="search" defaultValue={query} placeholder="Buscar por título o escritor" className="flex-1 min-w-0 bg-transparent outline-none text-sm" />
+              {categoria && <input type="hidden" name="categoria" value={categoria} />}
+            </form>
+          </div>
+          <nav aria-label="Categorías" className="no-scrollbar flex md:flex-wrap gap-2 md:gap-2.5 overflow-x-auto -mx-5 px-5 md:mx-0 md:px-0 pb-1">
+            {chips.map((c) => {
+              const active = (c.slug || undefined) === categoria;
+              return (
+                <Link
+                  key={c.slug || "todas"}
+                  href={listHref({ categoria: c.slug || undefined, q: query })}
+                  aria-current={active ? "page" : undefined}
+                  className={`shrink-0 h-9 md:h-11 flex items-center rounded-full px-4 md:px-5 text-[13px] md:text-sm font-medium border-[1.5px] transition hover:-translate-y-0.5 ${
+                    active ? "bg-ink text-white border-ink" : "bg-white border-[#e4e1ea] hover:border-ink"
+                  }`}
+                >
+                  {c.name}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="pt-6 md:pt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 lg:gap-10 items-start">
           {posts.length === 0 ? (
-            <p className="text-sm text-neutral-600 border border-mist p-6">
-              {query ? "No encontramos entradas con esa búsqueda." : "No hay entradas en esta categoría todavía."}
+            <p className="p-8 rounded-[20px] bg-panel text-center text-sm text-neutral-600">
+              {query ? "No encontramos entradas con esa búsqueda." : "Aún no hay entradas en esta categoría."}
             </p>
           ) : (
-            <div className="flex flex-col pt-px">
-              {posts.map((post) => (
-                <PostRow key={post.id} post={post} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-7">
+              {firstRow.map((p) => (
+                <PostCard key={p.id} post={p} />
               ))}
             </div>
           )}
+          <aside className="hidden lg:flex flex-col gap-6 sticky top-32">
+            {topList}
+            <SubscribeCard id="suscribirse" dark />
+          </aside>
+        </div>
+      </div>
 
-          {pageCount > 1 && (
-            <nav aria-label="Páginas" className="mt-8 flex justify-center items-center flex-wrap gap-1 text-sm">
-              {page > 1 && (
-                <Link href={pageHref(page - 1)} aria-label="Página anterior" className="w-9 h-9 flex items-center justify-center">
-                  ‹
-                </Link>
+      {/* Large screens: the poem of the week as a dark band between the posts. */}
+      {!filtered && weekly && (
+        <section aria-label="Poema de la semana" className="hidden lg:grid relative overflow-hidden mx-6 mt-20 p-16 xl:p-20 rounded-[34px] bg-navy text-[#f3eee6] grid-cols-[minmax(0,1fr)_340px] gap-14 items-center">
+          <span aria-hidden="true" className="absolute left-10 -top-16 font-serif font-extrabold text-[340px] leading-none text-[#2a2940]">
+            “
+          </span>
+          <div className="relative flex flex-col gap-5">
+            <span className="text-xs font-bold tracking-[0.2em] uppercase text-lilac">Poema de la semana</span>
+            <blockquote className="font-cormorant italic text-[40px] xl:text-[46px] leading-[1.2]">{weeklyQuote}</blockquote>
+            <div className="flex items-center gap-3 text-[15px] text-[#d3cde0]">
+              {weekly.writer.avatarUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={weekly.writer.avatarUrl} alt="" className="w-11 h-11 rounded-full object-cover" />
               )}
-              {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
-                <Link
-                  key={n}
-                  href={pageHref(n)}
-                  aria-current={n === page ? "page" : undefined}
-                  className={`w-9 h-9 flex items-center justify-center ${n === page ? "text-accent font-bold" : "hover:text-accent"}`}
-                >
-                  {n}
-                </Link>
-              ))}
-              {page < pageCount && (
-                <Link href={pageHref(page + 1)} aria-label="Página siguiente" className="w-9 h-9 flex items-center justify-center">
-                  ›
-                </Link>
-              )}
-            </nav>
+              <span>
+                <strong className="text-[#f3eee6]">{weekly.title}</strong> · {weekly.writer.name} · {shortDate(weekly.publishedAt)}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <Link href={`/blog/${weekly.slug}`} className="h-12 px-6 flex items-center rounded-full bg-[#f3eee6] text-ink text-[15px] font-bold transition hover:-translate-y-0.5">
+                Leer completo
+              </Link>
+              <ListenButton text={`${weekly.title}. ${postSummary(weekly.content, Infinity)}`} className="h-12 px-5 text-[15px] border-[1.5px] border-[#f3eee6] text-[#f3eee6]" />
+              {canEdit && <WeeklyPicker current={weeklyBlock.slug ?? ""} options={weeklyOptions} />}
+            </div>
+          </div>
+          {weekly.coverImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={weekly.coverImage} alt="" className="relative w-full h-[380px] object-cover rounded-[26px] rotate-3 shadow-[0_30px_60px_rgba(0,0,0,0.35)]" />
           )}
-        </main>
+        </section>
+      )}
+
+      <div className="wrap xl:px-20 pb-20 md:pb-28">
+        {rest.length > 0 && (
+          <div className="pt-4 md:pt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7">
+            {rest.map((p) => (
+              <PostCard key={p.id} post={p} />
+            ))}
+          </div>
+        )}
+        {posts.length < total && (
+          <div className="pt-10 md:pt-14 flex justify-center">
+            <LoadMoreLink href={listHref({ categoria, q: query, pagina: shown / PAGE_SIZE + 1 })} />
+          </div>
+        )}
+        <SubscribeCard id="suscribirse-movil" className="lg:hidden mt-10" />
       </div>
 
       <SiteFooter />

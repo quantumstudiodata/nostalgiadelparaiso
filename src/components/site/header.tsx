@@ -11,6 +11,7 @@ import { navWithLabels } from "@/components/site/nav-links";
 import { SocialLinksEditor } from "@/components/site/social-links-editor";
 import { EditableText } from "@/components/site/editable";
 import { SaveChangesBar } from "@/components/site/save-changes-bar";
+import { HeaderOverlay } from "@/components/site/header-overlay";
 import { ADSENSE_CLIENT } from "@/lib/seo";
 import { InstagramIcon, TikTokIcon, FacebookIcon, SearchIcon, UserIcon, PencilIcon } from "@/components/site/icons";
 
@@ -23,7 +24,8 @@ function LogoutIcon() {
   );
 }
 
-export async function SiteHeader() {
+/** `overlay`: the header sits over the page's cover photo (white text) and turns white once you scroll. */
+export async function SiteHeader({ overlay: wantsOverlay = false }: { overlay?: boolean } = {}) {
   const [session, social, navLabels, previewing] = await Promise.all([
     auth(),
     getSocialLinks(),
@@ -34,6 +36,8 @@ export async function SiteHeader() {
   const manager = isManager(user?.role);
   const editing = manager && !previewing;
   const links = navWithLabels(navLabels);
+  // The edit and preview bars need the regular header underneath them.
+  const overlay = wantsOverlay && !manager;
 
   async function logout() {
     "use server";
@@ -50,42 +54,9 @@ export async function SiteHeader() {
   // They are siblings in the page (no wrapping element) so "sticky" spans the whole page.
   const barHeight = editing ? "top-[52px]" : manager && previewing ? "top-10" : "top-0";
 
-  return (
+  const bars = (
     <>
-      {/* AdSense (automatic ads) on the public site only: never in the panel or while editing. */}
-      {!editing && (
-        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
-      )}
-      {editing && (
-        <div className="sticky top-0 z-50 h-[52px] bg-slate text-white">
-          <div className="wrap h-full flex items-center gap-x-4 text-sm overflow-x-auto">
-            <span className="flex items-center gap-2 font-bold whitespace-nowrap">
-              <PencilIcon size={15} />
-              Modo edición
-            </span>
-            <span className="hidden xl:inline text-lilac whitespace-nowrap">Pasa el cursor sobre cualquier texto o imagen para editarlo.</span>
-            <div className="ml-auto flex items-center gap-2.5">
-              <SaveChangesBar />
-              <Link href="/admin/entradas/nueva" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">+ Nueva entrada</Link>
-              <Link href="/admin" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">Panel</Link>
-              <a href="/admin/vista-previa" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">Ver mi página</a>
-            </div>
-          </div>
-        </div>
-      )}
-      {manager && previewing && (
-        <div className="sticky top-0 z-50 h-10 bg-lilac text-ink">
-          <div className="wrap h-full flex items-center gap-x-4 text-sm overflow-x-auto whitespace-nowrap">
-            <span>Estás viendo tu página como la ven los visitantes.</span>
-            <div className="ml-auto flex items-center gap-3">
-              <a href="/admin/vista-previa?salir=1&a=/" className="underline underline-offset-4">Volver a editar</a>
-              <a href="/admin/vista-previa?salir=1" className="underline underline-offset-4">Ir al panel</a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-ink text-white">
+      <div className={overlay ? "text-white transition-colors group-data-[solid=true]:bg-ink" : "bg-ink text-white"}>
         <div className="wrap h-11 lg:h-12 flex items-center justify-between text-[15px]">
           <div className="flex items-center gap-5 lg:gap-[22px]">
             <Link href="/blog" aria-label="Buscar entradas" className="flex">
@@ -124,10 +95,10 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className={`sticky ${barHeight} z-40 bg-white border-b border-black/5`}>
+      <div className={overlay ? "border-b border-transparent text-white transition-colors group-data-[solid=true]:bg-white group-data-[solid=true]:text-ink group-data-[solid=true]:border-black/5" : `sticky ${barHeight} z-40 bg-white border-b border-black/5`}>
         <div className="wrap h-[76px] lg:h-24 flex items-center gap-10 lg:gap-12">
           <Link href="/" className="flex items-center shrink-0">
-            <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className="h-11 lg:h-[52px] w-auto" priority />
+            <Image src="/images/logo.png" alt="Nostalgia del paraíso" width={431} height={178} className={`h-11 lg:h-[52px] w-auto ${overlay ? "brightness-0 invert group-data-[solid=true]:brightness-100 group-data-[solid=true]:invert-0" : ""}`} priority />
           </Link>
           <nav className="hidden md:flex items-center gap-8 lg:gap-10 text-base font-medium ml-auto">
             {links.map((link) =>
@@ -148,7 +119,7 @@ export async function SiteHeader() {
               ),
             )}
           </nav>
-          <Link href="/blog#suscribirse" className="hidden sm:inline-block bg-ink text-white rounded-full px-6 py-3.5 text-[15px] font-medium ml-auto md:ml-0">
+          <Link href="/blog#suscribirse" className={`hidden sm:inline-block rounded-full px-6 py-3.5 text-[15px] font-medium ml-auto md:ml-0 ${overlay ? "bg-white text-ink group-data-[solid=true]:bg-ink group-data-[solid=true]:text-white" : "bg-ink text-white"}`}>
             Suscribirse
           </Link>
           <div className="ml-auto sm:ml-0">
@@ -156,6 +127,45 @@ export async function SiteHeader() {
           </div>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* AdSense (automatic ads) on the public site only: never in the panel or while editing. */}
+      {!editing && (
+        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
+      )}
+      {editing && (
+        <div className="sticky top-0 z-50 h-[52px] bg-slate text-white">
+          <div className="wrap h-full flex items-center gap-x-4 text-sm overflow-x-auto">
+            <span className="flex items-center gap-2 font-bold whitespace-nowrap">
+              <PencilIcon size={15} />
+              Modo edición
+            </span>
+            <span className="hidden xl:inline text-lilac whitespace-nowrap">Pasa el cursor sobre cualquier texto o imagen para editarlo.</span>
+            <div className="ml-auto flex items-center gap-2.5">
+              <SaveChangesBar />
+              <Link href="/admin/entradas/nueva" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">+ Nueva entrada</Link>
+              <Link href="/admin" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">Panel</Link>
+              <a href="/admin/vista-previa" className="whitespace-nowrap border border-white/50 rounded-full px-4 py-1.5">Ver mi página</a>
+            </div>
+          </div>
+        </div>
+      )}
+      {manager && previewing && (
+        <div className="sticky top-0 z-50 h-10 bg-lilac text-ink">
+          <div className="wrap h-full flex items-center gap-x-4 text-sm overflow-x-auto whitespace-nowrap">
+            <span>Estás viendo tu página como la ven los visitantes.</span>
+            <div className="ml-auto flex items-center gap-3">
+              <a href="/admin/vista-previa?salir=1&a=/" className="underline underline-offset-4">Volver a editar</a>
+              <a href="/admin/vista-previa?salir=1" className="underline underline-offset-4">Ir al panel</a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {overlay ? <HeaderOverlay>{bars}</HeaderOverlay> : bars}
     </>
   );
 }

@@ -85,7 +85,7 @@ export function newPostEmail(p: {
     preheader: p.body.slice(0, 120),
     unsubscribeUrl: p.unsubscribeUrl,
     content: `
-    <tr><td style="padding:28px 40px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;letter-spacing:.14em;text-transform:uppercase;color:#a24c2f">Nueva entrada</td></tr>
+    <tr><td style="padding:28px 40px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;letter-spacing:.14em;text-transform:uppercase;color:#4b2d6b">Nueva entrada</td></tr>
     <tr><td style="padding:10px 40px 0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;font-weight:bold;color:${INK}">${escapeHtml(p.title)}</td></tr>
     <tr><td style="padding:16px 40px 0">
       <table role="presentation" cellpadding="0" cellspacing="0"><tr>
