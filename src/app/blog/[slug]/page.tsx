@@ -113,8 +113,8 @@ export default async function PostPage({
   const date = post.publishedAt?.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }).replace(".", "") ?? "";
   const minutes = readingMinutes(post.content);
   // The cover photo always heads the page; in the body it repeats above the text, below it, or not at all.
-  const coverAbove = post.coverImage && !["top", "below"].includes(post.coverPlacement);
-  const coverBelow = post.coverImage && post.coverPlacement === "below";
+  const coverAbove = post.coverImage && post.coverPlacement === "both";
+  const coverBelow = post.coverImage && !["top", "both"].includes(post.coverPlacement);
   const html = sanitizeHtml(post.content);
   // Editorial first letter: dropped over several lines for a long left-aligned paragraph; for short or centered lines (poems) it stays big on the first line.
   const firstParagraph = html.match(/<p([^>]*)>([\s\S]*?)<\/p>/);

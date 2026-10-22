@@ -105,8 +105,8 @@ model Post {
   excerpt    String?
   content    String
   coverImage String?
-  // Where the cover photo repeats in the post body: "both" (above the text), "below" (after the text) or "top" (not repeated).
-  coverPlacement String @default("both")
+  // Where the cover photo repeats in the post body: "below" (after the text), "both" (above the text) or "top" (not repeated).
+  coverPlacement String @default("below")
   status     PostStatus @default(DRAFT)
   likes      Int        @default(0)
   publishedAt DateTime?

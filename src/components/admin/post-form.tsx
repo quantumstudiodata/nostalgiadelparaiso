@@ -184,12 +184,12 @@ export function PostForm({
             <fieldset className="mt-4 flex flex-col gap-2 text-[15px]">
               <legend className="font-bold mb-1.5">La foto en el cuerpo de la entrada</legend>
               {[
-                { value: "both", label: "Arriba del texto" },
                 { value: "below", label: "Abajo del texto" },
+                { value: "both", label: "Arriba del texto" },
                 { value: "top", label: "No repetirla (solo en la portada)" },
               ].map((o) => (
                 <label key={o.value} className="flex items-center gap-2.5">
-                  <input type="radio" name="coverPlacement" value={o.value} defaultChecked={(post?.coverPlacement === "below" || post?.coverPlacement === "top" ? post.coverPlacement : "both") === o.value} className="accent-accent w-4 h-4" />
+                  <input type="radio" name="coverPlacement" value={o.value} defaultChecked={(post?.coverPlacement === "both" || post?.coverPlacement === "top" ? post.coverPlacement : "below") === o.value} className="accent-accent w-4 h-4" />
                   {o.label}
                 </label>
               ))}
