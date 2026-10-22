@@ -112,6 +112,8 @@ export default async function PostPage({
   const canEdit = await canEditSite(session);
   const date = post.publishedAt?.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }).replace(".", "") ?? "";
   const minutes = readingMinutes(post.content);
+  const coverOnTop = post.coverImage && post.coverPlacement !== "body";
+  const coverInBody = post.coverImage && post.coverPlacement !== "top";
   const listenText = `${post.title}. ${postSummary(post.content, Infinity)}`;
 
   return (
@@ -135,10 +137,10 @@ export default async function PostPage({
       <SiteHeader overlay />
 
       {/* Cover photo across the whole top of the page, under the menu and the logo. */}
-      <section className="relative h-[50vh] min-h-[360px] max-h-[460px] md:max-h-none md:h-[600px] overflow-hidden bg-navy">
-        {post.coverImage && (
+      <section className="relative h-[50vh] min-h-[360px] max-h-[460px] md:max-h-none md:h-[600px] overflow-hidden bg-navy bg-[radial-gradient(circle_at_80%_20%,#4b2d6b_0%,transparent_55%),radial-gradient(circle_at_10%_90%,#3c3e57_0%,transparent_50%)]">
+        {coverOnTop && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverImage} alt="" className="ken-burns absolute inset-0 w-full h-full object-cover" />
+          <img src={post.coverImage!} alt="" className="ken-burns absolute inset-0 w-full h-full object-cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/30" />
         <Link
@@ -195,9 +197,9 @@ export default async function PostPage({
         </div>
 
         <article className="min-w-0 max-w-[680px]">
-          {post.coverImage && (
+          {coverInBody && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.coverImage} alt={post.title} className="mb-6 md:mb-8 w-full max-h-[460px] object-cover rounded-[18px] md:rounded-[24px]" />
+            <img src={post.coverImage!} alt={post.title} className="mb-6 md:mb-8 w-full max-h-[460px] object-cover rounded-[18px] md:rounded-[24px]" />
           )}
           <div className="post-content post-body drop-cap" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
           <div className="mt-8 flex flex-wrap gap-2">

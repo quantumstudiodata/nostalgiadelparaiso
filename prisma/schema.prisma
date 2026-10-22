@@ -105,6 +105,8 @@ model Post {
   excerpt    String?
   content    String
   coverImage String?
+  // Where the cover photo shows on the post page: "both" (cover and body), "top" (cover only) or "body".
+  coverPlacement String @default("both")
   status     PostStatus @default(DRAFT)
   likes      Int        @default(0)
   publishedAt DateTime?
