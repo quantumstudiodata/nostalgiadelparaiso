@@ -105,6 +105,9 @@ model Post {
   excerpt    String?
   content    String
   coverImage String?
+  // Optional title and description for Google; empty uses the title and the extract.
+  seoTitle       String?
+  seoDescription String?
   // Where the cover photo repeats in the post body: "below" (after the text), "both" (above the text) or "top" (not repeated).
   coverPlacement String @default("below")
   status     PostStatus @default(DRAFT)

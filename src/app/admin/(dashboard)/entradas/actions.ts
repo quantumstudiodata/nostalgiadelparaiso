@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { isManager, requireWriter } from "@/lib/permissions";
 import { notifySubscribersOfPost } from "@/lib/email";
+import { announceUrls } from "@/lib/indexnow";
 
 export type PostFormState = { ok?: boolean; error?: string; savedAt?: number };
 
@@ -32,6 +33,8 @@ function readForm(formData: FormData) {
     content: String(formData.get("content") ?? ""),
     coverImage: String(formData.get("coverImage") ?? ""),
     coverPlacement: ["top", "both"].includes(String(formData.get("coverPlacement"))) ? String(formData.get("coverPlacement")) : "below",
+    seoTitle: String(formData.get("seoTitle") ?? "").trim().slice(0, 120) || null,
+    seoDescription: String(formData.get("seoDescription") ?? "").trim().slice(0, 320) || null,
     writerId: String(formData.get("writerId") ?? ""),
     status: formData.get("status") === "PUBLISHED" ? ("PUBLISHED" as const) : ("DRAFT" as const),
     publishedDay: String(formData.get("publishedAt") ?? "").trim(),
@@ -73,6 +76,8 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
       content: data.content,
       coverImage: data.coverImage,
       coverPlacement: data.coverPlacement,
+      seoTitle: data.seoTitle,
+      seoDescription: data.seoDescription,
       status: data.status,
       publishedAt: chosenDate(data.publishedDay, null) ?? (data.status === "PUBLISHED" ? new Date() : null),
       announcedAt: data.status === "PUBLISHED" ? new Date() : null,
@@ -82,7 +87,10 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
     },
   });
 
-  if (post.status === "PUBLISHED") after(() => notifySubscribersOfPost(post.id));
+  if (post.status === "PUBLISHED") {
+    after(() => notifySubscribersOfPost(post.id));
+    after(() => announceUrls([`/blog/${post.slug}`, "/blog"]));
+  }
   revalidatePosts(post.slug);
   redirect(`/admin/entradas/${post.id}?guardada=1`);
 }
@@ -111,6 +119,8 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
       content: data.content,
       coverImage: data.coverImage,
       coverPlacement: data.coverPlacement,
+      seoTitle: data.seoTitle,
+      seoDescription: data.seoDescription,
       status: data.status,
       publishedAt,
       ...(firstPublish ? { announcedAt: new Date() } : {}),
@@ -120,6 +130,7 @@ export async function updatePost(postId: string, _prev: PostFormState, formData:
   });
 
   if (firstPublish) after(() => notifySubscribersOfPost(postId));
+  if (data.status === "PUBLISHED") after(() => announceUrls([`/blog/${slug}`, "/blog"]));
   revalidatePosts(slug);
   if (slug !== existing.slug) revalidatePath(`/blog/${existing.slug}`);
   return { ok: true, savedAt: Date.now() };

@@ -24,15 +24,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const post = await prisma.post.findFirst({
     where: { slug, status: "PUBLISHED" },
-    select: { title: true, excerpt: true, content: true, coverImage: true, slug: true, publishedAt: true, updatedAt: true, writer: { select: { name: true } } },
+    select: { title: true, seoTitle: true, seoDescription: true, excerpt: true, content: true, coverImage: true, slug: true, publishedAt: true, updatedAt: true, writer: { select: { name: true } } },
   });
   if (!post) return {};
-  const description = (post.excerpt || postSummary(post.content, 35)).slice(0, 200);
+  const description = (post.seoDescription || post.excerpt || postSummary(post.content, 35)).slice(0, 200);
+  const title = post.seoTitle || post.title;
   const url = `/blog/${post.slug}`;
   // Light 1200×630 preview built from the cover (see /api/og); the version busts app caches after edits.
   const image = { url: `/api/og/${post.slug}?v=${post.updatedAt.getTime()}`, width: 1200, height: 630, type: "image/jpeg", alt: post.title };
   return {
-    title: post.title,
+    title,
     description,
     authors: [{ name: post.writer.name }],
     alternates: { canonical: url },
@@ -41,14 +42,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url,
       siteName: "Nostalgia del Paraíso",
       locale: "es_MX",
-      title: post.title,
+      title,
       description,
       publishedTime: post.publishedAt?.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
       authors: [post.writer.name],
       images: [image],
     },
-    twitter: { card: "summary_large_image", title: post.title, description, images: [image.url] },
+    twitter: { card: "summary_large_image", title, description, images: [image.url] },
   };
 }
 

@@ -49,6 +49,7 @@ export const metadata: Metadata = {
     url: "/",
     images: [{ url: "/images/hero-portada.jpg", width: 1920, height: 1282, type: "image/jpeg", alt: SITE_NAME }],
   },
+  alternates: { types: { "application/rss+xml": [{ url: "/feed.xml", title: "Nostalgia del Paraíso" }] } },
   // Lets AdSense confirm the site belongs to the account.
   other: { "google-adsense-account": ADSENSE_CLIENT },
   twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION, images: ["/images/hero-portada.jpg"] },

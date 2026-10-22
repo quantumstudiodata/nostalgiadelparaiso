@@ -8,6 +8,7 @@ import type { PostFormState } from "@/app/admin/(dashboard)/entradas/actions";
 import { ImageUploadField } from "./image-upload-field";
 import { RichTextEditor } from "./rich-text-editor";
 import { DeletePostButton } from "./delete-post-button";
+import { SeoFields } from "./seo-fields";
 
 type WriterOption = { id: string; name: string };
 
@@ -195,6 +196,8 @@ export function PostForm({
               ))}
             </fieldset>
           </div>
+
+          <SeoFields slug={post?.slug} seoTitle={post?.seoTitle ?? ""} seoDescription={post?.seoDescription ?? ""} />
 
           <div className="bg-lilac rounded-[10px] px-4 py-3.5 text-[15px] leading-relaxed text-[#2a2b40]">
             <strong>Consejo:</strong> con el botón “Imagen” de la barra puedes poner fotos dentro del texto, a la izquierda, al centro o a la derecha.
