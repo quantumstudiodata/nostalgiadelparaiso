@@ -124,17 +124,23 @@ export default async function BlogPage({
   const rest = posts.slice(FIRST_ROW);
 
   const topList = topRead.length > 0 && (
-    <div className="flex flex-col gap-1 p-5 md:p-6 rounded-[22px] md:rounded-[26px] bg-panel">
-      <h2 className="font-serif font-extrabold text-[19px] md:text-[24px] pb-2">Lo más leído</h2>
+    <div className="relative overflow-hidden flex flex-col p-5 md:p-6 rounded-[22px] md:rounded-[26px] bg-navy text-white">
+      <span aria-hidden="true" className="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-accent" />
+      <span className="relative text-[10px] font-bold tracking-[0.2em] uppercase text-lilac">Ranking</span>
+      <h2 className="relative mt-1 mb-2 font-serif font-extrabold text-[19px] md:text-[22px]">Lo más leído</h2>
       {topRead.map(({ post }, i) => (
-        <Link key={post.id} href={`/blog/${post.slug}`} className="group flex items-center gap-3 p-2 -mx-2 rounded-2xl transition hover:bg-white">
+        <Link key={post.id} href={`/blog/${post.slug}`} className="group relative flex gap-3 py-3 border-b border-white/10 last:border-b-0">
           <span
-            className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center font-serif font-extrabold text-sm md:text-lg shrink-0 ${i === 0 ? "bg-accent text-white" : "bg-white"}`}
+            className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-[1.5px] flex items-center justify-center text-xs font-bold shrink-0 ${
+              i === 0 ? "border-[#f6c64e] text-[#f6c64e]" : "border-white/35"
+            }`}
           >
             {i + 1}
           </span>
-          <span className="flex flex-col min-w-0">
-            <span className="font-serif font-semibold text-[14px] md:text-[15px] leading-snug group-hover:text-accent transition-colors">{post.title}</span>
+          <span className="flex flex-col gap-1 min-w-0">
+            <span className="text-[9px] md:text-[10px] font-bold tracking-[0.12em] uppercase text-lilac">{post.category.name}</span>
+            <span className="font-serif font-semibold text-[14px] md:text-[15px] leading-snug text-[#f3eee6] group-hover:text-lilac transition-colors">{post.title}</span>
+            <span className="text-[11.5px] leading-snug text-[#b9b4c6] line-clamp-2">{post.excerpt || postSummary(post.content, 16)}</span>
           </span>
         </Link>
       ))}
