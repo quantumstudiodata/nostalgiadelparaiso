@@ -6,6 +6,7 @@ import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { getSocialLinks } from "@/lib/social-links";
 import { jsonLdString, siteJsonLd } from "@/lib/seo";
+import { getSiteSeo } from "@/lib/site-seo";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { EditableText, EditableButton, EditableButtonList, EditableImage, type EditableButtonItem } from "@/components/site/editable";
@@ -18,7 +19,16 @@ import { AnimatedTitle } from "@/components/site/animated-title";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSiteSeo();
+  const title = seo.home.title || seo.title;
+  return {
+    title: { absolute: title },
+    description: seo.home.description,
+    alternates: { canonical: "/" },
+    openGraph: { title, description: seo.home.description },
+  };
+}
 
 const HERO_SUBTITLE_DEFAULT =
   "Una red viva de actividades, personas, textos e ideas que se conectan entre sí para formar comunidad.";
@@ -100,7 +110,7 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdString(siteJsonLd(Object.values(socialLinks), author.bio)) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdString(siteJsonLd(Object.values(socialLinks), author.bio, (await getSiteSeo()).description)) }}
       />
       <SiteHeader />
 

@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { postSummary } from "@/lib/email-templates";
+import { getSiteSeo } from "@/lib/site-seo";
 import { readingMinutes, shortDate } from "@/lib/reading-time";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -16,11 +17,10 @@ const PAGE_SIZE = 10;
 // Posts shown beside "Lo más leído" before the "Texto de la semana" band.
 const FIRST_ROW = 4;
 
-export const metadata: Metadata = {
-  title: "Blog",
-  description: "Poemas, textos y reflexiones de Ángeles Nava y las voces de la comunidad de Nostalgia del Paraíso.",
-  alternates: { canonical: "/blog" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { blog } = await getSiteSeo();
+  return { title: blog.title, description: blog.description, alternates: { canonical: "/blog" } };
+}
 
 const cardInclude = { category: true, writer: true } as const;
 const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);

@@ -29,6 +29,12 @@ const ICONS = {
     </>
   ),
   estadisticas: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+  seo: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.5-4.5" />
+    </>
+  ),
 };
 
 function Item({ link, active }: { link: NavLink; active: boolean }) {
@@ -64,6 +70,7 @@ export function AdminNavLinks({ manager, writer }: { manager: boolean; writer: b
         { href: "/admin/escritores", label: "Escritores", icon: ICONS.escritores, match: (p) => p.startsWith("/admin/escritores") },
         { href: "/admin/suscriptores", label: "Suscriptores", icon: ICONS.suscriptores, match: (p) => p.startsWith("/admin/suscriptores") },
         { href: "/admin/estadisticas", label: "Estadísticas", icon: ICONS.estadisticas, match: (p) => p.startsWith("/admin/estadisticas") },
+        { href: "/admin/seo", label: "SEO del sitio", icon: ICONS.seo, match: (p) => p.startsWith("/admin/seo") },
       ]
     : [];
 

@@ -19,7 +19,7 @@ export const SITE_KEYWORDS = [
 ];
 
 /** Structured data so Google knows the site belongs to Ángeles Nava. */
-export function siteJsonLd(socialLinks: string[] = [], bio?: string) {
+export function siteJsonLd(socialLinks: string[] = [], bio?: string, description = SITE_DESCRIPTION) {
   const base = siteUrl();
   const sameAs = socialLinks.filter(Boolean);
   return {
@@ -31,7 +31,7 @@ export function siteJsonLd(socialLinks: string[] = [], bio?: string) {
         url: base,
         name: SITE_NAME,
         alternateName: ["Nostalgia del Paraiso", "Nostalgia del Paraíso Ángeles Nava"],
-        description: SITE_DESCRIPTION,
+        description,
         inLanguage: "es",
         publisher: { "@id": `${base}/#angeles-nava` },
         potentialAction: {
@@ -59,7 +59,7 @@ export function siteJsonLd(socialLinks: string[] = [], bio?: string) {
         name: SITE_NAME,
         url: base,
         logo: `${base}/images/logo.png`,
-        description: SITE_DESCRIPTION,
+        description,
         founder: { "@id": `${base}/#angeles-nava` },
         ...(sameAs.length ? { sameAs } : {}),
       },

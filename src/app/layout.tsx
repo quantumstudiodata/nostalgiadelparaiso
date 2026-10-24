@@ -3,7 +3,8 @@ import { DM_Sans, Fraunces, Playfair_Display, Cormorant_Garamond } from "next/fo
 import "./globals.css";
 import { PageTracker } from "@/components/site/page-tracker";
 import { siteUrl } from "@/lib/email";
-import { ADSENSE_CLIENT, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TITLE } from "@/lib/seo";
+import { ADSENSE_CLIENT, SITE_NAME } from "@/lib/seo";
+import { getSiteSeo } from "@/lib/site-seo";
 
 const sansBody = DM_Sans({
   variable: "--font-sans-body",
@@ -32,28 +33,31 @@ const cormorant = Cormorant_Garamond({
   weight: ["600"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  title: { default: SITE_TITLE, template: `%s | ${SITE_NAME}` },
-  description: SITE_DESCRIPTION,
-  keywords: SITE_KEYWORDS,
-  authors: [{ name: "Ángeles Nava" }],
-  creator: "Ángeles Nava",
-  applicationName: SITE_NAME,
-  openGraph: {
-    type: "website",
-    locale: "es_MX",
-    siteName: SITE_NAME,
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    url: "/",
-    images: [{ url: "/images/hero-portada.jpg", width: 1920, height: 1282, type: "image/jpeg", alt: SITE_NAME }],
-  },
-  alternates: { types: { "application/rss+xml": [{ url: "/feed.xml", title: "Nostalgia del Paraíso" }] } },
-  // Lets AdSense confirm the site belongs to the account.
-  other: { "google-adsense-account": ADSENSE_CLIENT },
-  twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION, images: ["/images/hero-portada.jpg"] },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSiteSeo();
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: { default: seo.title, template: `%s | ${SITE_NAME}` },
+    description: seo.description,
+    keywords: seo.keywords,
+    authors: [{ name: "Ángeles Nava" }],
+    creator: "Ángeles Nava",
+    applicationName: SITE_NAME,
+    openGraph: {
+      type: "website",
+      locale: "es_MX",
+      siteName: SITE_NAME,
+      title: seo.title,
+      description: seo.description,
+      url: "/",
+      images: [{ url: "/images/hero-portada.jpg", width: 1920, height: 1282, type: "image/jpeg", alt: SITE_NAME }],
+    },
+    alternates: { types: { "application/rss+xml": [{ url: "/feed.xml", title: "Nostalgia del Paraíso" }] } },
+    // Lets AdSense confirm the site belongs to the account.
+    other: { "google-adsense-account": ADSENSE_CLIENT },
+    twitter: { card: "summary_large_image", title: seo.title, description: seo.description, images: ["/images/hero-portada.jpg"] },
+  };
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

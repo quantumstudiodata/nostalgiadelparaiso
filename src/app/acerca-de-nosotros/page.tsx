@@ -5,6 +5,7 @@ import { canEditSite } from "@/lib/edit-mode";
 import { getSiteBlock } from "@/lib/site-blocks";
 import { getSocialLinks } from "@/lib/social-links";
 import { jsonLdString, siteJsonLd } from "@/lib/seo";
+import { getSiteSeo } from "@/lib/site-seo";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { PostCard } from "@/components/site/post-card";
@@ -13,12 +14,15 @@ import { updateSiteBlockField } from "@/app/actions/site-content";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Ángeles Nava · Acerca de",
-  description: "Conoce a Ángeles Nava, escritora, tallerista y fundadora de Nostalgia del Paraíso, un ecosistema cultural de poesía y cultura de paz.",
-  alternates: { canonical: "/acerca-de-nosotros" },
-  openGraph: { images: [{ url: "/images/angeles-nava.jpeg", alt: "Ángeles Nava" }] },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { about } = await getSiteSeo();
+  return {
+    title: about.title,
+    description: about.description,
+    alternates: { canonical: "/acerca-de-nosotros" },
+    openGraph: { images: [{ url: "/images/angeles-nava.jpeg", alt: "Ángeles Nava" }] },
+  };
+}
 
 const saveBio = updateSiteBlockField.bind(null, "about.page", "bio");
 const saveMainImage = updateSiteBlockField.bind(null, "about.page", "mainImageUrl");
@@ -66,7 +70,7 @@ export default async function AboutPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdString(siteJsonLd(Object.values(socialLinks), founder.bio)) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdString(siteJsonLd(Object.values(socialLinks), founder.bio, (await getSiteSeo()).description)) }}
       />
       <SiteHeader />
 
